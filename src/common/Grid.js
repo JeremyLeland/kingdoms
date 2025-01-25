@@ -6,7 +6,7 @@ export function draw( ctx, minX, minY, maxX, maxY ) {
     // |     |
     // |     |
     // + - - +
-    ctx.setLineDash( [ 0.1, 0.2, 0.1, 0.2, 0.1, 0.2, 0.1, 0 ] );
+    // ctx.setLineDash( [ 0.1, 0.2, 0.1, 0.2, 0.1, 0.2, 0.1, 0 ] );
     ctx.fillStyle = ctx.strokeStyle = '#ccca';
 
     for ( let col = minX; col <= maxX + 1; col ++ ) {
@@ -25,17 +25,17 @@ export function draw( ctx, minX, minY, maxX, maxY ) {
     ctx.textAlign = 'center';
     // ctx.textBaseline = 'middle';
 
-    ctx.translate( minX, minY );
+    // ctx.translate( minX, minY );
     for ( let row = minY; row <= maxY; row ++ ) {
-      ctx.save(); {
+      // ctx.save(); {
         for ( let col = minX; col <= maxX; col ++ ) {
-          ctx.fillText( `(${ col },${ row })`, 0, 0 );
-          ctx.translate( 1, 0 );
+          ctx.fillText( `(${ col },${ row })`, col, row );
+          // ctx.translate( 1, 0 );
         }
-      }
-      ctx.restore();
+      // }
+      // ctx.restore();
 
-      ctx.translate( 0, 1 );
+      // ctx.translate( 0, 1 );
     }
   }
   ctx.restore();

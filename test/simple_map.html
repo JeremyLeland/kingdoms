@@ -15,21 +15,40 @@
   const canvas = new Canvas();
   canvas.backgroundColor = '#222';
   canvas.lineWidth = 0.02;
-  canvas.zoom = 1 / 10;
-  canvas.scrollX = -5;
-  canvas.scrollY = -5;
+  canvas.zoom = 1 / 16;
+  canvas.scrollX = -8;
+  canvas.scrollY = -8;
 
   canvas.update = ( dt ) => {
 
   }
 
+  let mouseX = 0, mouseY = 0;
+
   canvas.draw = ( ctx ) => {
-    Grid.draw( ctx, -4, -4, 4, 4 );
+    Grid.draw( ctx, -10, -10, 10, 10 );
 
     ctx.save();
     ctx.translate( 2, 2 );
     Entities.draw( ctx, Entities.Info[ 'Tree' ] );
     ctx.restore();
+
+    const SIZE = 4;
+
+    const minX = Math.round( mouseX - SIZE / 2 + 0.5 ) - 0.5;
+    const minY = Math.round( mouseY - SIZE / 2 + 0.5 ) - 0.5;
+   
+    ctx.fillStyle = '#ccc8';
+    ctx.fillRect( minX, minY, SIZE, SIZE );
   }
+
+  canvas.pointerMove = ( p ) => {
+    mouseX = p.x;
+    mouseY = p.y;
+
+    // canvas.redraw();
+  }
+
+  canvas.start();
   
 </script>
