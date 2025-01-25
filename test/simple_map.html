@@ -8,6 +8,14 @@
   import * as Entities from '../src/Entities.js';
   
   
+  const entities = [
+    { type: 'Tree', x: 1, y: -3 },
+    { type: 'Tree', x: -1, y: -1 },
+    { type: 'Tree', x: -2, y: 2 },
+    { type: 'Tree', x: 0, y: 1 },
+    { type: 'Farm', x: 3, y: 3 },
+  ];
+
   //
   // Canvas
   //
@@ -25,40 +33,22 @@
 
   let mouseX = 0, mouseY = 0;
 
-  // TODO: Weird slowdowns!
-  // Seems worse with Grid.draw()
-  //   - Still bad without text
-  // Does moving the mouse make it worse?
-  // Resizing the canvas seems to reset whatever it is
-  // Is something lurking in my canvas code? But why would it be ok without Grid draw?
-
-  // Accumulating transforms? Maybe better to save/restore in betweewn? 
-
   const grid = new Grid( -10, -10, 10, 10 );
 
   canvas.draw = ( ctx ) => {
-    grid.draw( ctx );
 
-    for ( let row = -10; row <= 10; row ++ ) {
-      for ( let col = -10; col <= 10; col ++ ) {
-        ctx.save();
-        ctx.translate( col, row );
+    entities.forEach( entity => Entities.draw( ctx, entity ) );
 
-        Entities.draw( ctx, Entities.Info[ 'Tree' ] );
-
-        // ctx.translate( -col, -row );
-        // ctx.resetTransform();
-        ctx.restore();
-      }
-    }
-
-    const SIZE = 4;
+    const SIZE = 3;
 
     const minX = Math.round( mouseX - SIZE / 2 + 0.5 ) - 0.5;
     const minY = Math.round( mouseY - SIZE / 2 + 0.5 ) - 0.5;
    
     ctx.fillStyle = '#ccc8';
     ctx.fillRect( minX, minY, SIZE, SIZE );
+
+
+    grid.draw( ctx );
   }
 
   canvas.pointerMove = ( p ) => {

@@ -1,12 +1,22 @@
 export class Grid {
   #path;
 
+  minX = 0;
+  minY = 0;
+  maxX = 0;
+  maxY = 0;
+
   constructor( minX, minY, maxX, maxY ) {
+    this.minX = minX;
+    this.minY = minY;
+    this.maxX = maxX;
+    this.maxY = maxY;
+
     this.#path = getGrid( minX, minY, maxX, maxY );
   }
 
   draw( ctx ) {
-  // ctx.save(); {
+    ctx.save(); {
 
       // Make it look like:
       // + - - +
@@ -18,26 +28,17 @@ export class Grid {
 
       ctx.stroke( this.#path );
 
-      if ( false ) {
-        ctx.font = '0.2px Arial';
-        ctx.textAlign = 'center';
-        // ctx.textBaseline = 'middle';
+      ctx.font = '0.2px Arial';
+      ctx.textAlign = 'center';
+      // ctx.textBaseline = 'middle';
 
-        // ctx.translate( minX, minY );
-        for ( let row = minY; row <= maxY; row ++ ) {
-          // ctx.save(); {
-            for ( let col = minX; col <= maxX; col ++ ) {
-              ctx.fillText( `(${ col },${ row })`, col, row );
-              // ctx.translate( 1, 0 );
-            }
-          // }
-          // ctx.restore();
-
-          // ctx.translate( 0, 1 );
+      for ( let row = this.minY; row <= this.maxY; row ++ ) {
+        for ( let col = this.minX; col <= this.maxX; col ++ ) {
+          ctx.fillText( `(${ col },${ row })`, col, row );
         }
       }
-    // }
-    // ctx.restore();
+    }
+    ctx.restore();
   }
 }
 
