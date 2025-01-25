@@ -4,7 +4,7 @@
 <script type="module">
   
   import { Canvas } from '../src/common/Canvas.js';
-  import * as Grid from '../src/common/Grid.js';
+  import { Grid } from '../src/common/Grid.js';
   import * as Entities from '../src/Entities.js';
   
   
@@ -25,13 +25,32 @@
 
   let mouseX = 0, mouseY = 0;
 
-  canvas.draw = ( ctx ) => {
-    Grid.draw( ctx, -10, -10, 10, 10 );
+  // TODO: Weird slowdowns!
+  // Seems worse with Grid.draw()
+  //   - Still bad without text
+  // Does moving the mouse make it worse?
+  // Resizing the canvas seems to reset whatever it is
+  // Is something lurking in my canvas code? But why would it be ok without Grid draw?
 
-    ctx.save();
-    ctx.translate( 2, 2 );
-    Entities.draw( ctx, Entities.Info[ 'Tree' ] );
-    ctx.restore();
+  // Accumulating transforms? Maybe better to save/restore in betweewn? 
+
+  const grid = new Grid( -10, -10, 10, 10 );
+
+  canvas.draw = ( ctx ) => {
+    grid.draw( ctx );
+
+    for ( let row = -10; row <= 10; row ++ ) {
+      for ( let col = -10; col <= 10; col ++ ) {
+        ctx.save();
+        ctx.translate( col, row );
+
+        Entities.draw( ctx, Entities.Info[ 'Tree' ] );
+
+        // ctx.translate( -col, -row );
+        // ctx.resetTransform();
+        ctx.restore();
+      }
+    }
 
     const SIZE = 4;
 
