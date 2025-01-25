@@ -5,6 +5,7 @@
   
   import { Canvas } from '../src/common/Canvas.js';
   import * as Grid from '../src/common/Grid.js';
+  import * as Entities from '../src/Entities.js';
   
   
   //
@@ -12,7 +13,7 @@
   //
 
   const canvas = new Canvas();
-  canvas.backgroundColor = 'black';
+  canvas.backgroundColor = '#222';
   canvas.lineWidth = 0.02;
   canvas.zoom = 1 / 10;
   canvas.scrollX = -5;
@@ -24,6 +25,11 @@
 
   canvas.draw = ( ctx ) => {
     Grid.draw( ctx, -4, -4, 4, 4 );
+
+    ctx.save();
+    ctx.translate( 2, 2 );
+    Entities.draw( ctx, Entities.Info[ 'Tree' ] );
+    ctx.restore();
   }
   
 </script>
