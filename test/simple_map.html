@@ -1,0 +1,29 @@
+<title>Simple map to play around with</title>
+<link rel="stylesheet" href="../style.css">
+
+<script type="module">
+  
+  import { Canvas } from '../src/common/Canvas.js';
+  import * as Grid from '../src/common/Grid.js';
+  
+  
+  //
+  // Canvas
+  //
+
+  const canvas = new Canvas();
+  canvas.backgroundColor = 'black';
+  canvas.lineWidth = 0.02;
+  canvas.zoom = 1 / 10;
+  canvas.scrollX = -5;
+  canvas.scrollY = -5;
+
+  canvas.update = ( dt ) => {
+
+  }
+
+  canvas.draw = ( ctx ) => {
+    Grid.draw( ctx, -4, -4, 4, 4 );
+  }
+  
+</script>
