@@ -12,18 +12,22 @@ export const Info = {
     branches.lineTo( -TREE_WIDTH, -TRUNK_HEIGHT );
     branches.closePath();
 
-    return [
-      {
-        fillStyle: 'brown',
-        fill: trunk,
-        stroke: trunk,
-      },
-      {
-        fillStyle: 'green',
-        fill: branches,
-        stroke: branches,
-      },
-    ];
+    return {
+      width: 1,
+      height: 1,
+      drawLayers: [
+        {
+          fillStyle: 'brown',
+          fill: trunk,
+          stroke: trunk,
+        },
+        {
+          fillStyle: 'green',
+          fill: branches,
+          stroke: branches,
+        },
+      ]
+    };
   } )(),
   'Farm': ( () => {
     const SIZE = 3;
@@ -40,19 +44,22 @@ export const Info = {
       rows.roundRect( -1.5 + GAP_WIDTH + i * ( ROW_WIDTH + GAP_WIDTH ), -ROW_HEIGHT / 2, ROW_WIDTH, ROW_HEIGHT, 0.1 );
     }
 
-
-    return [
-      {
-        fillStyle: 'sienna',
-        fill: ground,
-        stroke: ground,
-      },
-      {
-        fillStyle: 'saddlebrown',
-        fill: rows,
-        stroke: rows,
-      },
-    ];
+    return {
+      width: SIZE,
+      height: SIZE,
+      drawLayers: [
+        {
+          fillStyle: 'sienna',
+          fill: ground,
+          stroke: ground,
+        },
+        {
+          fillStyle: 'saddlebrown',
+          fill: rows,
+          stroke: rows,
+        },
+      ],
+    };
   } )(),
 }
 
@@ -60,7 +67,7 @@ export function draw( ctx, entity ) {
   ctx.save(); {
     ctx.translate( entity.x, entity.y );
     
-    Info[ entity.type ].forEach( layer => {
+    Info[ entity.type ].drawLayers.forEach( layer => {
       if ( layer.fill ) {
         ctx.fillStyle = layer.fillStyle ?? 'white';
         ctx.fill( layer.fill );
