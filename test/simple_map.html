@@ -57,25 +57,37 @@
 
     entities.forEach( entity => Entities.draw( ctx, entity ) );
 
+    const info = Entities.Info[ pendingEntity.type ];
+    
+    const minX = pendingEntity.x - info.width / 2;
+    const minY = pendingEntity.y - info.height / 2;
+    const maxX = minX + info.width;
+    const maxY = minY + info.height;
+
+    ctx.fillStyle = '#ccc8';
+    ctx.fillRect( minX, minY, maxX - minX, maxY - minY );
+
     const blocking = getBlocking( pendingEntity );
 
     blocking.forEach( e => {
-      const info = Entities.Info[ e.type ];
+      const blockInfo = Entities.Info[ e.type ];
+
+      const blockMinX = e.x - blockInfo.width / 2;
+      const blockMinY = e.y - blockInfo.height / 2;
+      const blockMaxX = blockMinX + blockInfo.width;
+      const blockMaxY = blockMinY + blockInfo.height;
 
       ctx.fillStyle = '#f008';
-      ctx.fillRect( e.x - info.width / 2, e.y - info.height / 2, info.width, info.height );
+      ctx.fillRect(
+        Math.max( minX, blockMinX ),
+        Math.max( minY, blockMinY ),
+        Math.min( maxX, blockMaxX ) - Math.max( minX, blockMinX ),
+        Math.min( maxY, blockMaxY ) - Math.max( minY, blockMinY ),
+      );
     } );
 
    
-    ctx.fillStyle = '#ccc8';
-
-    const pendingInfo = Entities.Info[ pendingEntity.type ];
-    ctx.fillRect( 
-      pendingEntity.x - pendingInfo.width / 2, 
-      pendingEntity.y - pendingInfo.height / 2, 
-      pendingInfo.width, 
-      pendingInfo.height 
-    );
+    
 
     grid.draw( ctx );
   }
