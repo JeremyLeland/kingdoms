@@ -16,6 +16,12 @@
     { type: 'Farm', x: 3, y: 3 },
   ];
 
+  let pendingEntity = {
+    type: 'Farm',
+    x: 0,
+    y: 0,
+  };
+
   //
   // Canvas
   //
@@ -35,21 +41,23 @@
 
   const grid = new Grid( -10, -10, 10, 10 );
 
+  function getBlocking( entity ) {
+    const info = Entities.Info[ entity.type ];
+    
+    return entities.filter( other => {
+      const otherInfo = Entities.Info[ other.type ];
+      
+      return Math.abs( entity.x - other.x ) < ( info.width  + otherInfo.width  ) / 2 && 
+             Math.abs( entity.y - other.y ) < ( info.height + otherInfo.height ) / 2
+      }
+    );
+  }
+
   canvas.draw = ( ctx ) => {
 
     entities.forEach( entity => Entities.draw( ctx, entity ) );
 
-    const SIZE = 3;
-
-    const minX = Math.round( mouseX - SIZE / 2 + 0.5 ) - 0.5;
-    const minY = Math.round( mouseY - SIZE / 2 + 0.5 ) - 0.5;
-    const centerX = minX + SIZE / 2;
-    const centerY = minY + SIZE / 2;
-
-    const blocking = entities.filter( e => 
-      Math.abs( e.x - centerX ) < ( SIZE + Entities.Info[ e.type ].width )  / 2 && 
-      Math.abs( e.y - centerY ) < ( SIZE + Entities.Info[ e.type ].height ) / 2
-    );
+    const blocking = getBlocking( pendingEntity );
 
     blocking.forEach( e => {
       const info = Entities.Info[ e.type ];
@@ -60,16 +68,41 @@
 
    
     ctx.fillStyle = '#ccc8';
-    ctx.fillRect( minX, minY, SIZE, SIZE );
+
+    const pendingInfo = Entities.Info[ pendingEntity.type ];
+    ctx.fillRect( 
+      pendingEntity.x - pendingInfo.width / 2, 
+      pendingEntity.y - pendingInfo.height / 2, 
+      pendingInfo.width, 
+      pendingInfo.height 
+    );
 
     grid.draw( ctx );
   }
 
-  canvas.pointerMove = ( p ) => {
+  canvas.pointerMove = p => {
     mouseX = p.x;
     mouseY = p.y;
 
+    const info = Entities.Info[ pendingEntity.type ];
+
+    const xOffset = info.width  / 2 - 0.5;
+    const yOffset = info.height / 2 - 0.5;
+
+    pendingEntity.x = Math.round( mouseX - xOffset ) + xOffset;
+    pendingEntity.y = Math.round( mouseY - yOffset ) + yOffset;
+
     canvas.redraw();
+  }
+
+  canvas.pointerDown = p => {
+    mouseX = p.x;
+    mouseY = p.y;
+
+    if ( getBlocking( pendingEntity ).length == 0 ) {
+      const newEntity = Object.assign( {}, pendingEntity );
+      entities.push( newEntity );
+    }
   }
 
   // canvas.start();

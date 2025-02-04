@@ -34,16 +34,33 @@ export const Info = {
 
     const ROW_WIDTH = 0.21, ROW_HEIGHT = 2.8;
     const GAP_WIDTH = 0.25;
+    const PLANT_WIDTH = 0.15, PLANT_HEIGHT = 0.2, PLANT_SUB_HEIGHT = 0.1;
 
     const ground = new Path2D();
     ground.roundRect( -SIZE / 2, -SIZE / 2, SIZE, SIZE, 0.2 );
 
     const rows = new Path2D();
+    const plants = new Path2D();
 
-    for ( let i = 0; i < 6; i ++ ) {
-      rows.roundRect( -1.5 + GAP_WIDTH + i * ( ROW_WIDTH + GAP_WIDTH ), -ROW_HEIGHT / 2, ROW_WIDTH, ROW_HEIGHT, 0.1 );
+    for ( let col = 0; col < 6; col ++ ) {
+      const rowLeft = -1.5 + GAP_WIDTH + col * ( ROW_WIDTH + GAP_WIDTH );
+
+      rows.roundRect( rowLeft, -ROW_HEIGHT / 2, ROW_WIDTH, ROW_HEIGHT, 0.1 );
+
+      const x = rowLeft + ROW_WIDTH / 2;
+
+      for ( let row = 0; row < 6; row ++ ) {
+        const y = -1.2 + row / 2;
+        
+        plants.moveTo( x, y );
+        plants.lineTo( x - PLANT_WIDTH, y - PLANT_HEIGHT );
+        plants.lineTo( x, y - PLANT_SUB_HEIGHT );
+        plants.lineTo( x + PLANT_WIDTH, y - PLANT_HEIGHT );
+        plants.lineTo( x, y );
+      }
     }
 
+    
     return {
       width: SIZE,
       height: SIZE,
@@ -57,6 +74,11 @@ export const Info = {
           fillStyle: 'saddlebrown',
           fill: rows,
           stroke: rows,
+        },
+        {
+          fillStyle: 'green',
+          fill: plants,
+          stroke: plants,
         },
       ],
     };
