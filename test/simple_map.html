@@ -1,6 +1,8 @@
 <title>Simple map to play around with</title>
 <link rel="stylesheet" href="../style.css">
 
+<div id="ui" style="position: absolute"></div>
+
 <script type="module">
   
   import { Canvas } from '../src/common/Canvas.js';
@@ -92,7 +94,7 @@
     grid.draw( ctx );
   }
 
-  canvas.pointerMove = p => {
+  function pointerInput( p ) {
     mouseX = p.x;
     mouseY = p.y;
 
@@ -104,19 +106,36 @@
     pendingEntity.x = Math.round( mouseX - xOffset ) + xOffset;
     pendingEntity.y = Math.round( mouseY - yOffset ) + yOffset;
 
+    if ( p.buttons == 1 ) {
+      if ( getBlocking( pendingEntity ).length == 0 ) {
+        const newEntity = Object.assign( {}, pendingEntity );
+        entities.push( newEntity );
+      }
+    }
+
     canvas.redraw();
   }
 
-  canvas.pointerDown = p => {
-    mouseX = p.x;
-    mouseY = p.y;
-
-    if ( getBlocking( pendingEntity ).length == 0 ) {
-      const newEntity = Object.assign( {}, pendingEntity );
-      entities.push( newEntity );
-    }
-  }
+  canvas.pointerMove = pointerInput;
+  canvas.pointerDown = pointerInput;
 
   // canvas.start();
+
+  //
+  // UI
+  //
+  const divUI = document.getElementById( 'ui' );
+
+  for ( const type in Entities.Info ) {
+    const button = document.createElement( 'button' );
+    button.innerText = type;
+    button.addEventListener( 'click', e => {
+      pendingEntity.type = type;
+      canvas.redraw();
+    } );
+
+    divUI.appendChild( button );
+  }
+  
   
 </script>
