@@ -55,7 +55,7 @@
 
   canvas.draw = ( ctx ) => {
 
-    entities.forEach( entity => Entities.draw( ctx, entity ) );
+    entities.sort( ( a, b ) => a.y - b.y ).forEach( entity => Entities.draw( ctx, entity ) );
 
     const info = Entities.Info[ pendingEntity.type ];
     
