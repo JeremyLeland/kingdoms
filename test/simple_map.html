@@ -16,6 +16,7 @@
     { type: 'Tree', x: -2, y: 2 },
     { type: 'Tree', x: 0, y: 1 },
     { type: 'Farm', x: 3, y: 3 },
+    { type: 'House', x: 3, y: 0 },
   ];
 
   let pendingEntity = {
@@ -23,6 +24,8 @@
     x: 0,
     y: 0,
   };
+
+  let showGrid = true;
 
   //
   // Canvas
@@ -88,10 +91,9 @@
       );
     } );
 
-   
-    
-
-    grid.draw( ctx );
+    if ( showGrid ) {
+      grid.draw( ctx );
+    }
   }
 
   function pointerInput( p ) {
@@ -137,5 +139,21 @@
     divUI.appendChild( button );
   }
   
+  const gridCheckbox = document.createElement( 'input' );
+  gridCheckbox.setAttribute( 'type', 'checkbox' );
+  gridCheckbox.id = 'toggleGrid';
+  gridCheckbox.checked = true;
+  gridCheckbox.addEventListener( 'change', e => {
+    showGrid = e.target.checked;
+    canvas.redraw();
+  } );
+
+  const gridLabel = document.createElement( 'label' );
+  gridLabel.setAttribute( 'for', 'toggleGrid' );
+  gridLabel.textContent = 'Grid';
+
+  divUI.appendChild( gridCheckbox );
+  divUI.appendChild( gridLabel );
+
   
 </script>

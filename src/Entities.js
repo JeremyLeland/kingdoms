@@ -29,6 +29,7 @@ export const Info = {
       ]
     };
   } )(),
+
   'Farm': ( () => {
     const SIZE = 3;
 
@@ -59,7 +60,6 @@ export const Info = {
         plants.lineTo( x, y );
       }
     }
-
     
     return {
       width: SIZE,
@@ -82,6 +82,64 @@ export const Info = {
         },
       ],
     };
+  } )(),
+
+  'House': ( () => {
+
+    const SIZE = 1;
+
+    const ROOF_TOP = 1, ROOF_BOTTOM = 0.5, ROOF_DEPTH = 0.55;
+    const FRONT_WIDTH = 0.5;
+
+    const y = SIZE / 2;
+
+    const front = new Path2D();
+
+    front.lineTo(  0, y - ROOF_TOP );
+    front.lineTo(  FRONT_WIDTH, y - ROOF_BOTTOM );
+    front.lineTo(  FRONT_WIDTH, y );
+    front.lineTo( -FRONT_WIDTH, y );
+    front.lineTo( -FRONT_WIDTH, y - ROOF_BOTTOM );
+    front.closePath();
+
+    const leftRoof = new Path2D();
+
+    leftRoof.lineTo( 0, y - ROOF_TOP );
+    leftRoof.lineTo( 0, y - ROOF_TOP - ROOF_DEPTH );
+    leftRoof.lineTo( -FRONT_WIDTH, y - ROOF_BOTTOM - ROOF_DEPTH );
+    leftRoof.lineTo( -FRONT_WIDTH, y - ROOF_BOTTOM );
+    leftRoof.closePath();
+
+    const rightRoof = new Path2D();
+
+    rightRoof.lineTo( 0, y - ROOF_TOP );
+    rightRoof.lineTo( 0, y - ROOF_TOP - ROOF_DEPTH );
+    rightRoof.lineTo( FRONT_WIDTH, y - ROOF_BOTTOM - ROOF_DEPTH );
+    rightRoof.lineTo( FRONT_WIDTH, y - ROOF_BOTTOM );
+    rightRoof.closePath();
+
+    return {
+      width: 1,
+      height: 1,
+      drawLayers: [
+        {
+          fillStyle: 'goldenrod',
+          fill: front,
+          stroke: front,
+        },
+        {
+          fillStyle: 'brown',
+          fill: leftRoof,
+          stroke: leftRoof,
+        },
+        {
+          fillStyle: 'brown',
+          fill: rightRoof,
+          stroke: rightRoof,
+        }
+      ]
+    };
+
   } )(),
 }
 
