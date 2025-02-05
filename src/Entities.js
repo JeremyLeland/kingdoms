@@ -1,7 +1,7 @@
 export const Info = {
   'Tree': ( () => {
     const TRUNK_WIDTH = 0.2, TRUNK_HEIGHT = 0.2;
-    const TREE_WIDTH = 0.4, TREE_HEIGHT = 1;
+    const TREE_WIDTH = 0.4, TREE_HEIGHT = 2;
 
     const trunk = new Path2D();
     trunk.roundRect( -TRUNK_WIDTH / 2, -TRUNK_HEIGHT * 2, TRUNK_WIDTH, TRUNK_HEIGHT * 2, TRUNK_WIDTH / 3 );
@@ -17,7 +17,7 @@ export const Info = {
       height: 1,
       drawLayers: [
         {
-          fillStyle: 'brown',
+          fillStyle: 'saddlebrown',
           fill: trunk,
           stroke: trunk,
         },
@@ -86,46 +86,47 @@ export const Info = {
 
   'House': ( () => {
 
-    const SIZE = 1;
+    const SIZE = 2;
 
-    const ROOF_TOP = 1, ROOF_BOTTOM = 0.5, ROOF_DEPTH = 0.55;
-    const FRONT_WIDTH = 0.5;
+    const ROOF_WIDTH = SIZE * 0.45, ROOF_TOP = SIZE * 0.85, ROOF_BOTTOM = SIZE * 0.5, ROOF_DEPTH = SIZE * 0.5;
+    const FRONT_WIDTH = SIZE * 0.4;
+    const DOOR_WIDTH = SIZE * 0.15, DOOR_HEIGHT = SIZE * 0.4;
 
-    const y = SIZE / 2;
+    const y = ROOF_TOP / 2;
 
     const front = new Path2D();
+    front.rect( -FRONT_WIDTH, y - ROOF_TOP, FRONT_WIDTH * 2, ROOF_TOP );
 
-    front.lineTo(  0, y - ROOF_TOP );
-    front.lineTo(  FRONT_WIDTH, y - ROOF_BOTTOM );
-    front.lineTo(  FRONT_WIDTH, y );
-    front.lineTo( -FRONT_WIDTH, y );
-    front.lineTo( -FRONT_WIDTH, y - ROOF_BOTTOM );
-    front.closePath();
+    const door = new Path2D();
+    door.rect( -DOOR_WIDTH, y - DOOR_HEIGHT, DOOR_WIDTH * 2, DOOR_HEIGHT );
 
     const leftRoof = new Path2D();
-
     leftRoof.lineTo( 0, y - ROOF_TOP );
     leftRoof.lineTo( 0, y - ROOF_TOP - ROOF_DEPTH );
-    leftRoof.lineTo( -FRONT_WIDTH, y - ROOF_BOTTOM - ROOF_DEPTH );
-    leftRoof.lineTo( -FRONT_WIDTH, y - ROOF_BOTTOM );
+    leftRoof.lineTo( -ROOF_WIDTH, y - ROOF_BOTTOM - ROOF_DEPTH );
+    leftRoof.lineTo( -ROOF_WIDTH, y - ROOF_BOTTOM );
     leftRoof.closePath();
 
     const rightRoof = new Path2D();
-
     rightRoof.lineTo( 0, y - ROOF_TOP );
     rightRoof.lineTo( 0, y - ROOF_TOP - ROOF_DEPTH );
-    rightRoof.lineTo( FRONT_WIDTH, y - ROOF_BOTTOM - ROOF_DEPTH );
-    rightRoof.lineTo( FRONT_WIDTH, y - ROOF_BOTTOM );
+    rightRoof.lineTo( ROOF_WIDTH, y - ROOF_BOTTOM - ROOF_DEPTH );
+    rightRoof.lineTo( ROOF_WIDTH, y - ROOF_BOTTOM );
     rightRoof.closePath();
 
     return {
-      width: 1,
-      height: 1,
+      width: SIZE,
+      height: SIZE,
       drawLayers: [
         {
           fillStyle: 'goldenrod',
           fill: front,
           stroke: front,
+        },
+        {
+          fillStyle: 'sienna',
+          fill: door,
+          stroke: door,
         },
         {
           fillStyle: 'brown',
