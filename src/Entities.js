@@ -1,16 +1,23 @@
+const TRUNK_WIDTH = 0.2, TRUNK_HEIGHT = 0.2;
+
 export const Info = {
   'Tree': ( () => {
-    const TRUNK_WIDTH = 0.2, TRUNK_HEIGHT = 0.2;
     const TREE_WIDTH = 0.4, TREE_HEIGHT = 2;
 
     const trunk = new Path2D();
-    trunk.roundRect( -TRUNK_WIDTH / 2, -TRUNK_HEIGHT * 2, TRUNK_WIDTH, TRUNK_HEIGHT * 2, TRUNK_WIDTH / 3 );
+    trunk.roundRect( -TRUNK_WIDTH / 2, -TRUNK_HEIGHT * 1.5, TRUNK_WIDTH, TRUNK_HEIGHT * 1.5, TRUNK_WIDTH / 3 );
+
+    const top = new Path2D();
+    top.roundRect( -TRUNK_WIDTH / 2, -TRUNK_HEIGHT * 1.5, TRUNK_WIDTH, TRUNK_HEIGHT * 0.5, TRUNK_WIDTH / 3 );
 
     const branches = new Path2D();
     branches.moveTo( 0, -TREE_HEIGHT );
     branches.lineTo(  TREE_WIDTH, -TRUNK_HEIGHT );
     branches.lineTo( -TREE_WIDTH, -TRUNK_HEIGHT );
     branches.closePath();
+
+    // TODO: Can hide top when tree is intact and hide branches after tree is harvested?
+    //       Maybe the keyframes needs to be a higher level so elements can belong to only certain animations?
 
     return {
       width: 1,
@@ -22,6 +29,22 @@ export const Info = {
           stroke: trunk,
         },
         {
+          fillStyle: 'sienna',
+          fill: top,
+          stroke: top,
+        },
+        {
+          keyframes: {
+            fell: {
+              duration: 5000,
+              rotate: {
+                x: TRUNK_WIDTH,
+                y: -TRUNK_HEIGHT,
+                angle: [ 0, 1.8 ],
+              },
+            },
+          },
+          
           fillStyle: 'green',
           fill: branches,
           stroke: branches,
@@ -149,6 +172,24 @@ export function draw( ctx, entity ) {
     ctx.translate( entity.x, entity.y );
     
     Info[ entity.type ].drawLayers.forEach( layer => {
+
+      if ( entity.animation ) {
+        const keyframeInfo = layer.keyframes?.[ entity.animation.name ];
+
+        if ( keyframeInfo ) {
+          const partialTime = entity.animation.time / keyframeInfo.duration;
+
+          if ( keyframeInfo.rotate ) {
+            const keyAngles = keyframeInfo.rotate.angle;
+            const partialAngle = keyAngles[ 0 ] + partialTime * ( keyAngles[ 1 ] - keyAngles[ 0 ] );
+
+            ctx.translate( keyframeInfo.rotate.x, keyframeInfo.rotate.y );
+            ctx.rotate( partialAngle );
+            ctx.translate( -keyframeInfo.rotate.x, -keyframeInfo.rotate.y );
+          }
+        }
+      }
+
       if ( layer.fill ) {
         ctx.fillStyle = layer.fillStyle ?? 'white';
         ctx.fill( layer.fill );

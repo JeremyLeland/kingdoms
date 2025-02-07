@@ -1,0 +1,82 @@
+<title>Draw entities individually</title>
+<link rel="stylesheet" href="../style.css">
+
+<div id="ui" style="position: absolute"></div>
+
+<style>
+  #time {
+    position: absolute;
+    bottom: 0;
+    width: 99%;
+  }
+</style>
+
+<input id="time" type="range" min="0" value="0" max="5000" step="1"/>
+
+<script type="module">
+  
+  import { Canvas } from '../src/common/Canvas.js';
+  import { Grid } from '../src/common/Grid.js';
+  import * as Entities from '../src/Entities.js';
+  
+
+  let showGrid = false;
+  
+  //
+  // Canvas
+  //
+
+  const canvas = new Canvas();
+  canvas.backgroundColor = '#222';
+  canvas.lineWidth = 0.02;
+  canvas.zoom = 1 / 16;
+  canvas.scrollX = -8;
+  canvas.scrollY = -8;
+
+  
+  const grid = new Grid( -10, -10, 10, 10 );
+
+  let animationTime = 0;
+
+  canvas.draw = ( ctx ) => {
+
+    Entities.draw( ctx, { type: 'Tree', x: 0, y: 0, animation: { name: 'fell', time: animationTime } } );
+
+    if ( showGrid ) {
+      grid.draw( ctx );
+    }
+  }
+
+
+  //
+  // UI
+  //
+  const divUI = document.getElementById( 'ui' );
+  
+  const gridCheckbox = document.createElement( 'input' );
+  gridCheckbox.setAttribute( 'type', 'checkbox' );
+  gridCheckbox.id = 'toggleGrid';
+  gridCheckbox.checked = showGrid;
+  gridCheckbox.addEventListener( 'change', e => {
+    showGrid = e.target.checked;
+    canvas.redraw();
+  } );
+
+  const gridLabel = document.createElement( 'label' );
+  gridLabel.setAttribute( 'for', 'toggleGrid' );
+  gridLabel.textContent = 'Grid';
+
+  divUI.appendChild( gridCheckbox );
+  divUI.appendChild( gridLabel );
+
+  const slider = document.getElementById( 'time');
+  slider.value = animationTime;
+  slider.focus();
+
+  slider.addEventListener( 'input', e => {
+    animationTime = +e.target.value;
+    canvas.redraw();
+  } );
+
+  
+</script>
