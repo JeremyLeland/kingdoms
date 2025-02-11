@@ -20,7 +20,7 @@
   import * as Entities from '../src/Entities.js';
   
 
-  let showGrid = false;
+  let showGrid = true;
   
   //
   // Canvas
@@ -41,6 +41,15 @@
   canvas.draw = ( ctx ) => {
 
     Entities.draw( ctx, { type: 'Tree', x: 0, y: 0, animation: { name: 'fell', time: animationTime } } );
+
+    Entities.draw( ctx, { type: 'Board', x: 0, y: 1 - 0.25, dir: Entities.Direction.North } );
+    Entities.draw( ctx, { type: 'Board', x: 0, y: 1 + 0.25, dir: Entities.Direction.North } );
+
+    Entities.draw( ctx, { type: 'Board', x: 0 - 0.25, y: 1 - Entities.Info[ 'Board' ].depth * 2, dir: Entities.Direction.East } );
+    Entities.draw( ctx, { type: 'Board', x: 0 + 0.25, y: 1 - Entities.Info[ 'Board' ].depth * 2, dir: Entities.Direction.East } );
+
+    Entities.draw( ctx, { type: 'Board', x: 0, y: 1 - 0.25 - Entities.Info[ 'Board' ].depth * 3, dir: Entities.Direction.North } );
+    Entities.draw( ctx, { type: 'Board', x: 0, y: 1 + 0.25 - Entities.Info[ 'Board' ].depth * 3, dir: Entities.Direction.North } );
 
     if ( showGrid ) {
       grid.draw( ctx );
@@ -71,7 +80,7 @@
 
   const slider = document.getElementById( 'time');
   slider.value = animationTime;
-  slider.focus();
+  // slider.focus();
 
   slider.addEventListener( 'input', e => {
     animationTime = +e.target.value;

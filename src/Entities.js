@@ -1,7 +1,13 @@
-const TRUNK_WIDTH = 0.2, TRUNK_HEIGHT = 0.2;
+export const Direction = {
+  North: 'North',
+  East: 'East',
+  South: 'South',
+  West: 'West',
+};
 
 export const Info = {
   'Tree': ( () => {
+    const TRUNK_WIDTH = 0.2, TRUNK_HEIGHT = 0.2;
     const TREE_WIDTH = 0.4, TREE_HEIGHT = 2;
 
     const trunk = new Path2D();
@@ -50,6 +56,54 @@ export const Info = {
           stroke: branches,
         },
       ]
+    };
+  } )(),
+
+  'Board': ( () => {
+    const WIDTH = 0.8, HEIGHT = 0.2, DEPTH = 0.05;
+
+    const northTop = new Path2D();
+    northTop.rect( -WIDTH / 2, -HEIGHT / 2, WIDTH, HEIGHT );
+
+    const northSide = new Path2D();
+    northSide.rect( -WIDTH / 2, HEIGHT / 2, WIDTH, DEPTH );
+
+    const eastTop = new Path2D();
+    eastTop.rect( -HEIGHT / 2, -WIDTH / 2, HEIGHT, WIDTH );
+
+    const eastSide = new Path2D();
+    eastSide.rect( -HEIGHT / 2, WIDTH / 2, HEIGHT, DEPTH );
+
+    return {
+      width: 1,
+      height: 1,
+      depth: DEPTH,
+      drawLayers: {
+        'North': [
+          {
+            fillStyle: 'sienna',
+            fill: northTop,
+            stroke: northTop,
+          },
+          {
+            fillStyle: 'sienna',
+            fill: northSide,
+            stroke: northSide,
+          },
+        ],
+        'East': [
+          {
+            fillStyle: 'sienna',
+            fill: eastTop,
+            stroke: eastTop,
+          },
+          {
+            fillStyle: 'sienna',
+            fill: eastSide,
+            stroke: eastSide,
+          },
+        ]
+      },
     };
   } )(),
 
@@ -171,7 +225,13 @@ export function draw( ctx, entity ) {
   ctx.save(); {
     ctx.translate( entity.x, entity.y );
     
-    Info[ entity.type ].drawLayers.forEach( layer => {
+    let layers = Info[ entity.type ].drawLayers;
+
+    if ( entity.dir ) {
+      layers = layers[ entity.dir ];
+    }
+
+    layers.forEach( layer => {
 
       if ( entity.animation ) {
         const keyframeInfo = layer.keyframes?.[ entity.animation.name ];
