@@ -23,8 +23,8 @@ export class Grid {
       // |     |
       // |     |
       // + - - +
-      // ctx.setLineDash( [ 0.1, 0.2, 0.1, 0.2, 0.1, 0.2, 0.1, 0 ] );
-      ctx.fillStyle = ctx.strokeStyle = '#ccca';
+      ctx.setLineDash( [ 0.1, 0.2, 0.1, 0.2, 0.1, 0.2, 0.1, 0 ] );
+      ctx.fillStyle = ctx.strokeStyle = '#ccc8';
 
       ctx.stroke( this.#path );
 
