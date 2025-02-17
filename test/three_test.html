@@ -5,7 +5,17 @@
   import * as THREE from '../lib/threejs/three.module.js';
   import { ThreeGame } from '../src/common/ThreeGame.js';
   import { OrbitControls } from '../lib/threejs/OrbitControls.js';
-  
+  import { ValuesPanel } from '../src/common/ValuesPanel.js';
+
+  const Person = {
+    HeadSize: 0.4,
+    Neck: 0.2,
+    BodyWidth: 0.5,
+    BodyHeight: 1.5,
+  }
+
+  new ValuesPanel( Person );
+
   const game = new ThreeGame();
   game.scene.background = new THREE.Color( 0x000022 );
   game.camera.position.set( 5, 5, 5 );
@@ -38,22 +48,13 @@
     new THREE.SphereGeometry( 1, 32, 32, 0, Math.PI * 2, 0, Math.PI / 2 ), 
     new THREE.MeshPhongMaterial( { color: 'green' } ) 
   );
-
-  body.position.set( 0, 0, 0 );
-  // body.scale.set( 1, 2, 1 );
-
   group.add( body );
 
   const head = new THREE.Mesh( 
     new THREE.SphereGeometry( 1, 32, 32 ), 
     new THREE.MeshPhongMaterial( { color: 'tan' } ) 
   );
-
-  // head.position.set( 0, 2 + 0.75 - 0.2, 0 );
-  head.scale.set( 0.75, 0.75, 0.75 ); 
-
   group.add( head );
-
 
   game.scene.add( group );
 
@@ -65,10 +66,12 @@
   game.start( ( dt ) => {
     animationTime += dt;
 
-    const bodyHeight = 2 - 0.25 * Math.sin( Math.PI * 2 * ( animationTime % DURATION ) / DURATION );
+    const bodyHeight = Person.BodyHeight - 0.25 * Math.sin( Math.PI * 2 * ( animationTime % DURATION ) / DURATION );
 
-    body.scale.set( 1, bodyHeight, 1 );
-    head.position.set( 0, bodyHeight + 0.75 - 0.2, 0 );
+    body.scale.set( Person.BodyWidth, bodyHeight, Person.BodyWidth );
+
+    head.scale.set( Person.HeadSize, Person.HeadSize, Person.HeadSize ); 
+    head.position.set( 0, bodyHeight + Person.HeadSize - Person.Neck, 0 );
 
 
     const WALK_RADIUS = 3, WALK_TIME = 12000;
