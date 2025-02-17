@@ -40,16 +40,16 @@
   );
 
   body.position.set( 0, 0, 0 );
-  body.scale.set( 1, 2, 1 );
+  // body.scale.set( 1, 2, 1 );
 
   group.add( body );
 
   const head = new THREE.Mesh( 
     new THREE.SphereGeometry( 1, 32, 32 ), 
-    new THREE.MeshPhongMaterial( { color: 'peach' } ) 
+    new THREE.MeshPhongMaterial( { color: 'tan' } ) 
   );
 
-  head.position.set( 0, 2 + 0.75 - 0.2, 0 );
+  // head.position.set( 0, 2 + 0.75 - 0.2, 0 );
   head.scale.set( 0.75, 0.75, 0.75 ); 
 
   group.add( head );
@@ -58,8 +58,24 @@
   game.scene.add( group );
 
 
+  const DURATION = 1000;
+
+  let animationTime = 0;
+
   game.start( ( dt ) => {
-    
+    animationTime += dt;
+
+    const bodyHeight = 2 - 0.25 * Math.sin( Math.PI * 2 * ( animationTime % DURATION ) / DURATION );
+
+    body.scale.set( 1, bodyHeight, 1 );
+    head.position.set( 0, bodyHeight + 0.75 - 0.2, 0 );
+
+
+    const WALK_RADIUS = 3, WALK_TIME = 12000;
+    const theta = Math.PI * 2 * ( animationTime % WALK_TIME ) / WALK_TIME;
+
+    group.position.set( WALK_RADIUS * Math.cos( theta ), 0, WALK_RADIUS * Math.sin( theta ) );
+
   } );
 
 </script>
