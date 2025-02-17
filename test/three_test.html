@@ -12,6 +12,8 @@
     Neck: 0.2,
     BodyWidth: 0.5,
     BodyHeight: 1.5,
+    CarryDown: 0.5,
+    CarryAway: 0.1,
   }
 
   new ValuesPanel( Person );
@@ -46,15 +48,22 @@
   
   const body = new THREE.Mesh( 
     new THREE.SphereGeometry( 1, 32, 32, 0, Math.PI * 2, 0, Math.PI / 2 ), 
-    new THREE.MeshPhongMaterial( { color: 'green' } ) 
+    new THREE.MeshPhongMaterial( { color: 'green' } ),
   );
   group.add( body );
 
   const head = new THREE.Mesh( 
     new THREE.SphereGeometry( 1, 32, 32 ), 
-    new THREE.MeshPhongMaterial( { color: 'tan' } ) 
+    new THREE.MeshPhongMaterial( { color: 'tan' } ),
   );
   group.add( head );
+
+  const wood = new THREE.Mesh(
+    new THREE.BoxGeometry( 1, 0.1, 0.2 ),
+    new THREE.MeshPhongMaterial( { color: 'brown' } ),
+  )
+
+  group.add( wood );
 
   game.scene.add( group );
 
@@ -73,11 +82,13 @@
     head.scale.set( Person.HeadSize, Person.HeadSize, Person.HeadSize ); 
     head.position.set( 0, bodyHeight + Person.HeadSize - Person.Neck, 0 );
 
+    wood.position.set( 0, bodyHeight - Person.CarryDown, Person.BodyWidth + Person.CarryAway );
 
     const WALK_RADIUS = 3, WALK_TIME = 12000;
     const theta = Math.PI * 2 * ( animationTime % WALK_TIME ) / WALK_TIME;
 
     group.position.set( WALK_RADIUS * Math.cos( theta ), 0, WALK_RADIUS * Math.sin( theta ) );
+    group.rotation.set( 0, -theta, 0 );
 
   } );
 
