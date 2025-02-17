@@ -1,0 +1,42 @@
+<title>SVG SMIL test</title>
+<link rel="stylesheet" href="../style.css">
+
+<div id="ui" style="position: absolute"></div>
+
+<script type="module">
+  
+  import { Canvas } from '../src/common/Canvas.js';
+  
+  
+  //
+  // Canvas
+  //
+
+  const canvas = new Canvas();
+  canvas.backgroundColor = '#222';
+  canvas.lineWidth = 0.02;
+  canvas.zoom = 1 / 8;
+  canvas.scrollX = -4;
+  canvas.scrollY = -4;
+
+
+  const image = new Image();
+  image.src = './images/Toy train SMIL.svg';
+  await image.decode();
+
+  const SPRITE_SIZE = 64;
+  const START_FRAME = 4;
+  const FRAMES = 8;
+  const TIME = 1000;
+
+  let direction = 0;
+  let animationTime = 0;
+
+  canvas.draw = ( ctx ) => {
+    ctx.drawImage( image, -4, -4, 8, 8 );
+  }
+
+  canvas.redraw();
+
+  
+</script>
