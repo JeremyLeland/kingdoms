@@ -1,0 +1,153 @@
+<title>ThreeJS test</title>
+<link rel="stylesheet" href="../style.css">
+
+<script type="module">
+  import * as THREE from '../lib/threejs/three.module.js';
+  import { ThreeGame } from '../src/common/ThreeGame.js';
+  import { OrbitControls } from '../lib/threejs/OrbitControls.js';
+  import { ValuesPanel } from '../src/common/ValuesPanel.js';
+
+  const DETAIL = 32;
+
+  const Info = {
+    HeadSize: 0.4,
+    Neck: 0.2,
+    BodyHeight: 1.5,
+    BodyWidth: 0.5,
+    BodyShrink: 0.25,   // shrink amount during walk animation
+    HandSize: 0.1,
+    CarryDown: 0.5,
+    CarryAway: 0.1,
+  };
+
+  // TODO: Put meshes and size info into class?
+  // Put position info in JSON, place meshes based on that
+
+  // new ValuesPanel( Info );
+
+  const game = new ThreeGame();
+  game.scene.background = new THREE.Color( 0x000022 );
+  game.camera.position.set( 0, 0, 5 );
+  game.camera.lookAt( 0, 0, 0 );
+
+  const controls = new OrbitControls( game.camera, game.renderer.domElement );
+  controls.target.set( 0, 0, 0 );
+  controls.update();
+
+
+  game.scene.add( new THREE.AxesHelper( 5 ) );
+
+  const grid = new THREE.GridHelper( 10, 10 );
+  grid.material.opacity = 0.2;
+  grid.material.transparent = true;
+  game.scene.add( grid );
+
+  game.scene.add( new THREE.AmbientLight( 0xffffff, 0.4 ) );
+
+  const light = new THREE.DirectionalLight( 0xffffff, 0.8 );
+  light.position.set( 0, 1, 2 );
+  light.target.position.set( 0, 0, 0 );
+  game.scene.add( light );
+
+  //
+  // Ground
+  //
+  const ground = new THREE.Mesh(
+    new THREE.PlaneGeometry( 10, 10 ),
+    new THREE.MeshPhongMaterial( { color: 0x442200 } ),
+  );
+
+  ground.rotation.set( -Math.PI / 2, 0, 0 );
+
+  game.scene.add( ground );
+
+  //
+  // Worker
+  //
+  
+  
+
+  class Person {
+    #body;
+    #head;
+    #hands;
+    #group;
+
+    constructor( scene ) {
+      this.#body = new THREE.Mesh( 
+        new THREE.SphereGeometry( 1, DETAIL, DETAIL, 0, Math.PI * 2, 0, Math.PI / 2 ), 
+        new THREE.MeshPhongMaterial( { color: 'blue' } ),
+      );
+
+      this.#body.scale.set( Info.BodyWidth, Info.BodyHeight, Info.BodyWidth );
+      
+      this.#head = new THREE.Mesh( 
+        new THREE.SphereGeometry( Info.HeadSize, DETAIL, DETAIL ), 
+        new THREE.MeshPhongMaterial( { color: 'tan' } ),
+      );
+
+      this.#head.position.y = Info.BodyHeight + Info.HeadSize - Info.Neck;
+
+      this.#hands = Array.from( Array( 2 ), _ => 
+        new THREE.Mesh(
+          new THREE.SphereGeometry( Info.HandSize, DETAIL, DETAIL ),
+          new THREE.MeshPhongMaterial( { color: 'tan' } ),
+        )
+      );
+
+      this.#group = new THREE.Group();
+      this.#group.add( this.#body );
+      this.#group.add( this.#head );
+      this.#group.add( this.#hands[ 0 ] );
+      this.#group.add( this.#hands[ 1 ] );
+
+      scene.add( this.#group )
+
+      this.position = this.#group.position;
+      this.rotation = this.#group.rotation;
+      this.scale = this.#group.scale;
+    }
+
+    update( dt ) {
+      const bodyHeight = Info.BodyHeight - Info.BodyShrink * Math.sin( Math.PI * 2 * ( animationTime % DURATION ) / DURATION );
+
+      this.#body.scale.y = bodyHeight;
+      this.#head.position.y = bodyHeight + Info.HeadSize - Info.Neck;
+
+      this.#hands[ 0 ].position.set( -0.5, bodyHeight - Info.CarryDown, Info.BodyWidth + Info.CarryAway );
+      this.#hands[ 1 ].position.set(  0.5, bodyHeight - Info.CarryDown, Info.BodyWidth + Info.CarryAway );
+
+      // wood[ 0 ].position.set( 0, bodyHeight - Info.CarryDown, Info.BodyWidth + Info.CarryAway );
+
+      const WALK_RADIUS = 3, WALK_TIME = 12000;
+      const theta = Math.PI * 2 * ( animationTime % WALK_TIME ) / WALK_TIME;
+
+      // worker.position.set( WALK_RADIUS * Math.cos( theta ), 0, WALK_RADIUS * Math.sin( theta ) );
+      // worker.rotation.set( 0, -theta, 0 );
+
+      // worker.position.y = bodyOffset;
+    }
+  }
+  
+  const people = [
+    new Person( game.scene ),
+    new Person( game.scene ),
+  ];
+
+  people[ 0 ].position.x = 1;
+  people[ 1 ].position.z = 1;
+
+
+  
+  const DURATION = 1000;
+
+  let animationTime = 0;
+
+  game.start( ( dt ) => {
+    animationTime += dt;
+
+    people.forEach( p => p.update( dt ) );
+
+  } );
+
+</script>
