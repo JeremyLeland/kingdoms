@@ -1,0 +1,58 @@
+<title>WebGL test</title>
+<link rel="stylesheet" href="../style.css">
+
+<script type="module">
+
+import { mat4 } from '../lib/gl-matrix.js';
+import { GLCanvas } from '../src/common/GLCanvas.js';
+import * as ShaderCommon from '../src/common/ShaderCommon.js';
+
+const canvas = new GLCanvas();
+
+
+const fieldOfView = 45 * Math.PI / 180; // in radians
+const aspect = canvas.gl.canvas.clientWidth / canvas.gl.canvas.clientHeight;
+const zNear = 0.1;
+const zFar = 100.0;
+const projectionMatrix = mat4.perspective( mat4.create(), fieldOfView, aspect, zNear, zFar );
+
+
+const SquarePoints = [
+  0.5,  0.5, 
+ -0.5,  0.5, 
+  0.5, -0.5, 
+ -0.5, -0.5,
+];
+
+const ShaderInfo = {
+  Square: {
+    vertexShader: ShaderCommon.CommonVertexShader,
+    fragmentShader: ShaderCommon.CommonFragmentShader,
+    attributes: ShaderCommon.CommonAttributes,
+    uniforms: ShaderCommon.CommonUniforms,
+    points: SquarePoints,
+  },
+};
+
+const shader = ShaderCommon.getShader( canvas.gl, ShaderInfo.Square );
+
+const squareMatrix = mat4.fromRotationTranslationScale( 
+  mat4.create(), 
+  [ 0, 0, 0, 0 ],
+  [ 0, 0, -5 ],
+  [ 1, 1, 1 ],
+);
+
+canvas.draw = ( gl ) => {
+  gl.useProgram( shader.program );
+
+  gl.uniformMatrix4fv( shader.uniformLocations.mvp, false, 
+    mat4.multiply( mat4.create(), projectionMatrix, squareMatrix )
+  );
+
+  ShaderCommon.drawPoints( gl, shader );
+}
+
+canvas.start();
+
+</script>
