@@ -3,25 +3,25 @@ export const CommonVertexShader = /*glsl*/`# version 300 es
 
   uniform mat4 mvp;
 
-  out vec2 v_pos;
+  out vec4 v_pos;
 
   void main() {
+    v_pos = vertexPosition;
     gl_Position = mvp * vertexPosition;
-    v_pos = vertexPosition.xy;
   }
 `;
 
 export const CommonFragmentShader = /*glsl*/ `# version 300 es
   precision mediump float;
 
-  in vec2 v_pos;
+  in vec4 v_pos;
 
   uniform vec3 color;
 
   out vec4 outColor;
 
   void main() {
-    outColor = vec4( 0.0, 1.0, 0.0, 1.0 );
+    outColor = v_pos;
   }
 `;
 
@@ -45,30 +45,20 @@ export function getShader( gl, shaderInfo ) {
     program: program,
     attribLocations: attribLocations,
     uniformLocations: uniformLocations,
-    buffer: initBuffer( gl, shaderInfo.points ),
-    bufferLength: shaderInfo.points.length / 2,
+    vertexBuffer: createVertexBuffer( gl, shaderInfo.vertices ),
+    vertexLength: shaderInfo.vertices.length / 3,
+    indexBuffer: createIndexBuffer( gl, shaderInfo.indices ),
+    indexLength: shaderInfo.indices.length,
   };
 }
 
-export function drawShader( gl, shaderInfo, uniforms ) {
-
-  const shader = getShader( gl, shaderInfo );
-
-  gl.useProgram( shader.program );
-
-  gl.uniformMatrix4fv( shader.uniformLocations.mvp, false, uniforms.mvp );
-
-  gl.uniform3fv( shader.uniformLocations.color, uniforms.color );
-
-  drawPoints( gl, shader );
-}
-
 export function drawPoints( gl, shader ) {
-  gl.bindBuffer( gl.ARRAY_BUFFER, shader.buffer );
-  gl.vertexAttribPointer( shader.attribLocations.vertexPosition, 2, gl.FLOAT, false, 0, 0 );
+  gl.bindBuffer( gl.ARRAY_BUFFER, shader.vertexBuffer );
+  gl.bindBuffer( gl.ELEMENT_ARRAY_BUFFER, shader.indexBuffer );
+  gl.vertexAttribPointer( shader.attribLocations.vertexPosition, 3, gl.FLOAT, false, 0, 0 );
   gl.enableVertexAttribArray( shader.attribLocations.vertexPosition );
 
-  gl.drawArrays( gl.TRIANGLE_STRIP, 0, shader.bufferLength );
+  gl.drawElements( gl.TRIANGLES, shader.indexLength, gl.UNSIGNED_SHORT, 0 );
 }
 
 function initShaderProgram( gl, vsSource, fsSource ) {
@@ -123,9 +113,16 @@ function loadShader( gl, type, source ) {
   }
 }
 
-function initBuffer( gl, positions ) {
-  const buffer = gl.createBuffer();
-  gl.bindBuffer( gl.ARRAY_BUFFER, buffer );
-  gl.bufferData( gl.ARRAY_BUFFER, new Float32Array( positions ), gl.STATIC_DRAW );
-  return buffer;
+export function createVertexBuffer( gl, vertices ) {
+  const vertexBuffer = gl.createBuffer();
+  gl.bindBuffer( gl.ARRAY_BUFFER, vertexBuffer );
+  gl.bufferData( gl.ARRAY_BUFFER, new Float32Array( vertices ), gl.STATIC_DRAW );
+  return vertexBuffer;
+}
+
+export function createIndexBuffer( gl, indices ) {
+  const indexBuffer = gl.createBuffer();
+  gl.bindBuffer( gl.ELEMENT_ARRAY_BUFFER, indexBuffer );
+  gl.bufferData( gl.ELEMENT_ARRAY_BUFFER, new Uint16Array( indices ), gl.STATIC_DRAW );
+  return indexBuffer;
 }

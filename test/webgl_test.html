@@ -16,6 +16,13 @@ const zNear = 0.1;
 const zFar = 100.0;
 const projectionMatrix = mat4.perspective( mat4.create(), fieldOfView, aspect, zNear, zFar );
 
+const viewMatrix = mat4.lookAt(
+  mat4.create(),
+  [ 5, 5, 5 ],
+  [ 0, 0, 0 ],
+  [ 0, 1, 0 ],
+);
+
 
 const SquarePoints = [
   0.5,  0.5, 
@@ -24,13 +31,42 @@ const SquarePoints = [
  -0.5, -0.5,
 ];
 
+const vertices = [
+  //Front
+  -0.5, -0.5, -0.5,
+    0.5, -0.5, -0.5,
+    0.5,  0.5, -0.5,
+  -0.5,  0.5, -0.5,
+  //Back
+    0.5, -0.5, 0.5,
+  -0.5, -0.5, 0.5,
+  -0.5,  0.5, 0.5,
+    0.5,  0.5, 0.5
+];
+
+const indices = [
+  0, 1, 2, //front
+  0, 2, 3,
+  1, 4, 7, //right
+  1, 7, 2,
+  4, 5, 6, //back
+  4, 6, 7,
+  5, 0, 3, //left
+  5, 3, 6,
+  3, 2, 7, //top
+  3, 7, 6,
+  0, 1, 5, //bottom
+  1, 4, 5
+];
+
 const ShaderInfo = {
   Square: {
     vertexShader: ShaderCommon.CommonVertexShader,
     fragmentShader: ShaderCommon.CommonFragmentShader,
     attributes: ShaderCommon.CommonAttributes,
     uniforms: ShaderCommon.CommonUniforms,
-    points: SquarePoints,
+    vertices: vertices,
+    indices: indices,
   },
 };
 
@@ -39,15 +75,31 @@ const shader = ShaderCommon.getShader( canvas.gl, ShaderInfo.Square );
 const squareMatrix = mat4.fromRotationTranslationScale( 
   mat4.create(), 
   [ 0, 0, 0, 0 ],
-  [ 0, 0, -5 ],
+  [ 0, 0, 0 ],
   [ 1, 1, 1 ],
 );
 
+let angle = 0;
+
+canvas.update = ( dt ) => {
+  angle += dt / 1000;
+
+  mat4.fromRotationTranslationScale(
+    squareMatrix,
+    [ Math.cos( angle / 2 ), Math.sin( angle / 2 ), 0, 0 ],
+    [ 0, 0, 0 ],
+    [ 1, 1, 1 ],
+  )
+}
+
 canvas.draw = ( gl ) => {
+
+  const mv = mat4.multiply( mat4.create(), projectionMatrix, viewMatrix );
+
   gl.useProgram( shader.program );
 
   gl.uniformMatrix4fv( shader.uniformLocations.mvp, false, 
-    mat4.multiply( mat4.create(), projectionMatrix, squareMatrix )
+    mat4.multiply( mat4.create(), mv, squareMatrix )
   );
 
   ShaderCommon.drawPoints( gl, shader );
