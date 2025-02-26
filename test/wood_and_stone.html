@@ -1,0 +1,108 @@
+<title>WebGL test</title>
+<link rel="stylesheet" href="../style.css">
+
+<script type="module">
+
+import { mat4 } from '../lib/gl-matrix.js';
+import { GLCanvas } from '../src/common/GLCanvas.js';
+import * as MeshCommon from '../src/common/MeshCommon.js';
+import * as ShaderCommon from '../src/common/ShaderCommon.js';
+
+const canvas = new GLCanvas();
+
+const viewMatrix = mat4.lookAt(
+  mat4.create(),
+  [ 0, 0, 5 ],
+  [ 0, 0, 0 ],
+  [ 0, 1, 0 ],
+);
+
+
+const Info = {
+  Stone: {
+    width: 0.5,
+    height: 0.4,
+    depth: 0.3,
+    color: [ 0.4, 0.4, 0.4 ],
+  },
+  Wood: {
+    width: 1,
+    height: 0.1,
+    depth: 0.2,
+    color: [ 0.5, 0.2, 0.0 ],
+  },
+}
+
+const MeshInfo = {
+  Wood: MeshCommon.Box( Info.Wood.width, Info.Wood.height, Info.Wood.depth ),
+  Stone: MeshCommon.Box( Info.Stone.width, Info.Stone.height, Info.Stone.depth ),
+}
+
+const woodMesh = MeshCommon.getMesh( canvas.gl, MeshInfo.Wood );
+
+const ShaderInfo = {
+  Solid: {
+    vertexShader: ShaderCommon.CommonVertexShader,
+    fragmentShader: ShaderCommon.CommonFragmentShader,
+    attributes: ShaderCommon.CommonAttributes,
+    uniforms: ShaderCommon.CommonUniforms,
+  },
+};
+
+const shader = ShaderCommon.getShader( canvas.gl, ShaderInfo.Solid );
+
+const modelMatrix = mat4.fromRotationTranslationScale( 
+  mat4.create(), 
+  [ 0, 0, 0, 0 ],
+  [ 0, 0, 0 ],
+  [ 1, 1, 1 ],
+);
+
+let angle = 0;
+
+canvas.update = ( dt ) => {
+  angle += dt / 1000;
+
+  mat4.fromRotationTranslationScale(
+    modelMatrix,
+    [ Math.cos( angle / 2 ), 0, Math.sin( angle / 2 ), 0 ],
+    [ 0, 0, 0 ],
+    [ 1, 1, 1 ],
+  )
+}
+
+const projectionMatrix = mat4.create();
+const projViewMatrix = mat4.create();
+
+canvas.draw = ( gl ) => {
+
+  const fieldOfView = 45 * Math.PI / 180; // in radians
+  const zNear = 0.1;
+  const zFar = 100.0;
+  mat4.perspective( projectionMatrix, fieldOfView, canvas.canvas.width / canvas.canvas.height, zNear, zFar );
+  mat4.multiply( projViewMatrix, projectionMatrix, viewMatrix );
+
+  drawMesh( gl, woodMesh, shader );
+  
+
+}
+
+canvas.start();
+
+function drawMesh( gl, mesh, shader ) {
+  gl.useProgram( shader.program );
+
+  gl.uniformMatrix4fv( shader.uniformLocations.mvp, false, 
+    mat4.multiply( mat4.create(), projViewMatrix, modelMatrix )
+  );
+  gl.uniform3fv( shader.uniformLocations.color, Info.Wood.color );
+
+  gl.bindBuffer( gl.ARRAY_BUFFER, mesh.vertexBuffer );
+  gl.bindBuffer( gl.ELEMENT_ARRAY_BUFFER, mesh.indexBuffer );
+  gl.vertexAttribPointer( shader.attribLocations.vertexPosition, 3, gl.FLOAT, false, 0, 0 );
+  gl.enableVertexAttribArray( shader.attribLocations.vertexPosition );
+
+  gl.drawElements( gl.TRIANGLES, mesh.indexLength, gl.UNSIGNED_SHORT, 0 );
+}
+
+</script>

@@ -45,20 +45,7 @@ export function getShader( gl, shaderInfo ) {
     program: program,
     attribLocations: attribLocations,
     uniformLocations: uniformLocations,
-    vertexBuffer: createVertexBuffer( gl, shaderInfo.vertices ),
-    vertexLength: shaderInfo.vertices.length / 3,
-    indexBuffer: createIndexBuffer( gl, shaderInfo.indices ),
-    indexLength: shaderInfo.indices.length,
   };
-}
-
-export function drawPoints( gl, shader ) {
-  gl.bindBuffer( gl.ARRAY_BUFFER, shader.vertexBuffer );
-  gl.bindBuffer( gl.ELEMENT_ARRAY_BUFFER, shader.indexBuffer );
-  gl.vertexAttribPointer( shader.attribLocations.vertexPosition, 3, gl.FLOAT, false, 0, 0 );
-  gl.enableVertexAttribArray( shader.attribLocations.vertexPosition );
-
-  gl.drawElements( gl.TRIANGLES, shader.indexLength, gl.UNSIGNED_SHORT, 0 );
 }
 
 function initShaderProgram( gl, vsSource, fsSource ) {
@@ -111,18 +98,4 @@ function loadShader( gl, type, source ) {
   else {
     return shader;
   }
-}
-
-export function createVertexBuffer( gl, vertices ) {
-  const vertexBuffer = gl.createBuffer();
-  gl.bindBuffer( gl.ARRAY_BUFFER, vertexBuffer );
-  gl.bufferData( gl.ARRAY_BUFFER, new Float32Array( vertices ), gl.STATIC_DRAW );
-  return vertexBuffer;
-}
-
-export function createIndexBuffer( gl, indices ) {
-  const indexBuffer = gl.createBuffer();
-  gl.bindBuffer( gl.ELEMENT_ARRAY_BUFFER, indexBuffer );
-  gl.bufferData( gl.ELEMENT_ARRAY_BUFFER, new Uint16Array( indices ), gl.STATIC_DRAW );
-  return indexBuffer;
 }
