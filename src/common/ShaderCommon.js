@@ -21,7 +21,7 @@ export const CommonFragmentShader = /*glsl*/ `# version 300 es
   out vec4 outColor;
 
   void main() {
-    outColor = v_pos;
+    outColor.xyz = color;
   }
 `;
 
