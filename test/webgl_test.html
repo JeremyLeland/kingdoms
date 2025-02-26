@@ -9,16 +9,9 @@ import * as ShaderCommon from '../src/common/ShaderCommon.js';
 
 const canvas = new GLCanvas();
 
-
-const fieldOfView = 45 * Math.PI / 180; // in radians
-const aspect = canvas.gl.canvas.clientWidth / canvas.gl.canvas.clientHeight;
-const zNear = 0.1;
-const zFar = 100.0;
-const projectionMatrix = mat4.perspective( mat4.create(), fieldOfView, aspect, zNear, zFar );
-
 const viewMatrix = mat4.lookAt(
   mat4.create(),
-  [ 5, 5, 5 ],
+  [ 0, 0, 5 ],
   [ 0, 0, 0 ],
   [ 0, 1, 0 ],
 );
@@ -86,13 +79,21 @@ canvas.update = ( dt ) => {
 
   mat4.fromRotationTranslationScale(
     squareMatrix,
-    [ Math.cos( angle / 2 ), Math.sin( angle / 2 ), 0, 0 ],
+    [ Math.cos( angle / 2 ), 0, Math.sin( angle / 2 ), 0 ],
     [ 0, 0, 0 ],
     [ 1, 1, 1 ],
   )
 }
 
+const projectionMatrix = mat4.create();
+
 canvas.draw = ( gl ) => {
+
+  const fieldOfView = 45 * Math.PI / 180; // in radians
+  const zNear = 0.1;
+  const zFar = 100.0;
+  mat4.perspective( projectionMatrix, fieldOfView, canvas.canvas.width / canvas.canvas.height, zNear, zFar );
+
 
   const mv = mat4.multiply( mat4.create(), projectionMatrix, viewMatrix );
 
