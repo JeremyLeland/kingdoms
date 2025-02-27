@@ -21,6 +21,59 @@ export const SolidColor = {
   `,
 }
 
+export const PositionColor = {
+  vertex: /*glsl*/`# version 300 es
+    in vec4 position;
+
+    uniform mat4 mvp;
+
+    out vec4 v_pos;
+
+    void main() {
+      gl_Position = mvp * position;
+      v_pos = position;
+    }
+  `,
+  fragment: /*glsl*/ `# version 300 es
+    precision mediump float;
+
+    in vec4 v_pos;
+
+    out vec4 outColor;
+
+    void main() {
+      outColor = v_pos;
+    }
+  `,
+}
+
+export const UVColor = {
+  vertex: /*glsl*/`# version 300 es
+    in vec4 position;
+    in vec2 uv;
+
+    uniform mat4 mvp;
+
+    out vec2 v_uv;
+
+    void main() {
+      gl_Position = mvp * position;
+      v_uv = uv;
+    }
+  `,
+  fragment: /*glsl*/ `# version 300 es
+    precision mediump float;
+
+    in vec2 v_uv;
+
+    out vec4 outColor;
+
+    void main() {
+      outColor = vec4( v_uv.x, v_uv.y, 0.0, 1.0 );
+    }
+  `,
+}
+
 export function getShader( gl, shaderInfo ) {
   const vertexShader = loadShader( gl, gl.VERTEX_SHADER, shaderInfo.vertex );
   const fragmentShader = loadShader( gl, gl.FRAGMENT_SHADER, shaderInfo.fragment );

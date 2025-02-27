@@ -44,7 +44,7 @@ const Meshes = {
 };
 
 
-const shader = ShaderCommon.getShader( canvas.gl, ShaderCommon.SolidColor );
+const shader = ShaderCommon.getShader( canvas.gl, ShaderCommon.UVColor );
 
 const modelMatrix = mat4.fromRotationTranslationScale( 
   mat4.create(), 
@@ -91,8 +91,6 @@ function drawEntity( gl, entity ) {
   const mesh = Meshes[ entity.type ];
   // const shader = shader;
 
-  gl.useProgram( shader.program );
-
   mat4.fromRotationTranslation(
     modelMatrix,
     [ Math.cos( entity.rot[ 1 ] / 2 ), 0, Math.sin( entity.rot[ 1 ] / 2 ), 0 ],
@@ -101,15 +99,21 @@ function drawEntity( gl, entity ) {
 
   mat4.multiply( mvp, projViewMatrix, modelMatrix );
 
+  gl.useProgram( shader.program );
   gl.uniformMatrix4fv( shader.uniformLocations.mvp, false, mvp );
-  gl.uniform3fv( shader.uniformLocations.color, Info[ entity.type ].color );
+  // gl.uniform3fv( shader.uniformLocations.color, Info[ entity.type ].color );
 
-  gl.bindBuffer( gl.ARRAY_BUFFER, mesh.vertexBuffer );
-  gl.bindBuffer( gl.ELEMENT_ARRAY_BUFFER, mesh.indexBuffer );
+  gl.bindBuffer( gl.ARRAY_BUFFER, mesh.positionBuffer );
   gl.vertexAttribPointer( shader.attribLocations.position, 3, gl.FLOAT, false, 0, 0 );
   gl.enableVertexAttribArray( shader.attribLocations.position );
 
-  gl.drawElements( gl.TRIANGLES, mesh.indexLength, gl.UNSIGNED_SHORT, 0 );
+  gl.bindBuffer( gl.ARRAY_BUFFER, mesh.uvBuffer );
+  gl.vertexAttribPointer( shader.attribLocations.uv, 2, gl.FLOAT, false, 0, 0 );
+  gl.enableVertexAttribArray( shader.attribLocations.uv );
+
+  gl.bindBuffer( gl.ELEMENT_ARRAY_BUFFER, mesh.indexBuffer );
+
+  gl.drawElements( gl.TRIANGLES, mesh.length, gl.UNSIGNED_SHORT, 0 );
 }
 
 </script>

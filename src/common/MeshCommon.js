@@ -1,49 +1,121 @@
 export function Box( width, height, depth ) {
   return {
-    vertices: [
+    positions: [
       // Front
-      -width,  -height, -depth,
-       width , -height, -depth,
-       width,   height, -depth,
-      -width,   height, -depth,
+      -1, -1, -1,
+       1, -1, -1,
+       1,  1, -1,
+      -1,  1, -1,
+
+      // Right
+       1, -1, -1,
+       1, -1,  1,
+       1,  1,  1,
+       1,  1, -1,
 
       // Back
-       width,  -height,  depth,
-      -width,  -height,  depth,
-      -width,   height,  depth,
-       width,   height,  depth,
+       1, -1,  1,
+      -1, -1,  1,
+      -1,  1,  1,
+       1,  1,  1,
+
+      // Left
+      -1, -1,  1,
+      -1, -1, -1,
+      -1,  1, -1,
+      -1,  1,  1,
+
+      // Top
+      -1,  1, -1,
+       1,  1, -1,
+       1,  1,  1,
+      -1,  1,  1,
+
+      // Bottom
+      -1, -1,  1,
+       1, -1,  1,
+       1, -1, -1,
+      -1, -1, -1
+    ].map( ( value, index ) => value * [ width, height, depth ][ index % 3 ] / 2 ),
+    uvs: [
+      // front
+      0, 0,
+      1, 0,
+      1, 1,
+      0, 1,
+
+      // right
+      0, 0,
+      1, 0,
+      1, 1,
+      0, 1,
+
+      // back
+      0, 0,
+      1, 0,
+      1, 1,
+      0, 1,
+      
+      // left
+      0, 0,
+      1, 0,
+      1, 1,
+      0, 1,
+
+      // top
+      0, 0,
+      1, 0,
+      1, 1,
+      0, 1,
+
+      // bottom
+      0, 0,
+      1, 0,
+      1, 1,
+      0, 1,
     ],
     indices: [
-      0, 1, 2, // front
+      // front
+      0, 1, 2, 
       0, 2, 3,
-      1, 4, 7, // right
-      1, 7, 2,
-      4, 5, 6, // back
+
+      // right
+      4, 5, 6, 
       4, 6, 7,
-      5, 0, 3, // left
-      5, 3, 6,
-      3, 2, 7, // top
-      3, 7, 6,
-      0, 1, 5, // bottom
-      1, 4, 5
-    ],
+      
+      // back
+      8, 9, 10, 
+      8, 10, 11,
+      
+      // left
+      12, 13, 14, 
+      12, 14, 15, 
+      
+      // top
+      16, 17, 18, 
+      16, 18, 19,
+      
+      // bottom
+      20, 21, 22, 
+      20, 22, 23
+    ]
   }
 }
 
 export function getMesh( gl, meshInfo ) {  
   return {
-    vertexBuffer: createVertexBuffer( gl, meshInfo.vertices ),
-    vertexLength: meshInfo.vertices.length / 3,
+    positionBuffer: createArrayBuffer( gl, meshInfo.positions ),
+    uvBuffer: createArrayBuffer( gl, meshInfo.uvs ),
     indexBuffer: createIndexBuffer( gl, meshInfo.indices ),
-    indexLength: meshInfo.indices.length,
+    length: meshInfo.indices.length,
   };
 }
 
-function createVertexBuffer( gl, vertices ) {
-  const vertexBuffer = gl.createBuffer();
-  gl.bindBuffer( gl.ARRAY_BUFFER, vertexBuffer );
-  gl.bufferData( gl.ARRAY_BUFFER, new Float32Array( vertices ), gl.STATIC_DRAW );
-  return vertexBuffer;
+function createArrayBuffer( gl, array ) {
+  const arrayBuffer = gl.createBuffer();
+  gl.bindBuffer( gl.ARRAY_BUFFER, arrayBuffer );
+  gl.bufferData( gl.ARRAY_BUFFER, new Float32Array( array ), gl.STATIC_DRAW );
+  return arrayBuffer;
 }
 
 function createIndexBuffer( gl, indices ) {
