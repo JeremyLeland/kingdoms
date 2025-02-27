@@ -43,16 +43,8 @@ const Meshes = {
   Wood: MeshCommon.getMesh( canvas.gl, MeshInfo.Wood ),
 };
 
-const ShaderInfo = {
-  Solid: {
-    vertexShader: ShaderCommon.CommonVertexShader,
-    fragmentShader: ShaderCommon.CommonFragmentShader,
-    attributes: ShaderCommon.CommonAttributes,
-    uniforms: ShaderCommon.CommonUniforms,
-  },
-};
 
-const shader = ShaderCommon.getShader( canvas.gl, ShaderInfo.Solid );
+const shader = ShaderCommon.getShader( canvas.gl, ShaderCommon.SolidColor );
 
 const modelMatrix = mat4.fromRotationTranslationScale( 
   mat4.create(), 
@@ -114,8 +106,8 @@ function drawEntity( gl, entity ) {
 
   gl.bindBuffer( gl.ARRAY_BUFFER, mesh.vertexBuffer );
   gl.bindBuffer( gl.ELEMENT_ARRAY_BUFFER, mesh.indexBuffer );
-  gl.vertexAttribPointer( shader.attribLocations.vertexPosition, 3, gl.FLOAT, false, 0, 0 );
-  gl.enableVertexAttribArray( shader.attribLocations.vertexPosition );
+  gl.vertexAttribPointer( shader.attribLocations.position, 3, gl.FLOAT, false, 0, 0 );
+  gl.enableVertexAttribArray( shader.attribLocations.position );
 
   gl.drawElements( gl.TRIANGLES, mesh.indexLength, gl.UNSIGNED_SHORT, 0 );
 }

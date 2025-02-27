@@ -1,56 +1,29 @@
-export const CommonVertexShader = /*glsl*/`# version 300 es
-  in vec4 vertexPosition;
+export const SolidColor = {
+  vertex: /*glsl*/`# version 300 es
+    in vec4 position;
 
-  uniform mat4 mvp;
+    uniform mat4 mvp;
 
-  out vec4 v_pos;
+    void main() {
+      gl_Position = mvp * position;
+    }
+  `,
+  fragment: /*glsl*/ `# version 300 es
+    precision mediump float;
 
-  void main() {
-    v_pos = vertexPosition;
-    gl_Position = mvp * vertexPosition;
-  }
-`;
+    uniform vec3 color;
 
-export const CommonFragmentShader = /*glsl*/ `# version 300 es
-  precision mediump float;
+    out vec4 outColor;
 
-  in vec4 v_pos;
-
-  uniform vec3 color;
-
-  out vec4 outColor;
-
-  void main() {
-    outColor.xyz = color;
-  }
-`;
-
-export const CommonAttributes = [ 'vertexPosition' ];
-export const CommonUniforms = [ 'mvp', 'color' ];
-
-export function getShader( gl, shaderInfo ) {
-  const program = initShaderProgram( gl, shaderInfo.vertexShader, shaderInfo.fragmentShader );
-  
-  const attribLocations = {};
-  shaderInfo.attributes.forEach( attribName => 
-    attribLocations[ attribName ] = gl.getAttribLocation( program, attribName ) 
-  );
-  
-  const uniformLocations = {};
-  shaderInfo.uniforms.forEach( uniformName => 
-    uniformLocations[ uniformName ] = gl.getUniformLocation( program, uniformName ) 
-  );
-  
-  return {
-    program: program,
-    attribLocations: attribLocations,
-    uniformLocations: uniformLocations,
-  };
+    void main() {
+      outColor.xyz = color;
+    }
+  `,
 }
 
-function initShaderProgram( gl, vsSource, fsSource ) {
-  const vertexShader = loadShader( gl, gl.VERTEX_SHADER, vsSource );
-  const fragmentShader = loadShader( gl, gl.FRAGMENT_SHADER, fsSource );
+export function getShader( gl, shaderInfo ) {
+  const vertexShader = loadShader( gl, gl.VERTEX_SHADER, shaderInfo.vertex );
+  const fragmentShader = loadShader( gl, gl.FRAGMENT_SHADER, shaderInfo.fragment );
 
   const shaderProgram = gl.createProgram();
   gl.attachShader( shaderProgram, vertexShader );
@@ -62,7 +35,39 @@ function initShaderProgram( gl, vsSource, fsSource ) {
     return null;
   }
   else {
-    return shaderProgram;
+    const lines = shaderInfo.vertex.split( '\n' ).concat( shaderInfo.fragment.split( '\n' ) );
+
+    const attributes = new Set();
+    const uniforms = new Set();
+
+    lines.forEach( line => {
+      const aMatch = line.match( /^\s*in\s+\S+\s+(\S+);/ );
+      if ( aMatch ) {
+        attributes.add( aMatch[ 1 ] );
+      }
+      else {
+        const uMatch = line.match( /^\s*uniform\s+\S+\s+(\S+);/ );
+        if ( uMatch ) {
+          uniforms.add( uMatch[ 1 ] );
+        }
+      }
+    } );
+
+    const attribLocations = {};
+    attributes.forEach( attribName => 
+      attribLocations[ attribName ] = gl.getAttribLocation( shaderProgram, attribName ) 
+    );
+    
+    const uniformLocations = {};
+    uniforms.forEach( uniformName => 
+      uniformLocations[ uniformName ] = gl.getUniformLocation( shaderProgram, uniformName ) 
+    );
+
+    return {
+      program: shaderProgram,
+      attribLocations: attribLocations,
+      uniformLocations: uniformLocations,
+    }
   }
 }
 
