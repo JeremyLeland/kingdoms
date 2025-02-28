@@ -44,7 +44,7 @@ const Meshes = {
 };
 
 
-const shader = ShaderCommon.getShader( canvas.gl, ShaderCommon.UVColor );
+const shader = ShaderCommon.getShader( canvas.gl, ShaderCommon.NormalColor );
 
 const modelMatrix = mat4.fromRotationTranslationScale( 
   mat4.create(), 
@@ -56,7 +56,7 @@ const modelMatrix = mat4.fromRotationTranslationScale(
 
 const entities = [
   { type: 'Wood', pos: [ 0, 1, 0 ], rot: [ 0, 1, 0 ] },
-  { type: 'Stone', pos: [ 1, 0, 0 ], rot: [ 0, 2, 0 ] },
+  { type: 'Stone', pos: [ 1, -1, 0 ], rot: [ 0, 1, 0 ] },
 ];
 
 let angle = 0;
@@ -107,11 +107,16 @@ function drawEntity( gl, entity ) {
   gl.vertexAttribPointer( shader.attribLocations.position, 3, gl.FLOAT, false, 0, 0 );
   gl.enableVertexAttribArray( shader.attribLocations.position );
 
-  gl.bindBuffer( gl.ARRAY_BUFFER, mesh.uvBuffer );
-  gl.vertexAttribPointer( shader.attribLocations.uv, 2, gl.FLOAT, false, 0, 0 );
-  gl.enableVertexAttribArray( shader.attribLocations.uv );
+  gl.bindBuffer( gl.ARRAY_BUFFER, mesh.normalBuffer );
+  gl.vertexAttribPointer( shader.attribLocations.normal, 3, gl.FLOAT, false, 0, 0 );
+  gl.enableVertexAttribArray( shader.attribLocations.normal );
 
-  gl.bindBuffer( gl.ELEMENT_ARRAY_BUFFER, mesh.indexBuffer );
+  // gl.bindBuffer( gl.ARRAY_BUFFER, mesh.uvBuffer );
+  // gl.vertexAttribPointer( shader.attribLocations.uv, 2, gl.FLOAT, false, 0, 0 );
+  // gl.enableVertexAttribArray( shader.attribLocations.uv );
+
+  // Don't need this if already done in setup?
+  // gl.bindBuffer( gl.ELEMENT_ARRAY_BUFFER, mesh.indexBuffer );
 
   gl.drawElements( gl.TRIANGLES, mesh.length, gl.UNSIGNED_SHORT, 0 );
 }

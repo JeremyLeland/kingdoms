@@ -35,8 +35,45 @@ export function Box( width, height, depth ) {
       -1, -1,  1,
        1, -1,  1,
        1, -1, -1,
-      -1, -1, -1
+      -1, -1, -1,
     ].map( ( value, index ) => value * [ width, height, depth ][ index % 3 ] / 2 ),
+    normals: [
+      // Front
+       0,  0,  1,
+       0,  0,  1,
+       0,  0,  1,
+       0,  0,  1,
+
+      // Right
+       1,  0,  0,
+       1,  0,  0,
+       1,  0,  0,
+       1,  0,  0,
+
+      // Back
+       0,  0, -1,
+       0,  0, -1,
+       0,  0, -1,
+       0,  0, -1,
+
+      // Left
+      -1,  0,  0,
+      -1,  0,  0,
+      -1,  0,  0,
+      -1,  0,  0,
+
+      // Top
+       0, -1,  0,
+       0, -1,  0,
+       0, -1,  0,
+       0, -1,  0,
+
+      // Bottom
+       0,  1,  0,
+       0,  1,  0,
+       0,  1,  0,
+       0,  1,  0,
+    ],
     uvs: [
       // front
       0, 0,
@@ -105,6 +142,7 @@ export function Box( width, height, depth ) {
 export function getMesh( gl, meshInfo ) {  
   return {
     positionBuffer: createArrayBuffer( gl, meshInfo.positions ),
+    normalBuffer: createArrayBuffer( gl, meshInfo.normals ),
     uvBuffer: createArrayBuffer( gl, meshInfo.uvs ),
     indexBuffer: createIndexBuffer( gl, meshInfo.indices ),
     length: meshInfo.indices.length,

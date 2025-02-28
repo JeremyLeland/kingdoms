@@ -47,6 +47,33 @@ export const PositionColor = {
   `,
 }
 
+export const NormalColor = {
+  vertex: /*glsl*/`# version 300 es
+    in vec4 position;
+    in vec3 normal;
+
+    uniform mat4 mvp;
+
+    out vec3 v_norm;
+
+    void main() {
+      gl_Position = mvp * position;
+      v_norm = normal;
+    }
+  `,
+  fragment: /*glsl*/ `# version 300 es
+    precision mediump float;
+
+    in vec3 v_norm;
+
+    out vec4 outColor;
+
+    void main() {
+      outColor = vec4( v_norm, 1.0 );
+    }
+  `,
+}
+
 export const UVColor = {
   vertex: /*glsl*/`# version 300 es
     in vec4 position;
