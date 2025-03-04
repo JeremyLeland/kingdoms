@@ -53,12 +53,13 @@ export const NormalColor = {
     in vec3 normal;
 
     uniform mat4 mvp;
+    uniform mat4 normalMatrix;
 
     out vec3 v_norm;
 
     void main() {
       gl_Position = mvp * position;
-      v_norm = normal;
+      v_norm = ( normalMatrix * vec4( normal, 1.0 ) ).xyz;
     }
   `,
   fragment: /*glsl*/ `# version 300 es

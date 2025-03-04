@@ -46,24 +46,19 @@ const Meshes = {
 
 const shader = ShaderCommon.getShader( canvas.gl, ShaderCommon.NormalColor );
 
-const modelMatrix = mat4.fromRotationTranslationScale( 
-  mat4.create(), 
-  [ 0, 0, 0, 0 ],
-  [ 0, 0, 0 ],
-  [ 1, 1, 1 ],
-);
-
-
 const entities = [
-  { type: 'Wood', pos: [ 0, 1, 0 ], rot: [ 0, 1, 0 ] },
-  { type: 'Stone', pos: [ 1, -1, 0 ], rot: [ 0, 1, 0 ] },
+  { type: 'Wood', pos: [ 0, 1, 0 ], rot: [ 1, 0, 0 ] },
+  { type: 'Stone', pos: [ 1, -1, 0 ], rot: [ 0, 2, 0 ] },
+  { type: 'Stone', pos: [ -1, -1, -1 ], rot: [ 0, 0, 3 ] },
+  { type: 'Stone', pos: [ -2, -2, -2 ], rot: [ 0, 1, 0 ] },
+  { type: 'Stone', pos: [ 0, 0, 0 ], rot: [ 2, 0, 0 ] },
 ];
 
 let angle = 0;
 
 canvas.update = ( dt ) => {
   entities.forEach( entity => {
-    entity.rot[ 1 ] += dt / 1000;
+    entity.rot[ 0 ] += dt / 1000;
   } );
 }
 
@@ -85,22 +80,29 @@ canvas.draw = ( gl ) => {
 
 canvas.start();
 
+const modelMatrix = mat4.create();
 const mvp = mat4.create();
+const normalMatrix = mat4.create();
 
 function drawEntity( gl, entity ) {
   const mesh = Meshes[ entity.type ];
   // const shader = shader;
 
-  mat4.fromRotationTranslation(
-    modelMatrix,
-    [ Math.cos( entity.rot[ 1 ] / 2 ), 0, Math.sin( entity.rot[ 1 ] / 2 ), 0 ],
-    entity.pos,
-  );
+  mat4.fromTranslation( modelMatrix, entity.pos );
+  mat4.rotate( modelMatrix, modelMatrix, entity.rot[ 2 ], [ 0, 0, 1 ] );
+  mat4.rotate( modelMatrix, modelMatrix, entity.rot[ 1 ], [ 0, 1, 0 ] );
+  mat4.rotate( modelMatrix, modelMatrix, entity.rot[ 0 ], [ 1, 0, 0 ] );
 
   mat4.multiply( mvp, projViewMatrix, modelMatrix );
 
+  const modelViewMatrix = mat4.multiply( mat4.create(), viewMatrix, modelMatrix );
+  mat4.invert( normalMatrix, modelViewMatrix );
+  mat4.transpose( normalMatrix, normalMatrix );
+
+
   gl.useProgram( shader.program );
   gl.uniformMatrix4fv( shader.uniformLocations.mvp, false, mvp );
+  gl.uniformMatrix4fv( shader.uniformLocations.normalMatrix, false, normalMatrix );
   // gl.uniform3fv( shader.uniformLocations.color, Info[ entity.type ].color );
 
   gl.bindBuffer( gl.ARRAY_BUFFER, mesh.positionBuffer );

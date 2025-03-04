@@ -1,7 +1,7 @@
 export function Box( width, height, depth ) {
   return {
     positions: [
-      // Front
+      // Back
       -1, -1, -1,
        1, -1, -1,
        1,  1, -1,
@@ -13,7 +13,7 @@ export function Box( width, height, depth ) {
        1,  1,  1,
        1,  1, -1,
 
-      // Back
+      // Front
        1, -1,  1,
       -1, -1,  1,
       -1,  1,  1,
@@ -38,11 +38,11 @@ export function Box( width, height, depth ) {
       -1, -1, -1,
     ].map( ( value, index ) => value * [ width, height, depth ][ index % 3 ] / 2 ),
     normals: [
-      // Front
-       0,  0,  1,
-       0,  0,  1,
-       0,  0,  1,
-       0,  0,  1,
+      // Back
+       0,  0,  -1,
+       0,  0,  -1,
+       0,  0,  -1,
+       0,  0,  -1,
 
       // Right
        1,  0,  0,
@@ -50,11 +50,11 @@ export function Box( width, height, depth ) {
        1,  0,  0,
        1,  0,  0,
 
-      // Back
-       0,  0, -1,
-       0,  0, -1,
-       0,  0, -1,
-       0,  0, -1,
+      // Front
+       0,  0,  1,
+       0,  0,  1,
+       0,  0,  1,
+       0,  0,  1,
 
       // Left
       -1,  0,  0,
@@ -63,19 +63,19 @@ export function Box( width, height, depth ) {
       -1,  0,  0,
 
       // Top
-       0, -1,  0,
-       0, -1,  0,
-       0, -1,  0,
-       0, -1,  0,
+       0, 1,  0,
+       0, 1,  0,
+       0, 1,  0,
+       0, 1,  0,
 
       // Bottom
-       0,  1,  0,
-       0,  1,  0,
-       0,  1,  0,
-       0,  1,  0,
+       0, -1,  0,
+       0, -1,  0,
+       0, -1,  0,
+       0, -1,  0,
     ],
     uvs: [
-      // front
+      // back
       0, 0,
       1, 0,
       1, 1,
@@ -87,7 +87,7 @@ export function Box( width, height, depth ) {
       1, 1,
       0, 1,
 
-      // back
+      // front
       0, 0,
       1, 0,
       1, 1,
@@ -112,7 +112,7 @@ export function Box( width, height, depth ) {
       0, 1,
     ],
     indices: [
-      // front
+      // back
       0, 1, 2, 
       0, 2, 3,
 
@@ -120,7 +120,7 @@ export function Box( width, height, depth ) {
       4, 5, 6, 
       4, 6, 7,
       
-      // back
+      // front
       8, 9, 10, 
       8, 10, 11,
       
