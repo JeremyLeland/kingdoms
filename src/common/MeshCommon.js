@@ -39,10 +39,10 @@ export function Box( width, height, depth ) {
     ].map( ( value, index ) => value * [ width, height, depth ][ index % 3 ] / 2 ),
     normals: [
       // Back
-       0,  0,  -1,
-       0,  0,  -1,
-       0,  0,  -1,
-       0,  0,  -1,
+       0,  0, -1,
+       0,  0, -1,
+       0,  0, -1,
+       0,  0, -1,
 
       // Right
        1,  0,  0,
@@ -63,10 +63,10 @@ export function Box( width, height, depth ) {
       -1,  0,  0,
 
       // Top
-       0, 1,  0,
-       0, 1,  0,
-       0, 1,  0,
-       0, 1,  0,
+       0,  1,  0,
+       0,  1,  0,
+       0,  1,  0,
+       0,  1,  0,
 
       // Bottom
        0, -1,  0,
@@ -137,6 +137,61 @@ export function Box( width, height, depth ) {
       20, 22, 23
     ]
   }
+}
+
+// TODO: Width, height, depth?
+export function Sphere( radius, widthSegments, heightSegments, phiStart, phiLength, thetaStart, thetaLength ) {
+
+  const sphere = {
+    positions: [],
+    normals: [],
+    indices: [],
+  }
+
+  for ( let theta = thetaStart; theta <= thetaStart + thetaLength; theta += thetaLength / heightSegments ) {
+    for ( let phi = phiStart; phi <= phiStart + phiLength; phi += phiLength / widthSegments ) {
+      const x = radius * Math.cos( phi ) * Math.sin( theta );
+      const y = radius * Math.cos( theta );
+      const z = radius * Math.sin( phi ) * Math.sin( theta );
+
+      sphere.positions.push( x, y, z );
+      sphere.normals.push( x, y, z );
+    }
+  }
+
+  for ( let row = 0; row < heightSegments; row ++ ) {
+    for ( let col = 0; col < widthSegments; col ++ ) {
+      if ( row == 0 ) {
+        sphere.indices.push( 
+          col, 
+          widthSegments + 1 + col, 
+          widthSegments + 1 + col + 1,
+        );
+      }
+      else if ( row == heightSegments - 1 ) {
+        sphere.indices.push( 
+          ( widthSegments + 1 ) * row + col, 
+          ( widthSegments + 1 ) * row + col + 1, 
+          ( widthSegments + 1 ) * ( row + 1 ) + col,
+        );
+      }
+      else {
+        sphere.indices.push( 
+          ( widthSegments + 1 ) * row + col,
+          ( widthSegments + 1 ) * ( row + 1 ) + col,
+          ( widthSegments + 1 ) * ( row + 1 ) + col + 1,
+        );
+
+        sphere.indices.push( 
+          ( widthSegments + 1 ) * row + col,
+          ( widthSegments + 1 ) * row + col + 1,
+          ( widthSegments + 1 ) * ( row + 1 ) + col + 1,
+        );
+      }
+    }
+  }
+
+  return sphere;
 }
 
 export function getMesh( gl, meshInfo ) {  

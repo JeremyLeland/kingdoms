@@ -1,4 +1,4 @@
-<title>WebGL test</title>
+<title>Sphere geometry test</title>
 <link rel="stylesheet" href="../style.css">
 
 <script type="module">
@@ -12,60 +12,22 @@ const canvas = new GLCanvas();
 
 const viewMatrix = mat4.lookAt(
   mat4.create(),
-  [ 3, 4, 5 ],
+  [ 0, 0, 5 ],
   [ 0, 0, 0 ],
   [ 0, 1, 0 ],
 );
 
+const meshInfo = MeshCommon.Sphere( 1, 8, 8, 0, Math.PI * 2, 0, Math.PI );
 
-// TODO: Pass lighting info into shader
-// TODO: Sphere mesh (for better lighting testing)
-// TODO: Person from spheres
-// TODO: Person carrying wood or stone
-// TODO: Person picking up and setting down wood/stone
-
-const Info = {
-  Stone: {
-    width: 0.5,
-    height: 0.4,
-    depth: 0.3,
-    color: [ 0.4, 0.4, 0.4 ],
-  },
-  Wood: {
-    width: 1,
-    height: 0.1,
-    depth: 0.2,
-    color: [ 0.5, 0.2, 0.0 ],
-  },
-};
-
-const MeshInfo = {
-  Stone: MeshCommon.Box( Info.Stone.width, Info.Stone.height, Info.Stone.depth ),
-  Wood: MeshCommon.Box( Info.Wood.width, Info.Wood.height, Info.Wood.depth ),
-};
-
-const Meshes = {
-  Stone: MeshCommon.getMesh( canvas.gl, MeshInfo.Stone ),
-  Wood: MeshCommon.getMesh( canvas.gl, MeshInfo.Wood ),
-};
-
+const mesh = MeshCommon.getMesh( canvas.gl, meshInfo );
 
 const shader = ShaderCommon.getShader( canvas.gl, ShaderCommon.BasicLighting );
 
-const entities = [
-  { type: 'Wood', pos: [ 0, 1, 0 ], rot: [ 1, 0, 0 ] },
-  { type: 'Stone', pos: [ 1, -1, 0 ], rot: [ 0, 2, 0 ] },
-  { type: 'Stone', pos: [ -1, -1, -1 ], rot: [ 0, 0, 3 ] },
-  { type: 'Stone', pos: [ -2, -2, -2 ], rot: [ 0, 1, 0 ] },
-  { type: 'Stone', pos: [ 0, 0, 0 ], rot: [ 2, 0, 0 ] },
-];
 
 let angle = 0;
 
 canvas.update = ( dt ) => {
-  entities.forEach( entity => {
-    entity.rot[ 0 ] += dt / 1000;
-  } );
+  angle += dt / 1000;
 }
 
 const projectionMatrix = mat4.create();
@@ -79,9 +41,7 @@ canvas.draw = ( gl ) => {
   mat4.perspective( projectionMatrix, fieldOfView, canvas.canvas.width / canvas.canvas.height, zNear, zFar );
   mat4.multiply( projViewMatrix, projectionMatrix, viewMatrix );
 
-  entities.forEach( entity => {
-    drawEntity( gl, entity );
-  } );
+  drawSphere( gl );
 }
 
 canvas.start();
@@ -90,14 +50,12 @@ const modelMatrix = mat4.create();
 const mvp = mat4.create();
 const normalMatrix = mat4.create();
 
-function drawEntity( gl, entity ) {
-  const mesh = Meshes[ entity.type ];
-  // const shader = shader;
-
-  mat4.fromTranslation( modelMatrix, entity.pos );
-  mat4.rotate( modelMatrix, modelMatrix, entity.rot[ 2 ], [ 0, 0, 1 ] );
-  mat4.rotate( modelMatrix, modelMatrix, entity.rot[ 1 ], [ 0, 1, 0 ] );
-  mat4.rotate( modelMatrix, modelMatrix, entity.rot[ 0 ], [ 1, 0, 0 ] );
+function drawSphere( gl ) {
+  
+  mat4.fromTranslation( modelMatrix, [ 0, 0, 0 ] );
+  mat4.rotate( modelMatrix, modelMatrix, 0, [ 0, 0, 1 ] );
+  mat4.rotate( modelMatrix, modelMatrix, angle, [ 0, 1, 0 ] );
+  mat4.rotate( modelMatrix, modelMatrix, 0, [ 1, 0, 0 ] );
 
   mat4.multiply( mvp, projViewMatrix, modelMatrix );
 

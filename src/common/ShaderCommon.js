@@ -102,6 +102,43 @@ export const UVColor = {
   `,
 }
 
+export const BasicLighting = {
+  vertex: /*glsl*/`# version 300 es
+    in vec4 position;
+    in vec3 normal;
+
+    uniform mat4 mvp;
+    uniform mat4 normalMatrix;
+
+    out vec3 v_norm;
+
+    void main() {
+      gl_Position = mvp * position;
+      v_norm = ( normalMatrix * vec4( normal, 1.0 ) ).xyz;
+    }
+  `,
+  fragment: /*glsl*/ `# version 300 es
+    precision mediump float;
+
+    in vec3 v_norm;
+
+    out vec4 outColor;
+
+    void main() {
+
+      vec3 ambientLight = vec3(0.3, 0.3, 0.3);
+      vec3 directionalLightColor = vec3(1, 1, 1);
+      vec3 directionalVector = normalize(vec3(0.85, 0.8, 0.75));
+
+      vec3 normal = normalize( v_norm );
+
+      float directional = max( dot( normal, directionalVector ), 0.0 );
+
+      outColor = vec4( ambientLight + directionalLightColor * directional, 1.0 );
+    }
+  `,
+}
+
 export function getShader( gl, shaderInfo ) {
   const vertexShader = loadShader( gl, gl.VERTEX_SHADER, shaderInfo.vertex );
   const fragmentShader = loadShader( gl, gl.FRAGMENT_SHADER, shaderInfo.fragment );
