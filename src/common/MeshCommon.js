@@ -140,7 +140,7 @@ export function Box( width, height, depth ) {
 }
 
 // TODO: Width, height, depth?
-export function Sphere( radius, widthSegments, heightSegments, phiStart, phiLength, thetaStart, thetaLength ) {
+export function Sphere( radius, widthSegments = 32, heightSegments = 32, phiStart = 0, phiLength = Math.PI * 2, thetaStart = 0, thetaLength = Math.PI ) {
   const sphere = {
     positions: [],
     normals: [],

@@ -12,14 +12,13 @@ const canvas = new GLCanvas();
 
 const viewMatrix = mat4.lookAt(
   mat4.create(),
-  [ 3, 4, 5 ],
+  [ 0, 0, 5 ],
   [ 0, 0, 0 ],
   [ 0, 1, 0 ],
 );
 
 
 // TODO: Pass lighting info into shader
-// TODO: Sphere mesh (for better lighting testing)
 // TODO: Person from spheres
 // TODO: Person carrying wood or stone
 // TODO: Person picking up and setting down wood/stone
@@ -37,16 +36,21 @@ const Info = {
     depth: 0.2,
     color: [ 0.5, 0.2, 0.0 ],
   },
+  Sphere: {
+    color: [ 0.7, 0.6, 0.5 ],
+  }
 };
 
 const MeshInfo = {
   Stone: MeshCommon.Box( Info.Stone.width, Info.Stone.height, Info.Stone.depth ),
   Wood: MeshCommon.Box( Info.Wood.width, Info.Wood.height, Info.Wood.depth ),
+  Sphere: MeshCommon.Sphere( 0.3 ),
 };
 
 const Meshes = {
   Stone: MeshCommon.getMesh( canvas.gl, MeshInfo.Stone ),
   Wood: MeshCommon.getMesh( canvas.gl, MeshInfo.Wood ),
+  Sphere: MeshCommon.getMesh( canvas.gl, MeshInfo.Sphere ),
 };
 
 
@@ -58,6 +62,7 @@ const entities = [
   { type: 'Stone', pos: [ -1, -1, -1 ], rot: [ 0, 0, 3 ] },
   { type: 'Stone', pos: [ -2, -2, -2 ], rot: [ 0, 1, 0 ] },
   { type: 'Stone', pos: [ 0, 0, 0 ], rot: [ 2, 0, 0 ] },
+  { type: 'Sphere', pos: [ 1, 0, 0 ], rot: [ 0, 0, 0 ] },
 ];
 
 let angle = 0;
@@ -92,7 +97,6 @@ const normalMatrix = mat4.create();
 
 function drawEntity( gl, entity ) {
   const mesh = Meshes[ entity.type ];
-  // const shader = shader;
 
   mat4.fromTranslation( modelMatrix, entity.pos );
   mat4.rotate( modelMatrix, modelMatrix, entity.rot[ 2 ], [ 0, 0, 1 ] );
@@ -109,7 +113,7 @@ function drawEntity( gl, entity ) {
   gl.useProgram( shader.program );
   gl.uniformMatrix4fv( shader.uniformLocations.mvp, false, mvp );
   gl.uniformMatrix4fv( shader.uniformLocations.normalMatrix, false, normalMatrix );
-  // gl.uniform3fv( shader.uniformLocations.color, Info[ entity.type ].color );
+  gl.uniform3fv( shader.uniformLocations.color, Info[ entity.type ].color );
 
   gl.bindBuffer( gl.ARRAY_BUFFER, mesh.positionBuffer );
   gl.vertexAttribPointer( shader.attribLocations.position, 3, gl.FLOAT, false, 0, 0 );
@@ -123,9 +127,7 @@ function drawEntity( gl, entity ) {
   // gl.vertexAttribPointer( shader.attribLocations.uv, 2, gl.FLOAT, false, 0, 0 );
   // gl.enableVertexAttribArray( shader.attribLocations.uv );
 
-  // Don't need this if already done in setup?
-  // gl.bindBuffer( gl.ELEMENT_ARRAY_BUFFER, mesh.indexBuffer );
-
+  gl.bindBuffer( gl.ELEMENT_ARRAY_BUFFER, mesh.indexBuffer );
   gl.drawElements( gl.TRIANGLES, mesh.length, gl.UNSIGNED_SHORT, 0 );
 }
 

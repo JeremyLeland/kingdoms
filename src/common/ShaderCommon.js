@@ -122,6 +122,8 @@ export const BasicLighting = {
 
     in vec3 v_norm;
 
+    uniform vec3 color;
+
     out vec4 outColor;
 
     void main() {
@@ -134,7 +136,7 @@ export const BasicLighting = {
 
       float directional = max( dot( normal, directionalVector ), 0.0 );
 
-      outColor = vec4( ambientLight + directionalLightColor * directional, 1.0 );
+      outColor = vec4( color * ( ambientLight + directionalLightColor * directional ), 1.0 );
     }
   `,
 }
