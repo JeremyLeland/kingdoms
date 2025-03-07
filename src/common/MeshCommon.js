@@ -141,15 +141,17 @@ export function Box( width, height, depth ) {
 
 // TODO: Width, height, depth?
 export function Sphere( radius, widthSegments, heightSegments, phiStart, phiLength, thetaStart, thetaLength ) {
-
   const sphere = {
     positions: [],
     normals: [],
     indices: [],
   }
 
-  for ( let theta = thetaStart; theta <= thetaStart + thetaLength; theta += thetaLength / heightSegments ) {
-    for ( let phi = phiStart; phi <= phiStart + phiLength; phi += phiLength / widthSegments ) {
+  for ( let row = 0; row <= heightSegments; row ++ ) {
+    for ( let col = 0; col <= widthSegments; col ++ ) {
+      const phi   = phiStart   + phiLength   * col / widthSegments;
+      const theta = thetaStart + thetaLength * row / heightSegments;
+
       const x = radius * Math.cos( phi ) * Math.sin( theta );
       const y = radius * Math.cos( theta );
       const z = radius * Math.sin( phi ) * Math.sin( theta );

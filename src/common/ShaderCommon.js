@@ -128,7 +128,7 @@ export const BasicLighting = {
 
       vec3 ambientLight = vec3(0.3, 0.3, 0.3);
       vec3 directionalLightColor = vec3(1, 1, 1);
-      vec3 directionalVector = normalize(vec3(0.85, 0.8, 0.75));
+      vec3 directionalVector = normalize( vec3( 1, 1, 1 ) );
 
       vec3 normal = normalize( v_norm );
 

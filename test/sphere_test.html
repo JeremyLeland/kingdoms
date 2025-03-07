@@ -12,15 +12,16 @@ const canvas = new GLCanvas();
 
 const viewMatrix = mat4.lookAt(
   mat4.create(),
-  [ 0, 0, 5 ],
+  [ 5, 5, 5 ],
   [ 0, 0, 0 ],
   [ 0, 1, 0 ],
 );
 
-const meshInfo = MeshCommon.Sphere( 1, 8, 8, 0, Math.PI * 2, 0, Math.PI );
+const meshInfo = MeshCommon.Sphere( 1, 32, 32, 0, Math.PI * 2, 0, Math.PI );
 
 const mesh = MeshCommon.getMesh( canvas.gl, meshInfo );
 
+// const shader = ShaderCommon.getShader( canvas.gl, ShaderCommon.PositionColor );
 const shader = ShaderCommon.getShader( canvas.gl, ShaderCommon.BasicLighting );
 
 
