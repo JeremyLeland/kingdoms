@@ -36,7 +36,7 @@ export function Box( width, height, depth ) {
        1, -1,  1,
        1, -1, -1,
       -1, -1, -1,
-    ].map( ( value, index ) => value * [ width, height, depth ][ index % 3 ] / 2 ),
+    ],
     normals: [
       // Back
        0,  0, -1,
@@ -140,7 +140,7 @@ export function Box( width, height, depth ) {
 }
 
 // TODO: Width, height, depth?
-export function Sphere( radius, widthSegments = 32, heightSegments = 32, phiStart = 0, phiLength = Math.PI * 2, thetaStart = 0, thetaLength = Math.PI ) {
+export function Sphere( widthSegments = 32, heightSegments = 32, phiStart = 0, phiLength = Math.PI * 2, thetaStart = 0, thetaLength = Math.PI ) {
   const sphere = {
     positions: [],
     normals: [],
@@ -152,9 +152,9 @@ export function Sphere( radius, widthSegments = 32, heightSegments = 32, phiStar
       const phi   = phiStart   + phiLength   * col / widthSegments;
       const theta = thetaStart + thetaLength * row / heightSegments;
 
-      const x = radius * Math.cos( phi ) * Math.sin( theta );
-      const y = radius * Math.cos( theta );
-      const z = radius * Math.sin( phi ) * Math.sin( theta );
+      const x = Math.cos( phi ) * Math.sin( theta );
+      const y = Math.cos( theta );
+      const z = Math.sin( phi ) * Math.sin( theta );
 
       sphere.positions.push( x, y, z );
       sphere.normals.push( x, y, z );

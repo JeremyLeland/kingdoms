@@ -25,32 +25,40 @@ const viewMatrix = mat4.lookAt(
 
 const Info = {
   Stone: {
-    width: 0.5,
-    height: 0.4,
-    depth: 0.3,
+    scale: [ 0.3, 0.2, 0.1 ],
     color: [ 0.4, 0.4, 0.4 ],
   },
   Wood: {
-    width: 1,
-    height: 0.1,
-    depth: 0.2,
+    scale: [ 0.5, 0.05, 0.1 ],
     color: [ 0.5, 0.2, 0.0 ],
   },
-  Sphere: {
+  Head: {
+    scale: [ 0.3, 0.3, 0.3 ],
     color: [ 0.7, 0.6, 0.5 ],
+  },
+  Cube: {
+    color: [ 0.1, 0.6, 0.5 ],
+  },
+  Body: {
+    scale: [ 0.5, 0.5, 0.5 ],
+    color: [ 0.1, 0.2, 0.4 ],
   }
 };
 
 const MeshInfo = {
   Stone: MeshCommon.Box( Info.Stone.width, Info.Stone.height, Info.Stone.depth ),
   Wood: MeshCommon.Box( Info.Wood.width, Info.Wood.height, Info.Wood.depth ),
-  Sphere: MeshCommon.Sphere( 0.3 ),
+  Head: MeshCommon.Sphere(),
+  Cube: MeshCommon.Box( 1, 1, 1 ),
+  Body: MeshCommon.Sphere( 32, 32, 0, Math.PI * 2, 0, Math.PI / 2 ),
 };
 
 const Meshes = {
   Stone: MeshCommon.getMesh( canvas.gl, MeshInfo.Stone ),
   Wood: MeshCommon.getMesh( canvas.gl, MeshInfo.Wood ),
-  Sphere: MeshCommon.getMesh( canvas.gl, MeshInfo.Sphere ),
+  Head: MeshCommon.getMesh( canvas.gl, MeshInfo.Head ),
+  Cube: MeshCommon.getMesh( canvas.gl, MeshInfo.Cube ),
+  Body: MeshCommon.getMesh( canvas.gl, MeshInfo.Body ),
 };
 
 
@@ -62,15 +70,25 @@ const entities = [
   { type: 'Stone', pos: [ -1, -1, -1 ], rot: [ 0, 0, 3 ] },
   { type: 'Stone', pos: [ -2, -2, -2 ], rot: [ 0, 1, 0 ] },
   { type: 'Stone', pos: [ 0, 0, 0 ], rot: [ 2, 0, 0 ] },
-  { type: 'Sphere', pos: [ 1, 0, 0 ], rot: [ 0, 0, 0 ] },
+  { type: 'Head', pos: [ 1, 0, 0 ] },
+  { type: 'Body', pos: [ 1, 0, 0 ], scale: [ 1, 1, 1 ] },
 ];
 
-let angle = 0;
+let animationTime = 0;
 
 canvas.update = ( dt ) => {
-  entities.forEach( entity => {
-    entity.rot[ 0 ] += dt / 1000;
-  } );
+  animationTime += dt;
+
+  // entities.forEach( entity => {
+    entities[ 0 ].rot[ 0 ] += dt / 1000;
+  // } );
+
+
+  const scale = 2 + 0.5 * Math.sin( animationTime / 200 );
+
+  entities[ 5 ].pos[ 1 ] = scale / 2 + 0.2;
+  entities[ 6 ].scale[ 1 ] = scale;
+  // entities[ 6 ].pos[ 1 ] = 1 - 0.5 * Math.sin( animationTime / 500 );
 }
 
 const projectionMatrix = mat4.create();
@@ -97,11 +115,25 @@ const normalMatrix = mat4.create();
 
 function drawEntity( gl, entity ) {
   const mesh = Meshes[ entity.type ];
+  const info = Info[ entity.type ];
 
-  mat4.fromTranslation( modelMatrix, entity.pos );
-  mat4.rotate( modelMatrix, modelMatrix, entity.rot[ 2 ], [ 0, 0, 1 ] );
-  mat4.rotate( modelMatrix, modelMatrix, entity.rot[ 1 ], [ 0, 1, 0 ] );
-  mat4.rotate( modelMatrix, modelMatrix, entity.rot[ 0 ], [ 1, 0, 0 ] );
+  if ( entity.pos ) {
+    mat4.fromTranslation( modelMatrix, entity.pos );
+  }
+
+  if ( entity.rot ) {
+    mat4.rotate( modelMatrix, modelMatrix, entity.rot[ 2 ], [ 0, 0, 1 ] );
+    mat4.rotate( modelMatrix, modelMatrix, entity.rot[ 1 ], [ 0, 1, 0 ] );
+    mat4.rotate( modelMatrix, modelMatrix, entity.rot[ 0 ], [ 1, 0, 0 ] );
+  }
+
+  if ( entity.scale ) {
+    mat4.scale( modelMatrix, modelMatrix, entity.scale );
+  }
+
+  if ( info.scale ) {
+    mat4.scale( modelMatrix, modelMatrix, info.scale );
+  }
 
   mat4.multiply( mvp, projViewMatrix, modelMatrix );
 
@@ -113,7 +145,7 @@ function drawEntity( gl, entity ) {
   gl.useProgram( shader.program );
   gl.uniformMatrix4fv( shader.uniformLocations.mvp, false, mvp );
   gl.uniformMatrix4fv( shader.uniformLocations.normalMatrix, false, normalMatrix );
-  gl.uniform3fv( shader.uniformLocations.color, Info[ entity.type ].color );
+  gl.uniform3fv( shader.uniformLocations.color, info.color );
 
   gl.bindBuffer( gl.ARRAY_BUFFER, mesh.positionBuffer );
   gl.vertexAttribPointer( shader.attribLocations.position, 3, gl.FLOAT, false, 0, 0 );
