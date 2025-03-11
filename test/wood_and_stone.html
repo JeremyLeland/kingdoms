@@ -17,9 +17,8 @@ const viewMatrix = mat4.lookAt(
   [ 0, 1, 0 ],
 );
 
-
-// TODO: Pass lighting info into shader
-// TODO: Person from spheres
+// TODO: Orbit camera controls
+// TODO: Fix jagged edge of half-sphere (why is it missing lower row?)
 // TODO: Person carrying wood or stone
 // TODO: Person picking up and setting down wood/stone
 
@@ -46,10 +45,10 @@ const Info = {
 };
 
 const MeshInfo = {
-  Stone: MeshCommon.Box( Info.Stone.width, Info.Stone.height, Info.Stone.depth ),
-  Wood: MeshCommon.Box( Info.Wood.width, Info.Wood.height, Info.Wood.depth ),
+  Stone: MeshCommon.Cube(),
+  Wood: MeshCommon.Cube(),
   Head: MeshCommon.Sphere(),
-  Cube: MeshCommon.Box( 1, 1, 1 ),
+  Cube: MeshCommon.Cube(),
   Body: MeshCommon.Sphere( 32, 32, 0, Math.PI * 2, 0, Math.PI / 2 ),
 };
 
