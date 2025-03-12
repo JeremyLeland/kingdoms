@@ -20,7 +20,6 @@ const camera = {
 
 // TODO: Orbit camera controls
 // TODO: Pass lighting info into shader
-// TODO: Fix jagged edge of half-sphere (why is it missing lower row?)
 // TODO: Person carrying wood or stone
 // TODO: Person picking up and setting down wood/stone
 
@@ -89,7 +88,6 @@ canvas.update = ( dt ) => {
 
   entities[ 5 ].pos[ 1 ] = scale / 2 + 0.2;
   entities[ 6 ].scale[ 1 ] = scale;
-  // entities[ 6 ].pos[ 1 ] = 1 - 0.5 * Math.sin( animationTime / 500 );
 }
 
 const viewMatrix = mat4.create();

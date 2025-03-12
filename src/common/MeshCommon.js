@@ -162,33 +162,17 @@ export function Sphere( widthSegments = 32, heightSegments = 32, phiStart = 0, p
 
   for ( let row = 0; row < heightSegments; row ++ ) {
     for ( let col = 0; col < widthSegments; col ++ ) {
-      if ( row == 0 ) {
-        sphere.indices.push( 
-          col, 
-          widthSegments + 1 + col, 
-          widthSegments + 1 + col + 1,
-        );
-      }
-      else if ( row == heightSegments - 1 ) {
-        sphere.indices.push( 
-          ( widthSegments + 1 ) * row + col, 
-          ( widthSegments + 1 ) * row + col + 1, 
-          ( widthSegments + 1 ) * ( row + 1 ) + col,
-        );
-      }
-      else {
-        sphere.indices.push( 
-          ( widthSegments + 1 ) * row + col,
-          ( widthSegments + 1 ) * ( row + 1 ) + col,
-          ( widthSegments + 1 ) * ( row + 1 ) + col + 1,
-        );
+      sphere.indices.push( 
+        ( widthSegments + 1 ) * row + col,
+        ( widthSegments + 1 ) * ( row + 1 ) + col,
+        ( widthSegments + 1 ) * ( row + 1 ) + col + 1,
+      );
 
-        sphere.indices.push( 
-          ( widthSegments + 1 ) * row + col,
-          ( widthSegments + 1 ) * row + col + 1,
-          ( widthSegments + 1 ) * ( row + 1 ) + col + 1,
-        );
-      }
+      sphere.indices.push( 
+        ( widthSegments + 1 ) * row + col,
+        ( widthSegments + 1 ) * row + col + 1,
+        ( widthSegments + 1 ) * ( row + 1 ) + col + 1,
+      );
     }
   }
 
