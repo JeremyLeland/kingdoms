@@ -192,4 +192,13 @@ canvas.canvas.addEventListener( 'pointermove', e => {
   }
 } );
 
+const MIN_DIST = 1;
+const MAX_DIST = 20;
+const ZOOM_SENSIVITY = -200;
+canvas.canvas.addEventListener( 'wheel', e => {
+  camera.distance = Math.max( MIN_DIST, Math.min( MAX_DIST, camera.distance + e.wheelDelta / ZOOM_SENSIVITY ) );
+
+  updateViewMatrix();
+} );
+
 </script>
