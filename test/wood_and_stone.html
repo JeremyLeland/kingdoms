@@ -10,14 +10,16 @@ import * as ShaderCommon from '../src/common/ShaderCommon.js';
 
 const canvas = new GLCanvas();
 
-const viewMatrix = mat4.lookAt(
-  mat4.create(),
-  [ 0, 0, 5 ],
-  [ 0, 0, 0 ],
-  [ 0, 1, 0 ],
-);
+const camera = {
+  origin: [ 0, 0, 0 ],
+  distance: 5,
+  phi: Math.PI / 2,
+  theta: Math.PI / 2,
+}
+
 
 // TODO: Orbit camera controls
+// TODO: Pass lighting info into shader
 // TODO: Fix jagged edge of half-sphere (why is it missing lower row?)
 // TODO: Person carrying wood or stone
 // TODO: Person picking up and setting down wood/stone
@@ -90,6 +92,22 @@ canvas.update = ( dt ) => {
   // entities[ 6 ].pos[ 1 ] = 1 - 0.5 * Math.sin( animationTime / 500 );
 }
 
+const viewMatrix = mat4.create();
+
+function updateViewMatrix() {
+  const x = camera.distance * Math.cos( camera.phi ) * Math.sin( camera.theta );
+  const y = camera.distance * Math.cos( camera.theta );
+  const z = camera.distance * Math.sin( camera.phi ) * Math.sin( camera.theta );
+
+  mat4.lookAt(
+    viewMatrix,
+    [ x, y, z ],
+    [ 0, 0, 0 ],
+    [ 0, 1, 0 ],
+  );
+}
+updateViewMatrix();
+
 const projectionMatrix = mat4.create();
 const projViewMatrix = mat4.create();
 
@@ -161,5 +179,17 @@ function drawEntity( gl, entity ) {
   gl.bindBuffer( gl.ELEMENT_ARRAY_BUFFER, mesh.indexBuffer );
   gl.drawElements( gl.TRIANGLES, mesh.length, gl.UNSIGNED_SHORT, 0 );
 }
+
+const X_SENSITIVITY = 100;
+const Y_SENSTIVITY = -100;
+
+canvas.canvas.addEventListener( 'pointermove', e => {
+  if ( e.buttons == 1 ) {
+    camera.phi += e.movementX / X_SENSITIVITY;
+    camera.theta = Math.max( 1e-6, Math.min( Math.PI, camera.theta + e.movementY / Y_SENSTIVITY ) );
+
+    updateViewMatrix();
+  }
+} );
 
 </script>
