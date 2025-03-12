@@ -1,0 +1,199 @@
+<title>Multiple workers</title>
+<link rel="stylesheet" href="../style.css">
+
+<script type="module">
+
+import { mat4 } from '../lib/gl-matrix.js';
+import { GLCanvas } from '../src/common/GLCanvas.js';
+import * as MeshCommon from '../src/common/MeshCommon.js';
+import * as ShaderCommon from '../src/common/ShaderCommon.js';
+
+const canvas = new GLCanvas();
+
+const camera = {
+  origin: [ 0, 0, 0 ],
+  distance: 5,
+  phi: Math.PI / 2,
+  theta: Math.PI / 2,
+}
+
+// TODO: Why is lighting constant when we orbit? We should be able to see the dark side of things!
+
+
+const WorkerInfo = {
+  SkinColor: [ 0.7, 0.6, 0.5 ],
+  BodyRadius: 0.5,
+  BodyColor: [ 0.1, 0.2, 0.4 ],
+}
+
+const WorkerModel = {
+  Head: {
+    mesh: MeshCommon.Sphere(),
+    pos: [ 0, 1, 0 ],
+    scale: [ 0.3, 0.3, 0.3 ],
+    color: WorkerInfo.SkinColor,
+  },
+  Body: {
+    mesh: MeshCommon.Sphere( 32, 32, 0, Math.PI * 2, 0, Math.PI / 2 ),
+    scale: [ WorkerInfo.BodyRadius, WorkerInfo.BodyRadius, WorkerInfo.BodyRadius ],
+    color: WorkerInfo.BodyColor,
+  },
+  LeftHand: {
+    mesh: MeshCommon.Sphere(),
+    pos: [ WorkerInfo.BodyRadius, 0.5, -WorkerInfo.BodyRadius ],
+    scale: [ 0.1, 0.1, 0.1 ],
+    color: WorkerInfo.SkinColor,
+  },
+  RightHand: {
+    mesh: MeshCommon.Sphere(),
+    pos: [ WorkerInfo.BodyRadius, 0.5, WorkerInfo.BodyRadius ],
+    scale: [ 0.1, 0.1, 0.1 ],
+    color: WorkerInfo.SkinColor,
+  }
+  // TODO: Allow arrays like this? Maybe nesting eventually?
+  // Hands: [ -1, 1 ].map( offset => (
+  //   {
+  //     mesh: MeshCommon.Sphere(),
+  //     pos: [ offset, 0, 0 ],
+  //     scale: [ 0.1, 0.1, 0.1 ],
+  //     color: WorkerInfo.SkinColor,
+  //   }
+  // ) ),
+};
+
+const Meshes = new Map();
+
+const shader = ShaderCommon.getShader( canvas.gl, ShaderCommon.BasicLighting );
+
+const entities = [
+  { type: 'Worker', pos: [ 1, 0, 0 ], },
+  { type: 'Worker', pos: [ 0, 0, 1 ], rot: [ 0, -2, 0 ] },
+];
+
+let animationTime = 0;
+
+canvas.update = ( dt ) => {
+  animationTime += dt;
+
+
+  // const scale = 2 + 0.5 * Math.sin( animationTime / 200 );
+
+  // entities[ 5 ].pos[ 1 ] = scale / 2 + 0.2;
+  // entities[ 6 ].scale[ 1 ] = scale;
+}
+
+const viewMatrix = mat4.create();
+
+function updateViewMatrix() {
+  const x = camera.distance * Math.cos( camera.phi ) * Math.sin( camera.theta );
+  const y = camera.distance * Math.cos( camera.theta );
+  const z = camera.distance * Math.sin( camera.phi ) * Math.sin( camera.theta );
+
+  mat4.lookAt(
+    viewMatrix,
+    [ x, y, z ],
+    [ 0, 0, 0 ],
+    [ 0, 1, 0 ],
+  );
+}
+updateViewMatrix();
+
+const projectionMatrix = mat4.create();
+const projViewMatrix = mat4.create();
+
+canvas.draw = ( gl ) => {
+
+  const fieldOfView = 45 * Math.PI / 180; // in radians
+  const zNear = 0.1;
+  const zFar = 100.0;
+  mat4.perspective( projectionMatrix, fieldOfView, canvas.canvas.width / canvas.canvas.height, zNear, zFar );
+  mat4.multiply( projViewMatrix, projectionMatrix, viewMatrix );
+
+  entities.forEach( entity => {
+    drawWorker( gl, entity );
+  } );
+}
+
+canvas.start();
+
+const modelMatrix = mat4.create();
+const modelViewMatrix = mat4.create();
+const mvp = mat4.create();
+const normalMatrix = mat4.create();
+
+function applyTransforms( matrix, transform ) {
+  if ( transform.pos ) {
+    mat4.translate( matrix, matrix, transform.pos );
+  }
+
+  if ( transform.rot ) {
+    mat4.rotate( matrix, matrix, transform.rot[ 2 ], [ 0, 0, 1 ] );
+    mat4.rotate( matrix, matrix, transform.rot[ 1 ], [ 0, 1, 0 ] );
+    mat4.rotate( matrix, matrix, transform.rot[ 0 ], [ 1, 0, 0 ] );
+  }
+
+  if ( transform.scale ) {
+    mat4.scale( matrix, matrix, transform.scale );
+  }
+}
+
+function drawWorker( gl, entity ) {
+
+  for ( const part in WorkerModel ) {
+    if ( !Meshes.has( part ) ) {
+      Meshes.set( part, MeshCommon.getMesh( canvas.gl, WorkerModel[ part ].mesh ) );
+    }
+
+    const mesh = Meshes.get( part );
+    const partInfo = WorkerModel[ part ];
+
+    mat4.identity( modelMatrix );
+    applyTransforms( modelMatrix, entity );
+    applyTransforms( modelMatrix, partInfo );
+
+    mat4.multiply( mvp, projViewMatrix, modelMatrix );
+
+    mat4.multiply( modelViewMatrix, viewMatrix, modelMatrix );
+    mat4.invert( normalMatrix, modelViewMatrix );
+    mat4.transpose( normalMatrix, normalMatrix );
+
+    gl.useProgram( shader.program );
+    gl.uniformMatrix4fv( shader.uniformLocations.mvp, false, mvp );
+    gl.uniformMatrix4fv( shader.uniformLocations.normalMatrix, false, normalMatrix );
+    gl.uniform3fv( shader.uniformLocations.color, partInfo.color );
+
+    gl.bindBuffer( gl.ARRAY_BUFFER, mesh.positionBuffer );
+    gl.vertexAttribPointer( shader.attribLocations.position, 3, gl.FLOAT, false, 0, 0 );
+    gl.enableVertexAttribArray( shader.attribLocations.position );
+
+    gl.bindBuffer( gl.ARRAY_BUFFER, mesh.normalBuffer );
+    gl.vertexAttribPointer( shader.attribLocations.normal, 3, gl.FLOAT, false, 0, 0 );
+    gl.enableVertexAttribArray( shader.attribLocations.normal );
+
+    gl.bindBuffer( gl.ELEMENT_ARRAY_BUFFER, mesh.indexBuffer );
+    gl.drawElements( gl.TRIANGLES, mesh.length, gl.UNSIGNED_SHORT, 0 );
+  }
+}
+
+const X_SENSITIVITY = 100;
+const Y_SENSTIVITY = -100;
+
+canvas.canvas.addEventListener( 'pointermove', e => {
+  if ( e.buttons == 1 ) {
+    camera.phi += e.movementX / X_SENSITIVITY;
+    camera.theta = Math.max( 1e-6, Math.min( Math.PI, camera.theta + e.movementY / Y_SENSTIVITY ) );
+
+    updateViewMatrix();
+  }
+} );
+
+const MIN_DIST = 1;
+const MAX_DIST = 100;
+const ZOOM_SENSIVITY = -200;
+canvas.canvas.addEventListener( 'wheel', e => {
+  camera.distance = Math.max( MIN_DIST, Math.min( MAX_DIST, camera.distance + e.wheelDelta / ZOOM_SENSIVITY ) );
+
+  updateViewMatrix();
+} );
+
+</script>

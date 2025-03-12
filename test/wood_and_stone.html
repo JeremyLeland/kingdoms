@@ -53,14 +53,10 @@ const MeshInfo = {
   Body: MeshCommon.Sphere( 32, 32, 0, Math.PI * 2, 0, Math.PI / 2 ),
 };
 
-const Meshes = {
-  Stone: MeshCommon.getMesh( canvas.gl, MeshInfo.Stone ),
-  Wood: MeshCommon.getMesh( canvas.gl, MeshInfo.Wood ),
-  Head: MeshCommon.getMesh( canvas.gl, MeshInfo.Head ),
-  Cube: MeshCommon.getMesh( canvas.gl, MeshInfo.Cube ),
-  Body: MeshCommon.getMesh( canvas.gl, MeshInfo.Body ),
-};
-
+const Meshes = {};
+for ( const name in MeshInfo ) {
+  Meshes[ name ] = MeshCommon.getMesh( canvas.gl, MeshInfo[ name ] );
+}
 
 const shader = ShaderCommon.getShader( canvas.gl, ShaderCommon.BasicLighting );
 
