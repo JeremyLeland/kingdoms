@@ -22,20 +22,38 @@ const camera = {
 
 const WorkerInfo = {
   SkinColor: [ 0.7, 0.6, 0.5 ],
+  Neck: 0.2,
   BodyRadius: 0.5,
+  BodyHeight: 1,
   BodyColor: [ 0.1, 0.2, 0.4 ],
 }
 
 const WorkerModel = {
   Head: {
     mesh: MeshCommon.Sphere(),
-    pos: [ 0, 1, 0 ],
+    pos: [ 0, WorkerInfo.BodyHeight + WorkerInfo.Neck, 0 ],
     scale: [ 0.3, 0.3, 0.3 ],
     color: WorkerInfo.SkinColor,
+    keyframes: {
+      walk: [
+        {
+          time: 0,
+          pos: [ 0, 0, 0 ],
+        },
+        {
+          time: 1000,
+          pos: [ 0, -0.5, 0 ],
+        },
+        {
+          time: 2000,
+          pos: [ 0, 0, 0 ],
+        },
+      ],
+    }
   },
   Body: {
     mesh: MeshCommon.Sphere( 32, 32, 0, Math.PI * 2, 0, Math.PI / 2 ),
-    scale: [ WorkerInfo.BodyRadius, WorkerInfo.BodyRadius, WorkerInfo.BodyRadius ],
+    scale: [ WorkerInfo.BodyRadius, WorkerInfo.BodyHeight, WorkerInfo.BodyRadius ],
     color: WorkerInfo.BodyColor,
   },
   LeftHand: {
@@ -70,10 +88,11 @@ const entities = [
   { type: 'Worker', pos: [ 0, 0, 1 ], rot: [ 0, -2, 0 ] },
 ];
 
-let animationTime = 0;
+let animationTime = 0;    // TODO: Per entity
 
 canvas.update = ( dt ) => {
-  animationTime += dt;
+  // animationTime += dt;
+  animationTime = ( animationTime + dt ) % 2000;
 
 
   // const scale = 2 + 0.5 * Math.sin( animationTime / 200 );
@@ -137,6 +156,8 @@ function applyTransforms( matrix, transform ) {
   }
 }
 
+const blendPos = [ 0, 0, 0 ];
+
 function drawWorker( gl, entity ) {
 
   for ( const part in WorkerModel ) {
@@ -149,6 +170,35 @@ function drawWorker( gl, entity ) {
 
     mat4.identity( modelMatrix );
     applyTransforms( modelMatrix, entity );
+
+    // TODO: Where should animation specific transforms go? Here?
+    const keyframes = partInfo.keyframes?.walk;
+
+    if ( keyframes ) {
+      const totalTime = keyframes[ keyframes.length - 1 ].time;
+      const loopTime = animationTime % totalTime;
+      
+      let nextIndex = 0;
+      for ( let i = 0; i < keyframes.length; i ++ ) {
+        if ( keyframes[ i ].time > loopTime ) {
+          nextIndex = i;
+          break;
+        }
+      }
+
+      // NOTE: This assumes a keyframe at zero. Should we create one automatically?
+      const prevFrame = keyframes[ nextIndex - 1 ];
+      const nextFrame = keyframes[ nextIndex ];
+
+      const partialTime = ( animationTime - prevFrame.time ) / ( nextFrame.time - prevFrame.time );
+
+      for ( let i = 0; i < 3; i ++ ) {
+        blendPos[ i ] = prevFrame.pos[ i ] + partialTime * ( nextFrame.pos[ i ] - prevFrame.pos[ i ] );
+      }
+
+      mat4.translate( modelMatrix, modelMatrix, blendPos );
+    }
+
     applyTransforms( modelMatrix, partInfo );
 
     mat4.multiply( mvp, projViewMatrix, modelMatrix );
