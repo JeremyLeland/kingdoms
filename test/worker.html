@@ -26,7 +26,25 @@ const WorkerInfo = {
   BodyRadius: 0.5,
   BodyHeight: 1,
   BodyColor: [ 0.1, 0.2, 0.4 ],
+  CarryHeight: 0.6,
+  WalkTime: 1000,
 }
+
+// The "bob" part of the walk is used by head and hands
+const WalkBobFrames = [
+  {
+    time: 0,
+    pos: [ 0, 0, 0 ],
+  },
+  {
+    time: WorkerInfo.WalkTime / 2,
+    pos: [ 0, -0.25, 0 ],
+  },
+  {
+    time: WorkerInfo.WalkTime,
+    pos: [ 0, 0, 0 ],
+  },
+];
 
 const WorkerModel = {
   Head: {
@@ -35,38 +53,47 @@ const WorkerModel = {
     scale: [ 0.3, 0.3, 0.3 ],
     color: WorkerInfo.SkinColor,
     keyframes: {
-      walk: [
-        {
-          time: 0,
-          pos: [ 0, 0, 0 ],
-        },
-        {
-          time: 1000,
-          pos: [ 0, -0.5, 0 ],
-        },
-        {
-          time: 2000,
-          pos: [ 0, 0, 0 ],
-        },
-      ],
-    }
+      walk: WalkBobFrames,
+    },
   },
   Body: {
     mesh: MeshCommon.Sphere( 32, 32, 0, Math.PI * 2, 0, Math.PI / 2 ),
     scale: [ WorkerInfo.BodyRadius, WorkerInfo.BodyHeight, WorkerInfo.BodyRadius ],
     color: WorkerInfo.BodyColor,
+    keyframes: {
+      walk: [
+        {
+          time: 0,
+          scale: [ 1, 1, 1 ],
+        },
+        {
+          time: WorkerInfo.WalkTime / 2,
+          scale: [ 1, 0.75, 1 ],
+        },
+        {
+          time: WorkerInfo.WalkTime,
+          scale: [ 1, 1, 1 ],
+        },
+      ],
+    }
   },
   LeftHand: {
     mesh: MeshCommon.Sphere(),
-    pos: [ WorkerInfo.BodyRadius, 0.5, -WorkerInfo.BodyRadius ],
+    pos: [ WorkerInfo.BodyRadius, WorkerInfo.CarryHeight, -WorkerInfo.BodyRadius ],
     scale: [ 0.1, 0.1, 0.1 ],
     color: WorkerInfo.SkinColor,
+    keyframes: {
+      walk: WalkBobFrames,
+    },
   },
   RightHand: {
     mesh: MeshCommon.Sphere(),
-    pos: [ WorkerInfo.BodyRadius, 0.5, WorkerInfo.BodyRadius ],
+    pos: [ WorkerInfo.BodyRadius, WorkerInfo.CarryHeight, WorkerInfo.BodyRadius ],
     scale: [ 0.1, 0.1, 0.1 ],
     color: WorkerInfo.SkinColor,
+    keyframes: {
+      walk: WalkBobFrames,
+    },
   }
   // TODO: Allow arrays like this? Maybe nesting eventually?
   // Hands: [ -1, 1 ].map( offset => (
@@ -92,7 +119,7 @@ let animationTime = 0;    // TODO: Per entity
 
 canvas.update = ( dt ) => {
   // animationTime += dt;
-  animationTime = ( animationTime + dt ) % 2000;
+  animationTime = ( animationTime + dt ) % WorkerInfo.WalkTime;
 
 
   // const scale = 2 + 0.5 * Math.sin( animationTime / 200 );
@@ -156,7 +183,10 @@ function applyTransforms( matrix, transform ) {
   }
 }
 
-const blendPos = [ 0, 0, 0 ];
+const blend = {
+  pos: [ 0, 0, 0 ],
+  scale: [ 1, 1, 1 ],
+};
 
 function drawWorker( gl, entity ) {
 
@@ -172,6 +202,10 @@ function drawWorker( gl, entity ) {
     applyTransforms( modelMatrix, entity );
 
     // TODO: Where should animation specific transforms go? Here?
+    // Using fill to avoid garbage collection
+    blend.pos.fill( 0 );
+    blend.scale.fill( 1 );
+    
     const keyframes = partInfo.keyframes?.walk;
 
     if ( keyframes ) {
@@ -193,10 +227,16 @@ function drawWorker( gl, entity ) {
       const partialTime = ( animationTime - prevFrame.time ) / ( nextFrame.time - prevFrame.time );
 
       for ( let i = 0; i < 3; i ++ ) {
-        blendPos[ i ] = prevFrame.pos[ i ] + partialTime * ( nextFrame.pos[ i ] - prevFrame.pos[ i ] );
+        if ( prevFrame.pos ) {
+          blend.pos[ i ] = prevFrame.pos[ i ] + partialTime * ( nextFrame.pos[ i ] - prevFrame.pos[ i ] );
+        }
+
+        if ( prevFrame.scale ) {
+          blend.scale[ i ] = prevFrame.scale[ i ] + partialTime * ( nextFrame.scale[ i ] - prevFrame.scale[ i ] );
+        }
       }
 
-      mat4.translate( modelMatrix, modelMatrix, blendPos );
+      applyTransforms( modelMatrix, blend );
     }
 
     applyTransforms( modelMatrix, partInfo );
