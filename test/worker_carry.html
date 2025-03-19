@@ -51,7 +51,7 @@ const WalkBobFrames = [
 const WoodModel = {
   Plank: {
     mesh: MeshCommon.Cube(),
-    scale: [ 0.5, 0.05, 0.1 ],
+    scale: [ 0.1, 0.05, 0.5 ],
     color: [ 0.5, 0.2, 0.0 ],
   }
 }
@@ -104,7 +104,16 @@ const WorkerModel = {
     keyframes: {
       walk: WalkBobFrames,
     },
-  }
+  },
+  Carry: {
+    // mesh: MeshCommon.Cube(),
+    // scale: [ 0.1, 0.05, 0.5 ],
+    // color: [ 0.5, 0.2, 0.0 ],
+    pos: [ WorkerInfo.BodyRadius, WorkerInfo.CarryHeight, 0 ],
+    keyframes: {
+      walk: WalkBobFrames,
+    },
+  },
   // TODO: Allow arrays like this? Maybe nesting eventually?
   // Hands: [ -1, 1 ].map( offset => (
   //   {
@@ -116,7 +125,7 @@ const WorkerModel = {
   // ) ),
 };
 
-const Info = {
+const ModelInfo = {
   'Wood': WoodModel,
   'Worker': WorkerModel,
 };
@@ -125,10 +134,26 @@ const Meshes = new Map();
 
 const shader = ShaderCommon.getShader( canvas.gl, ShaderCommon.BasicLighting );
 
+// TODO: How to handle IDs? 
+//   - Should we make this a map? Can't serialize/deserialize as nicely that way, though
+//   - How to generate? Just keep a running index every time something is added?
 const entities = [
-  { type: 'Worker', pos: [ 1, 0, 0 ], goalPos: [ 2, 0, 0 ] },
-  { type: 'Worker', pos: [ 0, 0, 1 ], rot: [ 0, -2, 0 ], goalRot: [ 0, 0, 0 ] },
-  // { type: 'Wood',   pos: [ 0, 1, 0 ], rot: [ 1, 0, 0 ] },
+  { id: 1, type: 'Worker', pos: [ 1, 0, 0 ], goalPos: [ 2, 0, 0 ] },
+  { 
+    id: 2, 
+    type: 'Worker', 
+    pos: [ 0, 0, 1 ], 
+    rot: [ 0, -2, 0 ], 
+    goalRot: [ 0, 0, 0 ], 
+    carrying: { 
+      id: 3, 
+      type: 'Wood',
+      // NOTE: Need to clear these out when picking up object 
+      // (and give them something meaninful when dropping it)
+      // pos: [ 0, 1, 0 ],
+      // rot: [ 0, 0, 0 ],
+    }, 
+  },
 ];
 
 let animationTime = 0;    // TODO: Per entity
@@ -161,6 +186,30 @@ canvas.update = ( dt ) => {
     
     entities[ 1 ].rot[ 1 ] += sigma( goalAngle - angle ) * WorkerInfo.TurnSpeed * dt;
   }
+
+  entities.forEach( entity => {
+    // if ( entity.carrying != null ) {
+      // const carried = entities.find( e => e.id == entity.carrying );
+
+      // carried.rot[ 0 ] = entity.rot[ 0 ];
+      // carried.rot[ 1 ] = entity.rot[ 1 ];
+      // carried.rot[ 2 ] = entity.rot[ 2 ];
+
+      // carried.pos[ 0 ] = entity.pos[ 0 ] + Math.cos( entity.rot[ 1 ] ) * WorkerInfo.BodyRadius;
+      // carried.pos[ 1 ] = entity.pos[ 1 ] + WorkerInfo.CarryHeight;
+      // carried.pos[ 2 ] = entity.pos[ 2 ] - Math.sin( entity.rot[ 1 ] ) * WorkerInfo.BodyRadius;
+
+      // TODO: How to handle worker walk bob?
+      //  - should we be treating carried objects as separate objects in the world?
+      //  - or make them somehow part of the worker while being carried?
+      //  - can we apply our animation to them somehow?
+
+      // What if we add a placeholder object to the model, 
+      // and if worker is carrying an object, that object is drawn there?
+      //   - Could move item into worker so that it is not drawn twice. 
+      //     - How do we could total avaiable wood/stone, then?
+    // }
+  } )
 }
 
 // Play with different functions here
@@ -202,16 +251,12 @@ canvas.draw = ( gl ) => {
   mat4.multiply( projViewMatrix, projectionMatrix, viewMatrix );
 
   entities.forEach( entity => {
-    drawWorker( gl, entity );
+    drawEntity( gl, entity );
   } );
 }
 
 canvas.start();
 
-const modelMatrix = mat4.create();
-const modelViewMatrix = mat4.create();
-const mvp = mat4.create();
-const normalMatrix = mat4.create();
 
 function applyTransforms( matrix, transform ) {
   if ( transform.pos ) {
@@ -229,22 +274,27 @@ function applyTransforms( matrix, transform ) {
   }
 }
 
+const modelMatrix = mat4.create();
+const modelViewMatrix = mat4.create();
+const mvp = mat4.create();
+const normalMatrix = mat4.create();
+
 const blend = {
   pos: [ 0, 0, 0 ],
   scale: [ 1, 1, 1 ],
 };
 
-function drawWorker( gl, entity ) {
+function drawEntity( gl, entity, clearModelMatrix = true ) {
 
-  for ( const part in WorkerModel ) {
-    if ( !Meshes.has( part ) ) {
-      Meshes.set( part, MeshCommon.getMesh( canvas.gl, WorkerModel[ part ].mesh ) );
+  const modelInfo = ModelInfo[ entity.type ];
+
+  for ( const part in modelInfo ) {
+    const partInfo = modelInfo[ part ];
+
+    if ( clearModelMatrix ) {
+      mat4.identity( modelMatrix );
     }
 
-    const mesh = Meshes.get( part );
-    const partInfo = WorkerModel[ part ];
-
-    mat4.identity( modelMatrix );
     applyTransforms( modelMatrix, entity );
 
     // TODO: Where should animation specific transforms go? Here?
@@ -293,21 +343,37 @@ function drawWorker( gl, entity ) {
     mat4.invert( normalMatrix, modelViewMatrix );
     mat4.transpose( normalMatrix, normalMatrix );
 
+
     gl.useProgram( shader.program );
     gl.uniformMatrix4fv( shader.uniformLocations.mvp, false, mvp );
     gl.uniformMatrix4fv( shader.uniformLocations.normalMatrix, false, normalMatrix );
-    gl.uniform3fv( shader.uniformLocations.color, partInfo.color );
 
-    gl.bindBuffer( gl.ARRAY_BUFFER, mesh.positionBuffer );
-    gl.vertexAttribPointer( shader.attribLocations.position, 3, gl.FLOAT, false, 0, 0 );
-    gl.enableVertexAttribArray( shader.attribLocations.position );
+    if ( partInfo.color ) {
+      gl.uniform3fv( shader.uniformLocations.color, partInfo.color );
+    }
 
-    gl.bindBuffer( gl.ARRAY_BUFFER, mesh.normalBuffer );
-    gl.vertexAttribPointer( shader.attribLocations.normal, 3, gl.FLOAT, false, 0, 0 );
-    gl.enableVertexAttribArray( shader.attribLocations.normal );
+    if ( partInfo.mesh ) {
+      if ( !Meshes.has( part ) ) {
+        Meshes.set( part, MeshCommon.getMesh( canvas.gl, partInfo.mesh ) );
+      }
+      
+      const mesh = Meshes.get( part );
+      
+      gl.bindBuffer( gl.ARRAY_BUFFER, mesh.positionBuffer );
+      gl.vertexAttribPointer( shader.attribLocations.position, 3, gl.FLOAT, false, 0, 0 );
+      gl.enableVertexAttribArray( shader.attribLocations.position );
+      
+      gl.bindBuffer( gl.ARRAY_BUFFER, mesh.normalBuffer );
+      gl.vertexAttribPointer( shader.attribLocations.normal, 3, gl.FLOAT, false, 0, 0 );
+      gl.enableVertexAttribArray( shader.attribLocations.normal );
+      
+      gl.bindBuffer( gl.ELEMENT_ARRAY_BUFFER, mesh.indexBuffer );
+      gl.drawElements( gl.TRIANGLES, mesh.length, gl.UNSIGNED_SHORT, 0 );
+    }
 
-    gl.bindBuffer( gl.ELEMENT_ARRAY_BUFFER, mesh.indexBuffer );
-    gl.drawElements( gl.TRIANGLES, mesh.length, gl.UNSIGNED_SHORT, 0 );
+    if ( part == 'Carry' && entity.carrying ) {
+      drawEntity( gl, entity.carrying, false );
+    }
   }
 }
 
