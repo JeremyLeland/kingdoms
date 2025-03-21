@@ -149,8 +149,7 @@ function drawEntity( gl, entity ) {
 
   mat4.multiply( mvp, projViewMatrix, modelMatrix );
 
-  const modelViewMatrix = mat4.multiply( mat4.create(), viewMatrix, modelMatrix );
-  mat4.invert( normalMatrix, modelViewMatrix );
+  mat4.invert( normalMatrix, modelMatrix );
   mat4.transpose( normalMatrix, normalMatrix );
 
 

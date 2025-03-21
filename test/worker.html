@@ -164,7 +164,6 @@ canvas.draw = ( gl ) => {
 canvas.start();
 
 const modelMatrix = mat4.create();
-const modelViewMatrix = mat4.create();
 const mvp = mat4.create();
 const normalMatrix = mat4.create();
 
@@ -244,8 +243,7 @@ function drawWorker( gl, entity ) {
 
     mat4.multiply( mvp, projViewMatrix, modelMatrix );
 
-    mat4.multiply( modelViewMatrix, viewMatrix, modelMatrix );
-    mat4.invert( normalMatrix, modelViewMatrix );
+    mat4.invert( normalMatrix, modelMatrix );
     mat4.transpose( normalMatrix, normalMatrix );
 
     gl.useProgram( shader.program );
