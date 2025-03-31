@@ -17,8 +17,6 @@ const camera = {
   theta: Math.PI / 4,
 }
 
-// TODO: Why is lighting constant when we orbit? We should be able to see the dark side of things!
-
 
 const WorkerInfo = {
   SkinColor: [ 0.7, 0.6, 0.5 ],
@@ -26,7 +24,8 @@ const WorkerInfo = {
   BodyRadius: 0.5,
   BodyHeight: 1,
   BodyColor: [ 0.1, 0.2, 0.4 ],
-  CarryHeight: 0.6,
+  CarryWidth: 0.4,
+  CarryHeight: 0.4,
   WalkTime: 1000,
   WalkSpeed: 0.001,
   TurnSpeed: 0.004,
@@ -53,8 +52,25 @@ const WoodModel = {
     mesh: MeshCommon.Cube(),
     scale: [ 0.1, 0.05, 0.5 ],
     color: [ 0.5, 0.2, 0.0 ],
-  }
-}
+  },
+};
+
+const StoneModel = {
+  Block: {
+    mesh: MeshCommon.Cube(),
+    scale: [ 0.1, 0.2, 0.3 ],
+    color: [ 0.4, 0.4, 0.4 ],
+  },
+};
+
+const StockpileModel = {
+  Pile: {
+    mesh: MeshCommon.Cube(),
+    scale: [ 0.5, 0.1, 0.5 ],
+    color: [ 0.7, 0.7, 0.7 ],
+    attach: 'pile',
+  },
+};
 
 const WorkerModel = {
   Head: {
@@ -89,7 +105,7 @@ const WorkerModel = {
   },
   LeftHand: {
     mesh: MeshCommon.Sphere(),
-    pos: [ WorkerInfo.BodyRadius, WorkerInfo.CarryHeight, -WorkerInfo.BodyRadius ],
+    pos: [ WorkerInfo.BodyRadius, WorkerInfo.CarryHeight, -WorkerInfo.CarryWidth ],
     scale: [ 0.1, 0.1, 0.1 ],
     color: WorkerInfo.SkinColor,
     keyframes: {
@@ -98,7 +114,7 @@ const WorkerModel = {
   },
   RightHand: {
     mesh: MeshCommon.Sphere(),
-    pos: [ WorkerInfo.BodyRadius, WorkerInfo.CarryHeight, WorkerInfo.BodyRadius ],
+    pos: [ WorkerInfo.BodyRadius, WorkerInfo.CarryHeight, WorkerInfo.CarryWidth ],
     scale: [ 0.1, 0.1, 0.1 ],
     color: WorkerInfo.SkinColor,
     keyframes: {
@@ -113,10 +129,11 @@ const WorkerModel = {
     // mesh: MeshCommon.Cube(),
     // scale: [ 0.1, 0.05, 0.5 ],
     // color: [ 0.5, 0.2, 0.0 ],
-    pos: [ WorkerInfo.BodyRadius, WorkerInfo.CarryHeight, 0 ],
+    pos: [ WorkerInfo.BodyRadius, WorkerInfo.CarryHeight + 0.1, 0 ],
     keyframes: {
       walk: WalkBobFrames,
     },
+    attach: 'carry',
   },
   // TODO: Allow arrays like this? Maybe nesting eventually?
   // Hands: [ -1, 1 ].map( offset => (
@@ -131,6 +148,8 @@ const WorkerModel = {
 
 const ModelInfo = {
   'Wood': WoodModel,
+  'Stone': StoneModel,
+  'Stockpile': StockpileModel,
   'Worker': WorkerModel,
 };
 
@@ -141,24 +160,41 @@ const shader = ShaderCommon.getShader( canvas.gl, ShaderCommon.BasicLighting );
 // TODO: How to handle IDs? 
 //   - Should we make this a map? Can't serialize/deserialize as nicely that way, though
 //   - How to generate? Just keep a running index every time something is added?
+//   - Maybe we don't need to do this, if we move items into "carrying", "pile", etc
 const entities = [
-  { id: 1, type: 'Worker', pos: [ 1, 0, 0 ], goalPos: [ 2, 0, 0 ] },
+  {
+    id: 1, 
+    type: 'Worker', 
+    pos: [ 1, 0, 0 ], 
+    goalPos: [ 2, 0, 0 ],
+    carry: [
+      { type: 'Stone' },
+    ],
+  },
   { 
     id: 2, 
     type: 'Worker', 
     pos: [ 0, 0, 1 ], 
     rot: [ 0, -2, 0 ], 
     goalRot: [ 0, 0, 0 ], 
-    carrying: { 
-      id: 3, 
-      type: 'Wood',
-      // NOTE: Need to clear these out when picking up object 
-      // (and give them something meaninful when dropping it)
-      // pos: [ 0, 1, 0 ],
-      // rot: [ 0, 0, 0 ],
-    }, 
+    carry: [ 
+      { type: 'Wood' },
+      { type: 'Wood' },
+    ],
   },
+  {
+    type: 'Stockpile',
+    pos: [ 3, 0, 3 ],
+    pile: [
+      { type: 'Wood' },
+      { type: 'Wood' },
+      { type: 'Wood' },
+      { type: 'Wood' },
+    ]
+  }
 ];
+
+// TODO: Walk to wood on ground, pick up, carry to pile, add to pile
 
 let animationTime = 0;    // TODO: Per entity
 
@@ -373,8 +409,18 @@ function drawEntity( gl, entity, clearModelMatrix = true ) {
       gl.drawElements( gl.TRIANGLES, mesh.length, gl.UNSIGNED_SHORT, 0 );
     }
 
-    if ( part == 'Carry' && entity.carrying ) {
-      drawEntity( gl, entity.carrying, false );
+    if ( partInfo.attach ) {
+      const attachList = entity[ partInfo.attach ];
+
+      // TODO: attachFunc to iterate through list and draw? (so carry stack is done differently than pile stack, e.g.)
+      attachList.forEach( attached => {
+        drawEntity( gl, attached, false );
+
+        // TODO: move modelMatrix up
+        mat4.translate( modelMatrix, modelMatrix, [ 0, 0.5, 0 ] );
+
+        // TODO: push/pop stack for modelMatrix
+      } );
     }
   }
 }
