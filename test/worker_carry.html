@@ -5,6 +5,7 @@
 
 import { mat4 } from '../lib/gl-matrix.js';
 import { GLCanvas } from '../src/common/GLCanvas.js';
+import { MatrixStack } from '../src/common/MatrixStack.js';
 import * as MeshCommon from '../src/common/MeshCommon.js';
 import * as ShaderCommon from '../src/common/ShaderCommon.js';
 
@@ -134,6 +135,7 @@ const WorkerModel = {
       walk: WalkBobFrames,
     },
     attach: 'carry',
+    // TODO: attachFunc, something to specify how to draw multiple items
   },
   // TODO: Allow arrays like this? Maybe nesting eventually?
   // Hands: [ -1, 1 ].map( offset => (
@@ -314,7 +316,7 @@ function applyTransforms( matrix, transform ) {
   }
 }
 
-const modelMatrix = mat4.create();
+const modelMatrix = new MatrixStack( mat4.create() );
 const mvp = mat4.create();
 const normalMatrix = mat4.create();
 
@@ -323,18 +325,25 @@ const blend = {
   scale: [ 1, 1, 1 ],
 };
 
-function drawEntity( gl, entity, clearModelMatrix = true ) {
+function drawEntity( gl, entity ) {
+
+  modelMatrix.save();
+
+  // mat4.identity( modelMatrix.current );
+  applyTransforms( modelMatrix.current, entity );
 
   const modelInfo = ModelInfo[ entity.type ];
 
   for ( const part in modelInfo ) {
     const partInfo = modelInfo[ part ];
 
-    if ( clearModelMatrix ) {
-      mat4.identity( modelMatrix );
-    }
+    // if ( clearModelMatrix ) {
+    //   mat4.identity( modelMatrix.current );
+    // }
+    // 
+    // applyTransforms( modelMatrix.current, entity );
 
-    applyTransforms( modelMatrix, entity );
+    modelMatrix.save();
 
     // TODO: Where should animation specific transforms go? Here?
     // Using fill to avoid garbage collection
@@ -371,14 +380,14 @@ function drawEntity( gl, entity, clearModelMatrix = true ) {
         }
       }
 
-      applyTransforms( modelMatrix, blend );
+      applyTransforms( modelMatrix.current, blend );
     }
 
-    applyTransforms( modelMatrix, partInfo );
+    applyTransforms( modelMatrix.current, partInfo );
 
-    mat4.multiply( mvp, projViewMatrix, modelMatrix );
+    mat4.multiply( mvp, projViewMatrix, modelMatrix.current );
 
-    mat4.invert( normalMatrix, modelMatrix );
+    mat4.invert( normalMatrix, modelMatrix.current );
     mat4.transpose( normalMatrix, normalMatrix );
 
 
@@ -409,20 +418,26 @@ function drawEntity( gl, entity, clearModelMatrix = true ) {
       gl.drawElements( gl.TRIANGLES, mesh.length, gl.UNSIGNED_SHORT, 0 );
     }
 
+    // TODO: Prevent attached items from being scaled
+    //   - Maybe we should scale as part of making mesh after all?
+    //      - so it can be more easily separated from transform scales
+
     if ( partInfo.attach ) {
       const attachList = entity[ partInfo.attach ];
 
       // TODO: attachFunc to iterate through list and draw? (so carry stack is done differently than pile stack, e.g.)
       attachList.forEach( attached => {
-        drawEntity( gl, attached, false );
+        drawEntity( gl, attached );
 
-        // TODO: move modelMatrix up
-        mat4.translate( modelMatrix, modelMatrix, [ 0, 0.5, 0 ] );
-
-        // TODO: push/pop stack for modelMatrix
+        // TODO: Get size from ModelInfo? Make it top level somehow? (may need an overall bounding box for selection anyway)
+        mat4.translate( modelMatrix.current, modelMatrix.current, [ 0, 0.2, 0 ] );
       } );
     }
+
+    modelMatrix.restore();
   }
+
+  modelMatrix.restore();
 }
 
 const X_SENSITIVITY = 100;
