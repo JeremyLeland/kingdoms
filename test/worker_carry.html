@@ -51,6 +51,7 @@ const WalkBobFrames = [
 const WoodModel = {
   Plank: {
     mesh: MeshCommon.Cube(),
+    pos: [ 0, 0.05, 0 ],
     scale: [ 0.1, 0.05, 0.5 ],
     color: [ 0.5, 0.2, 0.0 ],
   },
@@ -59,16 +60,21 @@ const WoodModel = {
 const StoneModel = {
   Block: {
     mesh: MeshCommon.Cube(),
+    pos: [ 0, 0.2, 0 ],
     scale: [ 0.1, 0.2, 0.3 ],
     color: [ 0.4, 0.4, 0.4 ],
   },
 };
 
 const StockpileModel = {
-  Pile: {
+  Base: {
     mesh: MeshCommon.Cube(),
-    scale: [ 0.5, 0.1, 0.5 ],
+    pos: [ 0, 0.05, 0 ],
+    scale: [ 0.5, 0.05, 0.5 ],
     color: [ 0.7, 0.7, 0.7 ],
+  },
+  Pile: {
+    pos: [ 0, 0.05 * 2, 0 ],
     attach: 'pile',
   },
 };
@@ -284,6 +290,8 @@ updateViewMatrix();
 const projectionMatrix = mat4.create();
 const projViewMatrix = mat4.create();
 
+// TODO: Draw grid for ground (to help us see where things are and if they are underground)
+
 canvas.draw = ( gl ) => {
 
   const fieldOfView = 45 * Math.PI / 180; // in radians
@@ -418,10 +426,6 @@ function drawEntity( gl, entity ) {
       gl.drawElements( gl.TRIANGLES, mesh.length, gl.UNSIGNED_SHORT, 0 );
     }
 
-    // TODO: Prevent attached items from being scaled
-    //   - Maybe we should scale as part of making mesh after all?
-    //      - so it can be more easily separated from transform scales
-
     if ( partInfo.attach ) {
       const attachList = entity[ partInfo.attach ];
 
@@ -430,7 +434,11 @@ function drawEntity( gl, entity ) {
         drawEntity( gl, attached );
 
         // TODO: Get size from ModelInfo? Make it top level somehow? (may need an overall bounding box for selection anyway)
-        mat4.translate( modelMatrix.current, modelMatrix.current, [ 0, 0.2, 0 ] );
+        mat4.translate( modelMatrix.current, modelMatrix.current, [ 0, 0.15, 0 ] );
+
+        // How to make wood lay flat on top of ground (and not partway in it )?
+        // Should all wood be offset by half its height so that 0 is the bottom instead of center?
+
       } );
     }
 

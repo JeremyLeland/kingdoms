@@ -1,4 +1,5 @@
-export function Cube() {
+// Do we want to incorporate width, height, and depth during creation? Or just scale it later?
+export function Cube( /*width = 1, height = 1, depth = 1*/ ) {
   return {
     positions: [
       // Back
@@ -36,7 +37,7 @@ export function Cube() {
        1, -1,  1,
        1, -1, -1,
       -1, -1, -1,
-    ],
+    ] /*.map( ( e, index ) => e * [ width, height, depth ][ index % 3 ] )*/,
     normals: [
       // Back
        0,  0, -1,
