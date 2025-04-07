@@ -136,7 +136,7 @@ export function Cube( /*width = 1, height = 1, depth = 1*/ ) {
       // bottom
       20, 21, 22, 
       20, 22, 23
-    ]
+    ],
   }
 }
 
@@ -145,7 +145,7 @@ export function Sphere( widthSegments = 32, heightSegments = 32, phiStart = 0, p
     positions: [],
     normals: [],
     indices: [],
-  }
+  };
 
   for ( let row = 0; row <= heightSegments; row ++ ) {
     for ( let col = 0; col <= widthSegments; col ++ ) {
@@ -178,6 +178,28 @@ export function Sphere( widthSegments = 32, heightSegments = 32, phiStart = 0, p
   }
 
   return sphere;
+}
+
+// TODO: Is there any reason to subdivide this into segments?
+export function Plane() {
+  return {
+    positions: [
+       1, -1,  0,
+      -1, -1,  0,
+      -1,  1,  0,
+       1,  1,  0,
+    ],
+    normals: [
+      0, 0, 1,
+      0, 0, 1,
+      0, 0, 1,
+      0, 0, 1,
+    ],
+    indices: [
+      0, 1, 2,
+      0, 2, 3,
+    ],
+  };
 }
 
 export function getMesh( gl, meshInfo ) {  

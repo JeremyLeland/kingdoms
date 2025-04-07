@@ -13,6 +13,14 @@ const ModelInfo = {
   'Stone': Resources.StoneModel,
   'Stockpile': Buildings.StockpileModel,
   'Worker': Worker.Model,
+  'Ground': {
+    Grass: {
+      mesh: MeshCommon.Plane(),
+      pos: [ 0, 0, 0 ],
+      rot: [ Math.PI / 2, 0, 0 ],
+      color: [ 0.0, 0.6, 0.0 ],
+    },
+  },
 };
 
 const Meshes = new Map();
