@@ -67,8 +67,16 @@ const entities = [
       { type: 'Wood' },
       { type: 'Wood' },
       { type: 'Wood' },
-    ]
-  }
+    ],
+  },
+  {
+    type: 'Stockpile',
+    pos: [ 4, 0, 3 ],
+    pile: [
+      { type: 'Stone' },
+      { type: 'Stone' },
+    ],
+  },
 ];
 
 // TODO: Walk to wood on ground, pick up, carry to pile, add to pile
@@ -83,30 +91,37 @@ canvas.update = ( dt ) => {
   // Drop off wood test
   entities.filter( e => e.type == 'Worker' ).forEach( entity => {
     // const entity = entities[ 1 ];
-    const target = entities[ 2 ];
+    // const target = entities[ 2 ];
 
-    const [ tx, ty, tz ] = target.pos;
-    const [ px, py, pz ] = entity.pos;
+    if ( entity.carry.length > 0 ) {
+      const carryType = entity.carry[ 0 ].type;
 
-    const currentAngle = entity.rot[ 1 ];
-    const desiredAngle = Math.atan2( pz - tz, tx - px );   // need to flip Z here?
-    const angleFrom = Util.deltaAngle( currentAngle, desiredAngle )
-    
-    entity.rot[ 1 ] += sigma( angleFrom ) * Worker.Info.TurnSpeed * dt;
+      const target = entities.find( e => e.type == 'Stockpile' && e.pile.find( p => p.type == carryType ) );
 
-    const distanceFrom = Math.hypot( tx - px, tz - pz );
-    
-    if ( distanceFrom > 1 ) { 
-      const angle = entity.rot[ 1 ]
-      const moveDist = sigma( distanceFrom ) * Worker.Info.WalkSpeed * dt;
-      entity.pos[ 0 ] += Math.cos( angle ) * moveDist;
-      entity.pos[ 2 ] -= Math.sin( angle ) * moveDist;    // need to flip Z here?
-    }
-    else {
-      if ( entity.carry.length > 0 ) {
-        target.pile.push( ...entity.carry.splice( 0 ) );
-
-        // TODO: Unload one at a time with delay between
+      if ( target ) {
+        const [ tx, ty, tz ] = target.pos;
+        const [ px, py, pz ] = entity.pos;
+        
+        const currentAngle = entity.rot[ 1 ];
+        const desiredAngle = Math.atan2( pz - tz, tx - px );   // need to flip Z here?
+        const angleFrom = Util.deltaAngle( currentAngle, desiredAngle )
+        
+        entity.rot[ 1 ] += sigma( angleFrom ) * Worker.Info.TurnSpeed * dt;
+        
+        const distanceFrom = Math.hypot( tx - px, tz - pz );
+        
+        if ( distanceFrom > 1 ) { 
+          const angle = entity.rot[ 1 ]
+          const moveDist = sigma( distanceFrom ) * Worker.Info.WalkSpeed * dt;
+          entity.pos[ 0 ] += Math.cos( angle ) * moveDist;
+          entity.pos[ 2 ] -= Math.sin( angle ) * moveDist;    // need to flip Z here?
+        }
+        else {
+          
+          target.pile.push( ...entity.carry.splice( 0 ) );
+          
+          // TODO: Unload one at a time with delay between
+        }
       }
     }
   } );
