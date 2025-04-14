@@ -5,6 +5,7 @@ import * as MeshCommon from '../src/common/MeshCommon.js';
 import * as ShaderCommon from '../src/common/ShaderCommon.js';
 
 import * as Buildings from '../src/entities/Buildings.js';
+import * as Environment from '../src/entities/Environment.js';
 import * as Resources from '../src/entities/Resources.js';
 import * as Worker from '../src/entities/Worker.js';
 
@@ -13,6 +14,7 @@ const ModelInfo = {
   'Stone': Resources.StoneModel,
   'Stockpile': Buildings.StockpileModel,
   'Worker': Worker.Model,
+  'Tree': Environment.TreeModel,
   'Ground': {
     Grass: {
       mesh: MeshCommon.Plane(),
