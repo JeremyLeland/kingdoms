@@ -202,6 +202,8 @@ export function Sphere( widthSegments = 32, heightSegments = 32, phiStart = 0, p
   return sphere;
 }
 
+
+// TODO: Optional caps at top and bottom?
 // TODO: Is there any reason to subdivide this into height segments?
 export function Cylinder( widthSegments = 32, phiStart = 0, phiLength = Math.PI * 2 ) {
   const cylinder = {
@@ -210,7 +212,41 @@ export function Cylinder( widthSegments = 32, phiStart = 0, phiLength = Math.PI 
     indices: [],
   };
 
-  // Where do we want tip of default cylinder? Maybe center of base is 0,0,0?
+  // Where do we want base of unit cylinder? Should it be height of 1 or height of 2? (radius is 1)
+  for ( let col = 0; col <= widthSegments; col ++ ) {
+    const phi = phiStart + phiLength * col / widthSegments;
+    
+    const x = Math.cos( phi );
+    const z = Math.sin( phi );
+    
+    cylinder.positions.push( x, 1, z );
+    cylinder.normals.push( x, 0, z );
+
+    cylinder.positions.push( x, 0, z );
+    cylinder.normals.push( x, 0, z );
+  }
+
+  // For convenience, we alternated top and bottom for cylinder points
+
+  const heightSegments = 2;
+  for ( let col = 0; col < widthSegments; col ++ ) {
+    cylinder.indices.push( col * heightSegments, col * heightSegments + 1, col * heightSegments + 3 );
+    cylinder.indices.push( col * heightSegments, col * heightSegments + 2, col * heightSegments + 3 );
+  }
+
+  return cylinder;
+}
+
+// TODO: Optional cap at bottom?
+// TODO: Is there any reason to subdivide this into height segments?
+export function Cone( widthSegments = 32, phiStart = 0, phiLength = Math.PI * 2 ) {
+  const cone = {
+    positions: [],
+    normals: [],
+    indices: [],
+  };
+
+   // Where do we want base of unit cone? Should it be height of 1 or height of 2? (radius is 1)
   for ( let col = 0; col <= widthSegments; col ++ ) {
     const phi = phiStart + phiLength * col / widthSegments;
     
@@ -221,33 +257,21 @@ export function Cylinder( widthSegments = 32, phiStart = 0, phiLength = Math.PI 
     const nx = x * ny;
     const nz = z * ny;
     
-    cylinder.positions.push( 0, 1, 0 );
-    cylinder.normals.push( nx, ny, nz );
+    cone.positions.push( 0, 1, 0 );
+    cone.normals.push( nx, ny, nz );
 
-    cylinder.positions.push( x, 0, z );
-    cylinder.normals.push( nx, ny, nz );
+    cone.positions.push( x, 0, z );
+    cone.normals.push( nx, ny, nz );
   }
 
   // For convenience, we alternated top and bottom for cylinder points
 
   const heightSegments = 2;
   for ( let col = 0; col < widthSegments; col ++ ) {
-    cylinder.indices.push( col * heightSegments, col * heightSegments + 1, col * heightSegments + 3 );
-
-    // cylinder.indices.push( 
-    //   ( widthSegments + 1 ) * row + col,
-    //   ( widthSegments + 1 ) * ( row + 1 ) + col,
-    //   ( widthSegments + 1 ) * ( row + 1 ) + col + 1,
-    // );
-
-    // cylinder.indices.push( 
-    //   ( widthSegments + 1 ) * row + col,
-    //   ( widthSegments + 1 ) * row + col + 1,
-    //   ( widthSegments + 1 ) * ( row + 1 ) + col + 1,
-    // );
+    cone.indices.push( col * heightSegments, col * heightSegments + 1, col * heightSegments + 3 );
   }
 
-  return cylinder;
+  return cone;
 }
 
 export function getMesh( gl, meshInfo ) {  
