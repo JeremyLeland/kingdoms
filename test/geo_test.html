@@ -18,7 +18,8 @@ const viewMatrix = mat4.lookAt(
 );
 
 // const meshInfo = MeshCommon.Sphere( 32, 32, 0, Math.PI * 2, 0, Math.PI );
-const meshInfo = MeshCommon.Plane( );
+// const meshInfo = MeshCommon.Plane( );
+const meshInfo = MeshCommon.Cylinder( );
 
 const mesh = MeshCommon.getMesh( canvas.gl, meshInfo );
 

@@ -140,6 +140,28 @@ export function Cube( /*width = 1, height = 1, depth = 1*/ ) {
   }
 }
 
+// TODO: Is there any reason to subdivide this into segments?
+export function Plane() {
+  return {
+    positions: [
+       1, -1,  0,
+      -1, -1,  0,
+      -1,  1,  0,
+       1,  1,  0,
+    ],
+    normals: [
+      0, 0, 1,
+      0, 0, 1,
+      0, 0, 1,
+      0, 0, 1,
+    ],
+    indices: [
+      0, 1, 2,
+      0, 2, 3,
+    ],
+  };
+}
+
 export function Sphere( widthSegments = 32, heightSegments = 32, phiStart = 0, phiLength = Math.PI * 2, thetaStart = 0, thetaLength = Math.PI ) {
   const sphere = {
     positions: [],
@@ -180,26 +202,52 @@ export function Sphere( widthSegments = 32, heightSegments = 32, phiStart = 0, p
   return sphere;
 }
 
-// TODO: Is there any reason to subdivide this into segments?
-export function Plane() {
-  return {
-    positions: [
-       1, -1,  0,
-      -1, -1,  0,
-      -1,  1,  0,
-       1,  1,  0,
-    ],
-    normals: [
-      0, 0, 1,
-      0, 0, 1,
-      0, 0, 1,
-      0, 0, 1,
-    ],
-    indices: [
-      0, 1, 2,
-      0, 2, 3,
-    ],
+// TODO: Is there any reason to subdivide this into height segments?
+export function Cylinder( widthSegments = 32, phiStart = 0, phiLength = Math.PI * 2 ) {
+  const cylinder = {
+    positions: [],
+    normals: [],
+    indices: [],
   };
+
+  // Where do we want tip of default cylinder? Maybe center of base is 0,0,0?
+  for ( let col = 0; col <= widthSegments; col ++ ) {
+    const phi = phiStart + phiLength * col / widthSegments;
+    
+    const x = Math.cos( phi );
+    const z = Math.sin( phi );
+    
+    const ny = Math.cos( Math.PI / 4 );
+    const nx = x * ny;
+    const nz = z * ny;
+    
+    cylinder.positions.push( 0, 1, 0 );
+    cylinder.normals.push( nx, ny, nz );
+
+    cylinder.positions.push( x, 0, z );
+    cylinder.normals.push( nx, ny, nz );
+  }
+
+  // For convenience, we alternated top and bottom for cylinder points
+
+  const heightSegments = 2;
+  for ( let col = 0; col < widthSegments; col ++ ) {
+    cylinder.indices.push( col * heightSegments, col * heightSegments + 1, col * heightSegments + 3 );
+
+    // cylinder.indices.push( 
+    //   ( widthSegments + 1 ) * row + col,
+    //   ( widthSegments + 1 ) * ( row + 1 ) + col,
+    //   ( widthSegments + 1 ) * ( row + 1 ) + col + 1,
+    // );
+
+    // cylinder.indices.push( 
+    //   ( widthSegments + 1 ) * row + col,
+    //   ( widthSegments + 1 ) * row + col + 1,
+    //   ( widthSegments + 1 ) * ( row + 1 ) + col + 1,
+    // );
+  }
+
+  return cylinder;
 }
 
 export function getMesh( gl, meshInfo ) {  
