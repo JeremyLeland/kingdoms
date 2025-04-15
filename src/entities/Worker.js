@@ -11,6 +11,7 @@ export const Info = {
   WalkTime: 1000,
   WalkSpeed: 0.001,
   TurnSpeed: 0.004,
+  UnloadDelay: 500,
 }
 
 // The "bob" part of the walk is used by head and hands
