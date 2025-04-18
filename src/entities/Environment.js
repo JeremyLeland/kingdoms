@@ -14,7 +14,7 @@ export const TreeModel = {
     color: [ 0.5, 0.2, 0.0 ],
   },
   Leaves: {
-    mesh: MeshCommon.Cone(),
+    mesh: MeshCommon.Cone( 32 ),
     pos: [ 0, TreeInfo.TrunkHeight, 0 ],
     scale: [ TreeInfo.LeavesRadius, TreeInfo.LeavesHeight, TreeInfo.LeavesRadius ],
     color: [ 0.1, 0.5, 0.1 ],

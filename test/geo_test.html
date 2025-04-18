@@ -19,18 +19,18 @@ const viewMatrix = mat4.lookAt(
 
 // const meshInfo = MeshCommon.Sphere( 32, 32, 0, Math.PI * 2, 0, Math.PI );
 // const meshInfo = MeshCommon.Plane( );
-const meshInfo = MeshCommon.Cylinder( );
+const meshInfo = MeshCommon.Cylinder( 0, 1, 2, 32 );
 
 const mesh = MeshCommon.getMesh( canvas.gl, meshInfo );
 
-// const shader = ShaderCommon.getShader( canvas.gl, ShaderCommon.PositionColor );
 const shader = ShaderCommon.getShader( canvas.gl, ShaderCommon.BasicLighting );
+// const shader = ShaderCommon.getShader( canvas.gl, ShaderCommon.NormalColor );
 
 
 let angle = 0;
 
 canvas.update = ( dt ) => {
-  angle += dt / 1000;
+  // angle += dt / 1000;
 }
 
 const projectionMatrix = mat4.create();

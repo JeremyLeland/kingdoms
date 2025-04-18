@@ -1,3 +1,5 @@
+import { vec3 } from '../../lib/gl-matrix.js';
+
 // Do we want to incorporate width, height, and depth during creation? Or just scale it later?
 export function Cube( /*width = 1, height = 1, depth = 1*/ ) {
   return {
@@ -205,25 +207,29 @@ export function Sphere( widthSegments = 32, heightSegments = 32, phiStart = 0, p
 
 // TODO: Optional caps at top and bottom?
 // TODO: Is there any reason to subdivide this into height segments?
-export function Cylinder( widthSegments = 32, phiStart = 0, phiLength = Math.PI * 2 ) {
+export function Cylinder( radiusTop = 1, radiusBottom = 1, height = 1, widthSegments = 32, thetaStart = 0, thetaLength = Math.PI * 2 ) {
   const cylinder = {
     positions: [],
     normals: [],
     indices: [],
   };
 
+  const slope = ( radiusBottom - radiusTop ) / height;
+
   // Where do we want base of unit cylinder? Should it be height of 1 or height of 2? (radius is 1)
   for ( let col = 0; col <= widthSegments; col ++ ) {
-    const phi = phiStart + phiLength * col / widthSegments;
+    const phi = thetaStart + thetaLength * col / widthSegments;
     
-    const x = Math.cos( phi );
-    const z = Math.sin( phi );
-    
-    cylinder.positions.push( x, 1, z );
-    cylinder.normals.push( x, 0, z );
+    const cosTheta = Math.cos( phi );
+    const sinTheta = Math.sin( phi );
 
-    cylinder.positions.push( x, 0, z );
-    cylinder.normals.push( x, 0, z );
+    const normal = vec3.normalize( [], [ cosTheta, slope, sinTheta ] );
+
+    cylinder.positions.push( radiusTop * cosTheta, height, radiusTop * sinTheta );
+    cylinder.normals.push( ...normal );
+
+    cylinder.positions.push( radiusBottom * cosTheta, 0, radiusBottom * sinTheta );
+    cylinder.normals.push( ...normal );
   }
 
   // For convenience, we alternated top and bottom for cylinder points
@@ -239,39 +245,9 @@ export function Cylinder( widthSegments = 32, phiStart = 0, phiLength = Math.PI 
 
 // TODO: Optional cap at bottom?
 // TODO: Is there any reason to subdivide this into height segments?
-export function Cone( widthSegments = 32, phiStart = 0, phiLength = Math.PI * 2 ) {
-  const cone = {
-    positions: [],
-    normals: [],
-    indices: [],
-  };
-
-   // Where do we want base of unit cone? Should it be height of 1 or height of 2? (radius is 1)
-  for ( let col = 0; col <= widthSegments; col ++ ) {
-    const phi = phiStart + phiLength * col / widthSegments;
-    
-    const x = Math.cos( phi );
-    const z = Math.sin( phi );
-    
-    const ny = Math.cos( Math.PI / 4 );
-    const nx = x * ny;
-    const nz = z * ny;
-    
-    cone.positions.push( 0, 1, 0 );
-    cone.normals.push( nx, ny, nz );
-
-    cone.positions.push( x, 0, z );
-    cone.normals.push( nx, ny, nz );
-  }
-
-  // For convenience, we alternated top and bottom for cylinder points
-
-  const heightSegments = 2;
-  for ( let col = 0; col < widthSegments; col ++ ) {
-    cone.indices.push( col * heightSegments, col * heightSegments + 1, col * heightSegments + 3 );
-  }
-
-  return cone;
+// TODO: Make this special case of Cylinder? (allow different top and bottom radius)
+export function Cone( widthSegments = 32, thetaStart = 0, thetaLength = Math.PI * 2 ) {
+  return Cylinder( 0, 1, 1, widthSegments, thetaStart, thetaLength );
 }
 
 export function getMesh( gl, meshInfo ) {  
