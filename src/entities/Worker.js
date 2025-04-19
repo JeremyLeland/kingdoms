@@ -11,6 +11,7 @@ export const Info = {
   WalkTime: 1000,
   WalkSpeed: 0.001,
   TurnSpeed: 0.004,
+  PickupDelay: 500,
   UnloadDelay: 500,
 }
 

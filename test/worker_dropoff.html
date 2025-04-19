@@ -32,7 +32,6 @@ const camera = {
 //   - Maybe we don't need to do this, if we move items into "carrying", "pile", etc
 const entities = [
   {
-    id: 1, 
     type: 'Worker', 
     pos: [ 2, 0, 0 ],
     rot: [ 0, 0, 0 ],
@@ -45,8 +44,7 @@ const entities = [
     },
     delay: 0,
   },
-  { 
-    id: 2, 
+  {
     type: 'Worker', 
     pos: [ 0, 0, 2 ], 
     rot: [ 0, -2, 0 ],
@@ -55,6 +53,17 @@ const entities = [
       { type: 'Wood' },
       { type: 'Wood' },
     ],
+    animation: {
+      name: 'walk',
+      time: 0,
+    },
+    delay: 0,
+  },
+  {
+    type: 'Worker', 
+    pos: [ 0, 0, 0 ], 
+    rot: [ 0, 0, 0 ],
+    carry: [],
     animation: {
       name: 'walk',
       time: 0,
@@ -96,6 +105,18 @@ const entities = [
     type: 'Tree',
     pos: [ -3, 0, 2 ],
   },
+  {
+    type: 'Wood',
+    pos: [ -2, 0, 2 ],
+  },
+  {
+    type: 'Wood',
+    pos: [ -2, 0, 1 ],
+  },
+  {
+    type: 'Wood',
+    pos: [ -2, 0, 0 ],
+  }
 ];
 
 // TODO: Walk to wood on ground, pick up, carry to pile, add to pile
@@ -118,6 +139,7 @@ function updateWorker( entity, dt ) {
     return;
   }
 
+  // Drop off
   if ( entity.carry.length > 0 ) {
     const carryType = entity.carry[ 0 ].type;
 
@@ -142,13 +164,45 @@ function updateWorker( entity, dt ) {
         entity.pos[ 2 ] -= Math.sin( angle ) * moveDist;    // need to flip Z here?
       }
       else {
-        // TODO: Unload one at a time with delay between
         target.pile.push( ...entity.carry.splice( 0, 1 ) );
         entity.delay += Worker.Info.UnloadDelay;
       }
     }
   }
+
+  // TODO: Don't duplicate "turn/move toward" code
+
+  // Pick up
+  else {
+    const target = entities.find( e => e.type == 'Wood' );
+
+    if ( target ) {
+      const [ tx, ty, tz ] = target.pos;
+      const [ px, py, pz ] = entity.pos;
+      
+      const currentAngle = entity.rot[ 1 ];
+      const desiredAngle = Math.atan2( pz - tz, tx - px );   // need to flip Z here?
+      const angleFrom = Util.deltaAngle( currentAngle, desiredAngle )
+      
+      entity.rot[ 1 ] += sigma( angleFrom ) * Worker.Info.TurnSpeed * dt;
+      
+      const distanceFrom = Math.hypot( tx - px, tz - pz );
+      
+      if ( distanceFrom > 1 ) { 
+        const angle = entity.rot[ 1 ]
+        const moveDist = sigma( distanceFrom ) * Worker.Info.WalkSpeed * dt;
+        entity.pos[ 0 ] += Math.cos( angle ) * moveDist;
+        entity.pos[ 2 ] -= Math.sin( angle ) * moveDist;    // need to flip Z here?
+      }
+      else {
+        target.pos.fill( 0 );
+        entity.carry.push( ...entities.splice( entities.indexOf( target ), 1 ) );
+        entity.delay += Worker.Info.PickupDelay;
+      }
+    }
+  }
 }
+
 
 // Play with different functions here
 function sigma( x ) {
