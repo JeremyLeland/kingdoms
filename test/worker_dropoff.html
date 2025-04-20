@@ -114,7 +114,7 @@ const entities = [
     pos: [ -2, 0, 1 ],
   },
   {
-    type: 'Wood',
+    type: 'Stone',
     pos: [ -2, 0, 0 ],
   }
 ];
@@ -130,6 +130,25 @@ canvas.update = ( dt ) => {
   entities.filter( e => e.type == 'Worker' ).forEach( entity => updateWorker( entity, dt ) );
 }
 
+const WorkerActions = {
+  DropOff: {
+    targetFunc: ( entity ) => entities.find( e => e.type == 'Stockpile' && e.pile.find( p => p.type == entity.carry[ 0 ].type ) ),
+    actionFunc: ( entity, target ) => {
+      target.pile.push( ...entity.carry.splice( 0, 1 ) );
+      entity.delay += Worker.Info.UnloadDelay;
+    },
+  },
+  PickUp: {
+    // TODO: Find closest, not just first
+    targetFunc: ( entity ) => entities.find( e => e.type == 'Wood' || e.type == 'Stone' ),
+    actionFunc: ( entity, target ) => {
+      target.pos.fill( 0 );
+      entity.carry.push( ...entities.splice( entities.indexOf( target ), 1 ) );
+      entity.delay += Worker.Info.PickupDelay;
+    },
+  },
+}
+
 function updateWorker( entity, dt ) {
   // const entity = entities[ 1 ];
   // const target = entities[ 2 ];
@@ -139,66 +158,30 @@ function updateWorker( entity, dt ) {
     return;
   }
 
-  // Drop off
-  if ( entity.carry.length > 0 ) {
-    const carryType = entity.carry[ 0 ].type;
+  const workerAction = entity.carry.length > 0 ? WorkerActions.DropOff : WorkerActions.PickUp;
 
-    const target = entities.find( e => e.type == 'Stockpile' && e.pile.find( p => p.type == carryType ) );
+  const target = workerAction.targetFunc( entity );
 
-    if ( target ) {
-      const [ tx, ty, tz ] = target.pos;
-      const [ px, py, pz ] = entity.pos;
-      
-      const currentAngle = entity.rot[ 1 ];
-      const desiredAngle = Math.atan2( pz - tz, tx - px );   // need to flip Z here?
-      const angleFrom = Util.deltaAngle( currentAngle, desiredAngle )
-      
-      entity.rot[ 1 ] += sigma( angleFrom ) * Worker.Info.TurnSpeed * dt;
-      
-      const distanceFrom = Math.hypot( tx - px, tz - pz );
-      
-      if ( distanceFrom > 1 ) { 
-        const angle = entity.rot[ 1 ]
-        const moveDist = sigma( distanceFrom ) * Worker.Info.WalkSpeed * dt;
-        entity.pos[ 0 ] += Math.cos( angle ) * moveDist;
-        entity.pos[ 2 ] -= Math.sin( angle ) * moveDist;    // need to flip Z here?
-      }
-      else {
-        target.pile.push( ...entity.carry.splice( 0, 1 ) );
-        entity.delay += Worker.Info.UnloadDelay;
-      }
+  if ( target ) {
+    const [ tx, ty, tz ] = target.pos;
+    const [ px, py, pz ] = entity.pos;
+    
+    const currentAngle = entity.rot[ 1 ];
+    const desiredAngle = Math.atan2( pz - tz, tx - px );   // need to flip Z here?
+    const angleFrom = Util.deltaAngle( currentAngle, desiredAngle )
+    
+    entity.rot[ 1 ] += sigma( angleFrom ) * Worker.Info.TurnSpeed * dt;
+    
+    const distanceFrom = Math.hypot( tx - px, tz - pz );
+    
+    if ( distanceFrom > 1 ) { 
+      const angle = entity.rot[ 1 ]
+      const moveDist = sigma( distanceFrom ) * Worker.Info.WalkSpeed * dt;
+      entity.pos[ 0 ] += Math.cos( angle ) * moveDist;
+      entity.pos[ 2 ] -= Math.sin( angle ) * moveDist;    // need to flip Z here?
     }
-  }
-
-  // TODO: Don't duplicate "turn/move toward" code
-
-  // Pick up
-  else {
-    const target = entities.find( e => e.type == 'Wood' );
-
-    if ( target ) {
-      const [ tx, ty, tz ] = target.pos;
-      const [ px, py, pz ] = entity.pos;
-      
-      const currentAngle = entity.rot[ 1 ];
-      const desiredAngle = Math.atan2( pz - tz, tx - px );   // need to flip Z here?
-      const angleFrom = Util.deltaAngle( currentAngle, desiredAngle )
-      
-      entity.rot[ 1 ] += sigma( angleFrom ) * Worker.Info.TurnSpeed * dt;
-      
-      const distanceFrom = Math.hypot( tx - px, tz - pz );
-      
-      if ( distanceFrom > 1 ) { 
-        const angle = entity.rot[ 1 ]
-        const moveDist = sigma( distanceFrom ) * Worker.Info.WalkSpeed * dt;
-        entity.pos[ 0 ] += Math.cos( angle ) * moveDist;
-        entity.pos[ 2 ] -= Math.sin( angle ) * moveDist;    // need to flip Z here?
-      }
-      else {
-        target.pos.fill( 0 );
-        entity.carry.push( ...entities.splice( entities.indexOf( target ), 1 ) );
-        entity.delay += Worker.Info.PickupDelay;
-      }
+    else {
+      workerAction.actionFunc( entity, target );
     }
   }
 }
