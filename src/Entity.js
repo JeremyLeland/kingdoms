@@ -149,16 +149,8 @@ export function draw( entity, gl, modelMatrixStack, projViewMatrix ) {
     if ( partInfo.attach ) {
       const attachList = entity[ partInfo.attach ];
 
-      // TODO: attachFunc to iterate through list and draw? (so carry stack is done differently than pile stack, e.g.)
       attachList.forEach( attached => {
         draw( attached, gl, modelMatrixStack, projViewMatrix );
-
-        // TODO: Get size from ModelInfo? Make it top level somehow? (may need an overall bounding box for selection anyway)
-        mat4.translate( modelMatrixStack.current, modelMatrixStack.current, [ 0, 0.15, 0 ] );
-
-        // How to make wood lay flat on top of ground (and not partway in it )?
-        // Should all wood be offset by half its height so that 0 is the bottom instead of center?
-
       } );
     }
 
