@@ -26,17 +26,13 @@ const camera = {
 };
 
 
-// TODO: How to handle IDs? 
-//   - Should we make this a map? Can't serialize/deserialize as nicely that way, though
-//   - How to generate? Just keep a running index every time something is added?
-//   - Maybe we don't need to do this, if we move items into "carrying", "pile", etc
 const entities = [
   {
     type: 'Worker', 
     pos: [ 2, 0, 0 ],
     rot: [ 0, 0, 0 ],
     carry: [
-      { type: 'Stone' },
+      // { type: 'Stone' },
     ],
     animation: {
       name: 'walk',
@@ -49,9 +45,9 @@ const entities = [
     pos: [ 0, 0, 2 ], 
     rot: [ 0, -2, 0 ],
     carry: [ 
-      { type: 'Wood', pos: [ 0, 0, 0 ] },
-      { type: 'Wood', pos: [ 0, 0.15, 0 ] },
-      { type: 'Wood', pos: [ 0, 0.3, 0 ] },
+      // { type: 'Wood', pos: [ 0, 0, 0 ] },
+      // { type: 'Wood', pos: [ 0, 0.15, 0 ] },
+      // { type: 'Wood', pos: [ 0, 0.3, 0 ] },
     ],
     animation: {
       name: 'walk',
@@ -70,6 +66,7 @@ const entities = [
     },
     delay: 0,
   },
+  
   {
     type: 'Stockpile',
     pos: [ 3, 0, 3 ],
@@ -86,14 +83,14 @@ const entities = [
     type: 'Stockpile',
     pos: [ 4, 0, 3 ],
     pile: [
-      { type: 'Stone' },
-      { type: 'Stone' },
+      { type: 'Stone', pos: [ -0.3, 0, 0 ] },
+      // { type: 'Stone' },
     ],
   },
   {
     type: 'Ground',
     pos: [ 0, 0, 0 ],
-    scale: [ 5, 0, 5 ],
+    scale: [ 5, 1, 5 ],
   },
   {
     type: 'Tree',
@@ -108,20 +105,42 @@ const entities = [
     pos: [ -3, 0, 2 ],
   },
   {
-    type: 'Wood',
+    type: 'Stone',
     pos: [ -2, 0, 2 ],
   },
   {
-    type: 'Wood',
+    type: 'Stone',
     pos: [ -2, 0, 1 ],
   },
   {
     type: 'Stone',
     pos: [ -2, 0, 0 ],
-  }
+  },
+  {
+    type: 'Stone',
+    pos: [ -1, 0, 0 ],
+  },
+  {
+    type: 'Stone',
+    pos: [ -1, 0, 1 ],
+  },
+  {
+    type: 'Stone',
+    pos: [ -1, 0, 2 ],
+  },
+  {
+    type: 'Wood',
+    pos: [ 0, 0, 0 ],
+  },
+  {
+    type: 'Wood',
+    pos: [ 0, 0, 1 ],
+  },
+  {
+    type: 'Wood',
+    pos: [ 0, 0, 2 ],
+  },
 ];
-
-// TODO: Walk to wood on ground, pick up, carry to pile, add to pile
 
 
 canvas.update = ( dt ) => {
@@ -142,13 +161,17 @@ const WorkerActions = {
       const layerIndex = Math.floor( target.pile.length / 3 );
 
       const item = entity.carry.splice( 0, 1 )[ 0 ];
+      const itemInfo = Entity.ModelInfo[ item.type ];
+
+      const vert = ( -1 + withinLayer ) * itemInfo.bounds[ 1 ] * 1.5;
+      const horiz = layerIndex * itemInfo.bounds[ 0 ] * 4;
 
       if ( layerIndex % 2 == 0 ) {
-        item.pos = [ ( -1 + withinLayer ) * 0.3, layerIndex * 0.15, 0 ];
+        item.pos = [ vert, horiz, 0 ];
         item.rot = [ 0, 0, 0 ];
       }
       else {
-        item.pos = [ 0, layerIndex * 0.15, ( -1 + withinLayer ) * 0.3 ];
+        item.pos = [ 0, horiz, vert ];
         item.rot = [ 0, Math.PI / 2, 0 ];
       }
 
@@ -238,7 +261,6 @@ function updateViewMatrix() {
 updateViewMatrix();
 
 const projectionMatrix = mat4.create();
-const projViewMatrix = mat4.create();
 
 const modelMatrixStack = new MatrixStack( mat4.create() );
 
@@ -250,10 +272,11 @@ canvas.draw = ( gl ) => {
   const zNear = 0.1;
   const zFar = 100.0;
   mat4.perspective( projectionMatrix, fieldOfView, canvas.canvas.width / canvas.canvas.height, zNear, zFar );
-  mat4.multiply( projViewMatrix, projectionMatrix, viewMatrix );
+
+  const eyePos = [ viewMatrix[ 12 ], viewMatrix[ 13 ], viewMatrix[ 14 ], 1 ];
 
   entities.forEach( entity => {
-    Entity.draw( entity, gl, modelMatrixStack, projViewMatrix );
+    Entity.draw( entity, gl, modelMatrixStack, viewMatrix, projectionMatrix, eyePos );
   } );
 }
 

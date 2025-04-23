@@ -120,6 +120,7 @@ export const BasicLighting = {
   fragment: /*glsl*/ `# version 300 es
     precision mediump float;
 
+    in vec3 v_pos;
     in vec3 v_norm;
 
     uniform vec3 color;
@@ -137,6 +138,70 @@ export const BasicLighting = {
       float directional = max( dot( normal, directionalVector ), 0.0 );
 
       outColor = vec4( color * ( ambientLight + directionalLightColor * directional ), 1.0 );
+    }
+  `,
+}
+
+export const Lighting = {
+  vertex: /*glsl*/`# version 300 es
+    in vec4 position;
+    in vec3 normal;
+
+    uniform mat4 modelMatrix;
+    uniform mat4 viewMatrix;
+    uniform mat4 projectionMatrix;
+    uniform mat4 normalMatrix;
+
+    out vec4 v_pos;
+    out vec3 v_norm;
+
+    void main() {
+      v_pos = modelMatrix * position;
+      v_norm = ( normalMatrix * vec4( normal, 1.0 ) ).xyz;
+
+      gl_Position = projectionMatrix * viewMatrix * modelMatrix * position;
+    }
+  `,
+  fragment: /*glsl*/ `# version 300 es
+    precision mediump float;
+
+    in vec4 v_pos;
+    in vec3 v_norm;
+
+    // TODO: Structs?
+    uniform vec4 lightPos;
+    uniform vec3 lightColor;
+
+    uniform vec4 eyePos;
+
+    uniform vec3 color;
+
+    out vec4 outColor;
+
+    // vec4 getLighting( vec4 L, vec4 V, vec4 N, Light light, Material material ) {
+    vec4 getLighting( vec4 L, vec4 V, vec4 N ) {
+      float NdotL = dot( N, L );
+
+      if ( NdotL > 0.0 ) {
+        vec4 H = normalize( L + V );
+        
+        float NdotH = dot( N, H );
+        
+        float diffuse = max( 0.0, NdotL );
+        float specular = 0.0; //( NdotL > 0.0 ) ? pow( max( 0.0, NdotH ), material.shininess ) : 0.0;
+
+        // return vec4( light.color * material.color * ( diffuse + specular ) );
+        return vec4( lightColor * color * diffuse, 1 );
+      }
+    }
+
+    void main() {
+      vec4 L = normalize( lightPos - v_pos );
+      vec4 V = normalize( eyePos - v_pos );
+      vec3 N = normalize( v_norm );
+
+      outColor = getLighting( L, V, vec4( N, 1 ) );
+      // outColor = vec4( N, 1.0 );
     }
   `,
 }

@@ -9,19 +9,25 @@ import * as Environment from '../src/entities/Environment.js';
 import * as Resources from '../src/entities/Resources.js';
 import * as Worker from '../src/entities/Worker.js';
 
-const ModelInfo = {
+export const ModelInfo = {
   'Wood': Resources.WoodModel,
   'Stone': Resources.StoneModel,
   'Stockpile': Buildings.StockpileModel,
   'Worker': Worker.Model,
   'Tree': Environment.TreeModel,
+
+  // Why is ground so fucked up? Rotation isn't right at all, skews?
+  // And it won't draw at all without rotation?
+  // Normals change based on other things being drawn...
   'Ground': {
-    Grass: {
-      mesh: MeshCommon.Plane(),
-      pos: [ 0, 0, 0 ],
-      rot: [ Math.PI / 2, 0, 0 ],
-      color: [ 0.0, 0.6, 0.0 ],
-    },
+    parts: {
+      Grass: {
+        mesh: MeshCommon.Plane(),
+        pos: [ 0, 0, 0 ],
+        rot: [ -Math.PI / 2, 0, 0 ],
+        color: [ 0.0, 0.6, 0.0 ],
+      },
+    }
   },
 };
 
@@ -53,7 +59,9 @@ const blend = {
   scale: [ 1, 1, 1 ],
 };
 
-export function draw( entity, gl, modelMatrixStack, projViewMatrix ) {
+// TODO: Render scene instead of taking in all of this extra info
+
+export function draw( entity, gl, modelMatrixStack, viewMatrix, projectionMatrix, eyePos ) {
 
   modelMatrixStack.save();
 
@@ -61,8 +69,8 @@ export function draw( entity, gl, modelMatrixStack, projViewMatrix ) {
 
   const modelInfo = ModelInfo[ entity.type ];
 
-  for ( const part in modelInfo ) {
-    const partInfo = modelInfo[ part ];
+  for ( const partName in modelInfo.parts ) {
+    const partInfo = modelInfo.parts[ partName ];
 
     modelMatrixStack.save();
 
@@ -109,30 +117,35 @@ export function draw( entity, gl, modelMatrixStack, projViewMatrix ) {
 
     applyTransforms( modelMatrixStack.current, partInfo );
 
-    mat4.multiply( mvp, projViewMatrix, modelMatrixStack.current );
-
     mat4.invert( normalMatrix, modelMatrixStack.current );
     mat4.transpose( normalMatrix, normalMatrix );
 
     // TODO: Map of shaders, like Map of meshes below
     if ( shader == null ) {
-      shader = ShaderCommon.getShader( gl, ShaderCommon.BasicLighting );
+      shader = ShaderCommon.getShader( gl, ShaderCommon.Lighting );
     }
 
     gl.useProgram( shader.program );
-    gl.uniformMatrix4fv( shader.uniformLocations.mvp, false, mvp );
+    gl.uniformMatrix4fv( shader.uniformLocations.modelMatrix, false, modelMatrixStack.current );
+    gl.uniformMatrix4fv( shader.uniformLocations.viewMatrix, false, viewMatrix );
+    gl.uniformMatrix4fv( shader.uniformLocations.projectionMatrix, false, projectionMatrix );
     gl.uniformMatrix4fv( shader.uniformLocations.normalMatrix, false, normalMatrix );
 
     if ( partInfo.color ) {
       gl.uniform3fv( shader.uniformLocations.color, partInfo.color );
     }
 
+    // TODO: Better place for lighting info? Should this be part of a Scene that knows everything?
+    gl.uniform4fv( shader.uniformLocations.lightPos, [ 10, 10, 10, 1 ] );
+    gl.uniform3fv( shader.uniformLocations.lightColor, [ 1, 1, 1 ] );
+    gl.uniform4fv( shader.uniformLocations.eyePos, eyePos );
+
     if ( partInfo.mesh ) {
-      if ( !Meshes.has( part ) ) {
-        Meshes.set( part, MeshCommon.getMesh( gl, partInfo.mesh ) );
+      if ( !Meshes.has( partName ) ) {
+        Meshes.set( partName, MeshCommon.getMesh( gl, partInfo.mesh ) );
       }
       
-      const mesh = Meshes.get( part );
+      const mesh = Meshes.get( partName );
       
       gl.bindBuffer( gl.ARRAY_BUFFER, mesh.positionBuffer );
       gl.vertexAttribPointer( shader.attribLocations.position, 3, gl.FLOAT, false, 0, 0 );
@@ -150,7 +163,7 @@ export function draw( entity, gl, modelMatrixStack, projViewMatrix ) {
       const attachList = entity[ partInfo.attach ];
 
       attachList.forEach( attached => {
-        draw( attached, gl, modelMatrixStack, projViewMatrix );
+        draw( attached, gl, modelMatrixStack, viewMatrix, projectionMatrix, eyePos );
       } );
     }
 
