@@ -1,3 +1,5 @@
+const MAX_UPDATE = 100;
+
 export class GLCanvas {
   #reqId;
 
@@ -62,7 +64,7 @@ export class GLCanvas {
       let lastTime;
       const animate = ( now ) => {
         lastTime ??= now;  // for first call only
-        this.update( now - lastTime );
+        this.update( Math.min( now - lastTime, MAX_UPDATE ) );
         lastTime = now;
     
         this.redraw();

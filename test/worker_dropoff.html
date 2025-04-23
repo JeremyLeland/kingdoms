@@ -188,6 +188,8 @@ function updateWorker( entity, dt ) {
 
   const target = workerAction.targetFunc( entity );
 
+  // Get target vector, but also get avoid vectors, then move appropriately
+
   if ( target ) {
     const [ tx, ty, tz ] = target.pos;
     const [ px, py, pz ] = entity.pos;
