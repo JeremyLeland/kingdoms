@@ -1,0 +1,26 @@
+- Pick up more than one item at a time (up to 3?)
+
+- Workers avoid each other when walking
+  - And avoid trees and stockpiles
+
+- Stockpiles have their own delay?
+  - So several workers can't dump several items at same time
+
+- Scene
+  - with camera, lights, and entities
+  - and draw function to handle them all
+
+- Pan camera with arrow keys
+
+- Bush with berries
+  - Bucket with berries to carry
+    - Combine meshes? (create a bunch of half spheres and stick them together as one?)
+      - Is this more efficient than a dozen or so individual spheres?
+
+- Farm
+  - Rows of cylinders, sphere end caps
+  - Plants start folded up under ground
+  - Animation raises them and opens them up? (for corn, maybe?)
+  - Carrots are orange cone and green stuff
+    - Slowly raise so part of orange sticks up and make green part bigger?
+    - Carry carrots in basket?

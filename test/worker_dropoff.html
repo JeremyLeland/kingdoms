@@ -227,14 +227,14 @@ function bump( x ) {
 const viewMatrix = mat4.create();
 
 function updateViewMatrix() {
-  const x = camera.distance * Math.cos( camera.phi ) * Math.sin( camera.theta );
-  const y = camera.distance * Math.cos( camera.theta );
-  const z = camera.distance * Math.sin( camera.phi ) * Math.sin( camera.theta );
+  const x = camera.origin[ 0 ] + camera.distance * Math.cos( camera.phi ) * Math.sin( camera.theta );
+  const y = camera.origin[ 1 ] + camera.distance * Math.cos( camera.theta );
+  const z = camera.origin[ 2 ] + camera.distance * Math.sin( camera.phi ) * Math.sin( camera.theta );
 
   mat4.lookAt(
     viewMatrix,
     [ x, y, z ],
-    [ 0, 0, 0 ],
+    camera.origin,
     [ 0, 1, 0 ],
   );
 }
@@ -253,6 +253,7 @@ canvas.draw = ( gl ) => {
   const zFar = 100.0;
   mat4.perspective( projectionMatrix, fieldOfView, canvas.canvas.width / canvas.canvas.height, zNear, zFar );
 
+  // TODO: Do this in shader instead
   const eyePos = [ viewMatrix[ 12 ], viewMatrix[ 13 ], viewMatrix[ 14 ], 1 ];
 
   entities.forEach( entity => {
@@ -263,13 +264,30 @@ canvas.draw = ( gl ) => {
 canvas.start();
 
 
-const X_SENSITIVITY = 100;
-const Y_SENSTIVITY = -100;
+const X_TURN_SENSITIVITY = 100;
+const Y_TURN_SENSITIVITY = -100;
+const X_MOVE_SENSITIVITY = -50;
+const Y_MOVE_SENSITIVITY = -50;
 
 canvas.canvas.addEventListener( 'pointermove', e => {
+  // Rotate around origin with left mouse button
   if ( e.buttons == 1 ) {
-    camera.phi += e.movementX / X_SENSITIVITY;
-    camera.theta = Math.max( 1e-6, Math.min( Math.PI, camera.theta + e.movementY / Y_SENSTIVITY ) );
+    camera.phi += e.movementX / X_TURN_SENSITIVITY;
+    camera.theta = Math.max( 1e-6, Math.min( Math.PI, camera.theta + e.movementY / Y_TURN_SENSITIVITY ) );
+
+    updateViewMatrix();
+  }
+
+  // Pan with right mouse button
+  else if ( e.buttons == 2 ) {
+    const cos = Math.cos( camera.phi );
+    const sin = Math.sin( camera.phi );
+
+    const dx = e.movementX / X_MOVE_SENSITIVITY;
+    const dy = e.movementY / Y_MOVE_SENSITIVITY;
+
+    camera.origin[ 0 ] +=  sin * dx + cos * dy;
+    camera.origin[ 2 ] += -cos * dx + sin * dy;
 
     updateViewMatrix();
   }
