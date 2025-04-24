@@ -162,7 +162,10 @@ const WorkerActions = {
   },
   PickUp: {
     // TODO: Find closest, not just first
-    targetFunc: ( entity ) => entities.find( e => e.type == 'Wood' || e.type == 'Stone' ),
+    targetFunc: ( entity ) => {
+      const resources = entities.filter( e => e.type == 'Wood' || e.type == 'Stone' );
+      return closestTo( entity, resources );
+    },
     actionFunc: ( entity, target ) => {
       
       // TODO: call a target.type-specific function to get this based on index
@@ -173,6 +176,22 @@ const WorkerActions = {
       entity.delay += Worker.Info.PickupDelay;
     },
   },
+}
+
+function closestTo( target, entities ) {
+  let closestEntity, closestDist = Infinity;
+  
+  entities.forEach( e => {
+    if ( e != target ) {
+      const dist = Math.hypot( e.pos[ 0 ] - target.pos[ 0 ], e.pos[ 2 ] - target.pos[ 2 ] );
+      if ( dist < closestDist ) {
+        closestEntity = e;
+        closestDist = dist;
+      }
+    }
+  } );
+
+  return closestEntity;
 }
 
 function updateWorker( entity, dt ) {
