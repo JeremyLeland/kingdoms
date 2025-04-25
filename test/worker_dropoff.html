@@ -29,7 +29,7 @@ const camera = {
 const entities = [
   {
     type: 'Worker', 
-    pos: [ 2, 0, 0 ],
+    pos: [ -1, 0, 4 ],
     rot: [ 0, 0, 0 ],
     carry: [
       // { type: 'Stone' },
@@ -42,8 +42,8 @@ const entities = [
   },
   {
     type: 'Worker', 
-    pos: [ 0, 0, 2 ], 
-    rot: [ 0, -2, 0 ],
+    pos: [ 0, 0, 4 ], 
+    rot: [ 0, 0, 0 ],
     carry: [ 
       // { type: 'Wood', pos: [ 0, 0, 0 ] },
       // { type: 'Wood', pos: [ 0, 0.15, 0 ] },
@@ -57,7 +57,7 @@ const entities = [
   },
   {
     type: 'Worker', 
-    pos: [ 0, 0, 0 ], 
+    pos: [ 1, 0, 4 ], 
     rot: [ 0, 0, 0 ],
     carry: [],
     animation: {
@@ -68,12 +68,22 @@ const entities = [
   },
   {
     type: 'Stockpile',
-    pos: [ 3, 0, 3 ],
+    pos: [ -3, 0, 3 ],
     pile: [],
   },
   {
     type: 'Stockpile',
-    pos: [ 4, 0, 3 ],
+    pos: [ -4, 0, 3 ],
+    pile: [],
+  },
+  {
+    type: 'Stockpile',
+    pos: [ 3, 0, 4 ],
+    pile: [],
+  },
+  {
+    type: 'Stockpile',
+    pos: [ 4, 0, 4 ],
     pile: [],
   },
   {
@@ -93,19 +103,19 @@ const entities = [
 
 const stockpiles = entities.filter( e => e.type == 'Stockpile' );
 
-for ( let i = 0; i < 10; i ++ ) {
-  addItemToStockpile( stockpiles[ 0 ], { type: 'Wood' } );
-}
+// for ( let i = 0; i < 10; i ++ ) {
+//   addItemToStockpile( stockpiles[ 0 ], { type: 'Wood' } );
+// }
 
-for ( let i = 0; i < 10; i ++ ) {
-  addItemToStockpile( stockpiles[ 1 ], { type: 'Stone' } );
-}
+// for ( let i = 0; i < 10; i ++ ) {
+//   addItemToStockpile( stockpiles[ 1 ], { type: 'Stone' } );
+// }
 
 for ( let row = -3; row < 3; row ++ ) {
   for ( let col = -3; col < 3; col ++ ) {
     entities.push( 
       { 
-        type: 'Wood',
+        type: Math.random() < 0.5 ? 'Wood' : 'Stone',
         pos: [ col, 0, row ],
         rot: [ 0, Math.random() * Math.PI * 2, 0 ],
       }
@@ -147,9 +157,26 @@ function addItemToStockpile( target, item ) {
   target.pile.push( item );
 }
 
+const STOCKPILE_MAX = 9;
+
 const WorkerActions = {
   DropOff: {
-    targetFunc: ( entity ) => entities.find( e => e.type == 'Stockpile' && e.pile.find( p => p.type == entity.carry[ 0 ].type ) ),
+    targetFunc: ( entity ) => {
+      const stockpiles = entities.filter( e => e.type == 'Stockpile' );
+      const matchingPiles = stockpiles.filter( 
+        e => e.pile.find( p => p.type == entity.carry[ 0 ].type ) &&
+        e.pile.length < STOCKPILE_MAX
+      );
+
+      if ( matchingPiles.length > 0 ) {
+        return closestTo( entity, matchingPiles );
+      }
+      else {
+        const emptyPiles = stockpiles.filter( e => e.pile.length == 0 );
+
+        return closestTo( entity, emptyPiles )
+      }
+    },
     actionFunc: ( entity, target ) => {
       const item = entity.carry.splice( 0, 1 )[ 0 ];
 

@@ -1,11 +1,5 @@
 - Pick up more than one item at a time (up to 3?)
 
-- Stockpile selection
-  - Closest stockpile with matching resource
-  - Closest empty stockpile
-
-- Stack limit for stock pile (use another pile if full)
-
 - Workers avoid each other when walking
   - And avoid trees and stockpiles
 
