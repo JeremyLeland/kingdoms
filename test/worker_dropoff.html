@@ -127,8 +127,6 @@ for ( let row = -3; row < 3; row ++ ) {
 }
 
 
-// TODO: Have separate function to add items to stockpile, so we can more easily test placement (and pre-position items)
-
 canvas.update = ( dt ) => {
   // animationTime += dt;
   // animationTime = ( animationTime + dt ) % Worker.Info.WalkTime;
@@ -161,6 +159,7 @@ function addItemToStockpile( target, item ) {
 }
 
 const CARRY_MAX = 3;
+const CARRY_GAP = 0.05;
 const STOCKPILE_MAX = 9;
 
 const WorkerActions = {
@@ -198,9 +197,9 @@ const WorkerActions = {
       return closestTo( entity, resources );
     },
     actionFunc: ( entity, target ) => {
-      
-      // TODO: call a target.type-specific function to get this based on index
-      target.pos = [ 0, entity.carry.length * 0.15, 0 ];
+      const itemInfo = Entity.ModelInfo[ target.type ];
+
+      target.pos = [ 0, entity.carry.length * ( itemInfo.bounds[ 1 ] * 2 + CARRY_GAP ), 0 ];
       target.rot = [ 0, 0, 0 ];
 
       entity.carry.push( ...entities.splice( entities.indexOf( target ), 1 ) );
