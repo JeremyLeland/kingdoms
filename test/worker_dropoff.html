@@ -39,6 +39,7 @@ const entities = [
       time: 0,
     },
     delay: 0,
+    job: 'PickUp',
   },
   {
     type: 'Worker', 
@@ -54,6 +55,7 @@ const entities = [
       time: 0,
     },
     delay: 0,
+    job: 'PickUp',
   },
   {
     type: 'Worker', 
@@ -65,6 +67,7 @@ const entities = [
       time: 0,
     },
     delay: 0,
+    job: 'PickUp',
   },
   {
     type: 'Stockpile',
@@ -157,14 +160,15 @@ function addItemToStockpile( target, item ) {
   target.pile.push( item );
 }
 
+const CARRY_MAX = 3;
 const STOCKPILE_MAX = 9;
 
 const WorkerActions = {
   DropOff: {
     targetFunc: ( entity ) => {
       const stockpiles = entities.filter( e => e.type == 'Stockpile' );
-      const matchingPiles = stockpiles.filter( 
-        e => e.pile.find( p => p.type == entity.carry[ 0 ].type ) &&
+      const matchingPiles = stockpiles.filter( e =>
+        e.pile.length > 0 && e.pile[ 0 ].type == entity.carry[ 0 ].type &&
         e.pile.length < STOCKPILE_MAX
       );
 
@@ -178,7 +182,7 @@ const WorkerActions = {
       }
     },
     actionFunc: ( entity, target ) => {
-      const item = entity.carry.splice( 0, 1 )[ 0 ];
+      const item = entity.carry.splice( entity.carry.length - 1, 1 )[ 0 ];
 
       addItemToStockpile( target, item );
 
@@ -188,9 +192,9 @@ const WorkerActions = {
     },
   },
   PickUp: {
-    // TODO: Find closest, not just first
     targetFunc: ( entity ) => {
-      const resources = entities.filter( e => e.type == 'Wood' || e.type == 'Stone' );
+      const matchFunc = entity.carry.length > 0 ? e => e.type == entity.carry[ 0 ].type : e => e.type == 'Wood' || e.type == 'Stone';
+      const resources = entities.filter( matchFunc );
       return closestTo( entity, resources );
     },
     actionFunc: ( entity, target ) => {
@@ -230,8 +234,30 @@ function updateWorker( entity, dt ) {
     return;
   }
 
-  const workerAction = entity.carry.length > 0 ? WorkerActions.DropOff : WorkerActions.PickUp;
+  // TODO: How to determine drop-off mode vs pick-up mode if we can have multiple items?
+  //       Probably need to make this part of state...if picking up puts us at max, then
+  //       change mode to dropoff. If drop off puts us at 0, then change mode to pickup.
 
+  // Action vs job vs...something else? Maybe there's a list of jobs (gather resource),
+  // but whether we are doing more jobs or returning to base is something else.
+  // I feel like "action" would be "walk" or "swing axe" or whatever
+
+  // Maybe job is "gather" vs "return". "Gather" job finds resources until we are full.
+  // These are basically Pick Up and Drop Off, though. Call it a job for now.
+
+  if ( entity.job == 'PickUp' ) {
+    if ( entity.carry.length >= CARRY_MAX ) {
+      entity.job = 'DropOff';
+    }
+  }
+  else if ( entity.job == 'DropOff' ) {
+    if ( entity.carry.length == 0 ) {
+      entity.job = 'PickUp';
+    }
+  }
+
+  const workerAction = WorkerActions[ entity.job ];
+  //const workerAction = entity.carry.length >= CARRY_MAX ? WorkerActions.DropOff : WorkerActions.PickUp;
   const target = workerAction.targetFunc( entity );
 
   // Get target vector, but also get avoid vectors, then move appropriately
