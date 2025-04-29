@@ -3,7 +3,7 @@
 
 <script type="module">
 
-import { mat4 } from '../lib/gl-matrix.js';
+import { mat4, vec3 } from '../lib/gl-matrix.js';
 import { GLCanvas } from '../src/common/GLCanvas.js';
 import { MatrixStack } from '../src/common/MatrixStack.js';
 import * as MeshCommon from '../src/common/MeshCommon.js';
@@ -79,21 +79,21 @@ const entities = [
     pos: [ -4, 0, 3 ],
     pile: [],
   },
-  {
-    type: 'Stockpile',
-    pos: [ 3, 0, 4 ],
-    pile: [],
-  },
-  {
-    type: 'Stockpile',
-    pos: [ 4, 0, 4 ],
-    pile: [],
-  },
   // {
-  //   type: 'Ground',
-  //   pos: [ 0, 0, 0 ],
-  //   scale: [ 5, 1, 5 ],
+  //   type: 'Stockpile',
+  //   pos: [ 3, 0, 4 ],
+  //   pile: [],
   // },
+  // {
+  //   type: 'Stockpile',
+  //   pos: [ 4, 0, 4 ],
+  //   pile: [],
+  // },
+  {
+    type: 'Ground',
+    pos: [ 0, 0, 0 ],
+    scale: [ 5, 1, 5 ],
+  },
   {
     type: 'Tree',
     pos: [ 4, 0, -4 ],
@@ -115,7 +115,7 @@ const stockpiles = entities.filter( e => e.type == 'Stockpile' );
 // }
 
 for ( let row = -3; row < 3; row ++ ) {
-  for ( let col = -3; col < 3; col ++ ) {
+  for ( let col = -1; col < 1; col ++ ) {
     entities.push( 
       { 
         type: Math.random() < 0.5 ? 'Wood' : 'Stone',
@@ -160,7 +160,7 @@ function addItemToStockpile( target, item ) {
   target.pile.push( item );
 }
 
-const CARRY_MAX = 3;
+const CARRY_MAX = 1; //3;
 const CARRY_GAP = 0.05;
 const STOCKPILE_MAX = 9;
 
@@ -245,7 +245,7 @@ function updateWorker( entity, others, dt ) {
       const dist = Math.hypot( cx, cy );
       const angle = Math.atan2( cy, cx );
 
-      const weight = 1 - Math.tanh( dist );
+      const weight = 10 * ( 1 - Math.tanh( dist ) );
 
       avoid[ 0 ] += weight * Math.cos( angle );
       avoid[ 2 ] += weight * Math.sin( angle );
@@ -284,18 +284,32 @@ function updateWorker( entity, others, dt ) {
 
   // Get target vector, but also get avoid vectors, then move appropriately
 
+  // TODO: May want to avoid even if we don't have a target (i.e. move out of way of others?)
+
   if ( target ) {
-    const [ tx, ty, tz ] = target.pos;
-    const [ px, py, pz ] = entity.pos;
-    
+
+    const toTarget = vec3.sub( [], target.pos, entity.pos );
+    const goalVec = vec3.normalize( [], toTarget );
+
+    vec3.add( goalVec, goalVec, entity.avoid );
+
+
     const currentAngle = entity.rot[ 1 ];
-    const desiredAngle = Math.atan2( pz - tz, tx - px );   // need to flip Z here?
+    const desiredAngle = Math.atan2( -goalVec[ 2 ], goalVec[ 0 ] );   // need to flip Z here
     const angleFrom = Util.deltaAngle( currentAngle, desiredAngle )
     
     entity.rot[ 1 ] += sigma( angleFrom ) * Worker.Info.TurnSpeed * dt;
     
-    const distanceFrom = Math.hypot( tx - px, tz - pz );
+    const distanceFrom = vec3.len( toTarget );
     
+    // TODO: Do we need to separate concept of moving toward immediate goal (which may include avoidance)
+    //       and being in range of target? Otherwise, I'd be moving slowly to avoid if near target...
+    //       which may be ok
+
+    // TODO: Incorporate angleFrom into how fast we try to move. (e.g. move slower if we are turning,
+    //       so we don't make such wide circles). If we are having to do a big avoid, may be better to stay
+    //       in place while turning so other can more easily go around us.
+
     if ( distanceFrom > 1 ) { 
       const angle = entity.rot[ 1 ]
       const moveDist = sigma( distanceFrom ) * Worker.Info.WalkSpeed * dt;
