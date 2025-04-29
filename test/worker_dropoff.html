@@ -89,11 +89,11 @@ const entities = [
     pos: [ 4, 0, 4 ],
     pile: [],
   },
-  {
-    type: 'Ground',
-    pos: [ 0, 0, 0 ],
-    scale: [ 5, 1, 5 ],
-  },
+  // {
+  //   type: 'Ground',
+  //   pos: [ 0, 0, 0 ],
+  //   scale: [ 5, 1, 5 ],
+  // },
   {
     type: 'Tree',
     pos: [ 4, 0, -4 ],
@@ -132,7 +132,9 @@ canvas.update = ( dt ) => {
   // animationTime = ( animationTime + dt ) % Worker.Info.WalkTime;
 
   // Drop off wood test
-  entities.filter( e => e.type == 'Worker' ).forEach( entity => updateWorker( entity, dt ) );
+  const workers = entities.filter( e => e.type == 'Worker' );
+  
+  workers.forEach( entity => updateWorker( entity, workers, dt ) );
 }
 
 function addItemToStockpile( target, item ) {
@@ -224,7 +226,7 @@ function closestTo( target, entities ) {
   return closestEntity;
 }
 
-function updateWorker( entity, dt ) {
+function updateWorker( entity, others, dt ) {
   // const entity = entities[ 1 ];
   // const target = entities[ 2 ];
 
@@ -232,6 +234,27 @@ function updateWorker( entity, dt ) {
     entity.delay -= dt;   // or max( delay - dt, zero )?
     return;
   }
+
+  // Find avoid vectors
+  const avoid = [ 0, 0, 0 ];
+
+  others.forEach( other => {
+    if ( entity != other ) {
+      const cx = entity.pos[ 0 ] - other.pos[ 0 ];
+      const cy = entity.pos[ 2 ] - other.pos[ 2 ];
+      const dist = Math.hypot( cx, cy );
+      const angle = Math.atan2( cy, cx );
+
+      const weight = 1 - Math.tanh( dist );
+
+      avoid[ 0 ] += weight * Math.cos( angle );
+      avoid[ 2 ] += weight * Math.sin( angle );
+    }
+  } );
+
+  //console.log( entity.pos + " avoid: " + avoid );
+
+  entity.avoid = avoid;
 
   // TODO: How to determine drop-off mode vs pick-up mode if we can have multiple items?
   //       Probably need to make this part of state...if picking up puts us at max, then

@@ -260,6 +260,7 @@ export function getMesh( gl, meshInfo ) {
   };
 }
 
+// TODO: Should these be STATIC_DRAW, DYNAMIC_DRAW, or STREAM_DRAW?
 function createArrayBuffer( gl, array ) {
   const arrayBuffer = gl.createBuffer();
   gl.bindBuffer( gl.ARRAY_BUFFER, arrayBuffer );
@@ -272,4 +273,20 @@ function createIndexBuffer( gl, indices ) {
   gl.bindBuffer( gl.ELEMENT_ARRAY_BUFFER, indexBuffer );
   gl.bufferData( gl.ELEMENT_ARRAY_BUFFER, new Uint16Array( indices ), gl.STATIC_DRAW );
   return indexBuffer;
+}
+
+// TODO: getLine function like getMesh that creates buffers and everything
+// TODO: Helper function to drawMesh and drawLine here? (take code from drawEntity in Entity.js)
+
+export function drawLine( gl, positions, shader ) {
+  const positionBuffer = gl.createBuffer();
+  gl.bindBuffer( gl.ARRAY_BUFFER, positionBuffer );
+  gl.bufferData( gl.ARRAY_BUFFER, new Float32Array( positions ), gl.STATIC_DRAW );
+
+  // gl.useProgram( shader.program );
+  gl.enableVertexAttribArray( shader.attribLocations.position );
+  gl.bindBuffer( gl.ARRAY_BUFFER, positionBuffer );
+  gl.vertexAttribPointer( shader.attribLocations.position, 3, gl.FLOAT, false, 0, 0 );
+
+  gl.drawArrays( gl.LINES, 0, positions.length / 3 );
 }

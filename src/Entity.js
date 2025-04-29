@@ -33,7 +33,7 @@ export const ModelInfo = {
 
 const Meshes = new Map();
 
-let shader;
+let shader, lineShader;
 
 function applyTransforms( matrix, transform ) {
   if ( transform.pos ) {
@@ -51,7 +51,6 @@ function applyTransforms( matrix, transform ) {
   }
 }
 
-const mvp = mat4.create();
 const normalMatrix = mat4.create();
 
 const blend = {
@@ -117,6 +116,7 @@ export function draw( entity, gl, modelMatrixStack, viewMatrix, projectionMatrix
 
     applyTransforms( modelMatrixStack.current, partInfo );
 
+
     mat4.invert( normalMatrix, modelMatrixStack.current );
     mat4.transpose( normalMatrix, normalMatrix );
 
@@ -171,4 +171,34 @@ export function draw( entity, gl, modelMatrixStack, viewMatrix, projectionMatrix
   }
 
   modelMatrixStack.restore();
+
+  if ( entity.avoid ) {
+    if ( lineShader == null ) {
+      lineShader = ShaderCommon.getShader( gl, ShaderCommon.SolidColor );
+    }
+
+    gl.useProgram( lineShader.program );
+    gl.uniformMatrix4fv( lineShader.uniformLocations.modelMatrix, false, modelMatrixStack.current );
+    gl.uniformMatrix4fv( lineShader.uniformLocations.viewMatrix, false, viewMatrix );
+    gl.uniformMatrix4fv( lineShader.uniformLocations.projectionMatrix, false, projectionMatrix );
+    // gl.uniformMatrix4fv( lineShader.uniformLocations.normalMatrix, false, normalMatrix );
+
+    gl.uniform3fv( lineShader.uniformLocations.color, [ 1, 1, 1 ] );
+
+    const linePositions = [
+      entity.pos[ 0 ],
+      entity.pos[ 1 ] + 1,
+      entity.pos[ 2 ],
+      entity.pos[ 0 ],
+      entity.pos[ 1 ],
+      entity.pos[ 2 ],
+      entity.pos[ 0 ],
+      entity.pos[ 1 ],
+      entity.pos[ 2 ],
+      entity.pos[ 0 ] + entity.avoid[ 0 ],
+      entity.pos[ 1 ] + entity.avoid[ 1 ],
+      entity.pos[ 2 ] + entity.avoid[ 2 ],
+    ];
+    MeshCommon.drawLine( gl, linePositions, lineShader );
+  }
 }

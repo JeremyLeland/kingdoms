@@ -44,27 +44,27 @@ export const Model = {
         walk: WalkBobFrames,
       },
     },
-    Body: {
-      mesh: MeshCommon.Sphere( 32, 32, 0, Math.PI * 2, 0, Math.PI / 2 ),
-      scale: [ Info.BodyRadius, Info.BodyHeight, Info.BodyRadius ],
-      color: Info.BodyColor,
-      keyframes: {
-        walk: [
-          {
-            time: 0,
-            scale: [ 1, 1, 1 ],
-          },
-          {
-            time: Info.WalkTime / 2,
-            scale: [ 1, 0.75, 1 ],
-          },
-          {
-            time: Info.WalkTime,
-            scale: [ 1, 1, 1 ],
-          },
-        ],
-      }
-    },
+    // Body: {
+    //   mesh: MeshCommon.Sphere( 32, 32, 0, Math.PI * 2, 0, Math.PI / 2 ),
+    //   scale: [ Info.BodyRadius, Info.BodyHeight, Info.BodyRadius ],
+    //   color: Info.BodyColor,
+    //   keyframes: {
+    //     walk: [
+    //       {
+    //         time: 0,
+    //         scale: [ 1, 1, 1 ],
+    //       },
+    //       {
+    //         time: Info.WalkTime / 2,
+    //         scale: [ 1, 0.75, 1 ],
+    //       },
+    //       {
+    //         time: Info.WalkTime,
+    //         scale: [ 1, 1, 1 ],
+    //       },
+    //     ],
+    //   }
+    // },
     LeftHand: {
       mesh: MeshCommon.Sphere(),
       pos: [ Info.BodyRadius, Info.CarryHeight, -Info.CarryWidth ],
