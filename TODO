@@ -1,12 +1,22 @@
+New test
+  - Scene class
+    - Hold GL context
+    - Camera and light information
+    - Functions to draw given entity, line, etc
+    - Lazy-loading for compiling shaders, preparing meshes, making VBAs, etc?
+  - Try using VBAs
+  - Draw single entity for now, with buttons (in HTML page) to click to trigger each animation
+    - Start with a tree, so we can have "impact" and "fell" animations
+      - Make tree have 3 cones, getting slightly smaller as you go up
+      - Button sets animation and time, updates revert these after animation completes
+      - Impact: slight woble back and forth on Z axis
+      - Fell: Fall all the way onto side on Z axis
+
 - Workers avoid each other when walking
   - And avoid trees and stockpiles
 
 - Stockpiles have their own delay?
   - So several workers can't dump several items at same time
-
-- Scene
-  - with camera, lights, and entities
-  - and draw function to handle them all
 
 - Pan camera with arrow keys
 
