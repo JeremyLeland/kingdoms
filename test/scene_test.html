@@ -25,7 +25,7 @@ const scene = new Scene( /*canvas.gl */ );
 const entities = [
   {
     type: 'Tree',
-    pos: [ 4, 0, -4 ],
+    pos: [ 0, 0, 0 ],
     animation: {
       name: 'idle',
       time: 0,
@@ -54,7 +54,30 @@ canvas.draw = ( gl ) => {
 
   entities.forEach( entity => {
     // scene.draw( gl, Entity.ModelInfo[ entity.type ], ShaderCommon.Lighting, modelMatrixStack.current );
-    scene.draw( gl, mesh, ShaderCommon.Lighting, modelMatrixStack.current );
+
+    modelMatrixStack.save(); {
+
+      Entity.applyTransforms( modelMatrixStack.current, entity );
+
+      const modelInfo = Entity.ModelInfo[ entity.type ];
+
+      for ( const partName in modelInfo.parts ) {
+        modelMatrixStack.save(); {
+
+          const partInfo = modelInfo.parts[ partName ];
+
+          Entity.applyTransforms( modelMatrixStack.current, partInfo );
+
+          scene.drawMesh( gl, partInfo.mesh, ShaderCommon.Lighting, modelMatrixStack.current );
+        }
+
+        modelMatrixStack.restore();
+      }
+    }
+
+    modelMatrixStack.restore();
+
+    // scene.drawMesh( gl, mesh, ShaderCommon.Lighting, modelMatrixStack.current );
   } );
 }
 

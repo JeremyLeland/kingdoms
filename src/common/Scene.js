@@ -10,7 +10,7 @@ export class OrbitCamera {
   center = [ 0, 0, 0 ];
   distance = 10;
   phi = Math.PI / 2;
-  theta = Math.PI / 4;
+  theta = Math.PI / 3;
 
   #eyePos = vec3.create();
   #viewMatrix = mat4.create();
@@ -81,7 +81,7 @@ export class Scene {
   //   this.gl = gl;
   // }
 
-  draw( gl, mesh, shader, modelMatrix ) {
+  drawMesh( gl, mesh, shader, modelMatrix ) {
     if ( !shader.program ) {
       // Leave our shader load code as is for now, append to shader here
       Object.assign( shader, ShaderCommon.getShader( gl, shader ) );

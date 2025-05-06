@@ -35,7 +35,7 @@ const Meshes = new Map();
 
 let shader, lineShader;
 
-function applyTransforms( matrix, transform ) {
+export function applyTransforms( matrix, transform ) {
   if ( transform.pos ) {
     mat4.translate( matrix, matrix, transform.pos );
   }
