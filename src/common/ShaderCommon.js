@@ -147,7 +147,7 @@ export const BasicLighting = {
 
 export const Lighting = {
   vertex: /*glsl*/`# version 300 es
-    in vec4 position;
+    in vec3 position;
     in vec3 normal;
 
     uniform mat4 modelMatrix;
@@ -155,38 +155,38 @@ export const Lighting = {
     uniform mat4 projectionMatrix;
     uniform mat4 normalMatrix;
 
-    out vec4 v_pos;
+    out vec3 v_pos;
     out vec3 v_norm;
 
     void main() {
-      v_pos = modelMatrix * position;
+      v_pos = ( modelMatrix * vec4( position, 1.0 ) ).xyz;
       v_norm = ( normalMatrix * vec4( normal, 1.0 ) ).xyz;
 
-      gl_Position = projectionMatrix * viewMatrix * modelMatrix * position;
+      gl_Position = projectionMatrix * viewMatrix * modelMatrix * vec4( position, 1.0 );
     }
   `,
   fragment: /*glsl*/ `# version 300 es
     precision mediump float;
 
-    in vec4 v_pos;
+    in vec3 v_pos;
     in vec3 v_norm;
 
     // TODO: Structs?
-    uniform vec4 lightPos;
+    uniform vec3 lightPos;
     uniform vec3 lightColor;
 
-    uniform vec4 eyePos;
+    uniform vec3 eyePos;
 
     uniform vec3 color;
 
     out vec4 outColor;
 
     // vec4 getLighting( vec4 L, vec4 V, vec4 N, Light light, Material material ) {
-    vec4 getLighting( vec4 L, vec4 V, vec4 N ) {
+    vec4 getLighting( vec3 L, vec3 V, vec3 N ) {
       float NdotL = dot( N, L );
 
       if ( NdotL > 0.0 ) {
-        vec4 H = normalize( L + V );
+        vec3 H = normalize( L + V );
         
         float NdotH = dot( N, H );
         
@@ -199,11 +199,11 @@ export const Lighting = {
     }
 
     void main() {
-      vec4 L = normalize( lightPos - v_pos );
-      vec4 V = normalize( eyePos - v_pos );
+      vec3 L = normalize( lightPos - v_pos );
+      vec3 V = normalize( eyePos - v_pos );
       vec3 N = normalize( v_norm );
 
-      outColor = getLighting( L, V, vec4( N, 1 ) );
+      outColor = getLighting( L, V, N );
       // outColor = vec4( N, 1.0 );
     }
   `,

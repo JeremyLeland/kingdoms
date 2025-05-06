@@ -14,6 +14,11 @@ New test
 
 - Workers avoid each other when walking
   - And avoid trees and stockpiles
+  - Make 2D test of this to try different avoidance techniques
+    - Will want pathing at some point (e.g. account for lower transport costs for roads)
+    - Classic avoid vector leads to lots of weird turning
+      - What about yielding? Maybe one avoids, the other yields? Upper left always yields, for instance
+      - What if we only turned right? Aim right until no longer close, then resume normal aiming?
 
 - Stockpiles have their own delay?
   - So several workers can't dump several items at same time

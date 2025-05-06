@@ -1,15 +1,79 @@
-import { mat4, vec4 } from '../../lib/gl-matrix.js';
+import { mat4, vec3, vec4 } from '../../lib/gl-matrix.js';
 import * as ShaderCommon from './ShaderCommon.js';
 
+// TODO: Put camera code here, then have the class in scene
+
+const MIN_DIST = 1;
+const MAX_DIST = 100;
+
+export class OrbitCamera {
+  center = [ 0, 0, 0 ];
+  distance = 10;
+  phi = Math.PI / 2;
+  theta = Math.PI / 4;
+
+  #eyePos = vec3.create();
+  #viewMatrix = mat4.create();
+
+  constructor() {
+    this.#updateViewMatrix();
+  }
+
+  getEyePos() {
+    return this.#eyePos;
+  }
+
+  getViewMatrix() {
+    return this.#viewMatrix;
+  }
+
+  rotate( dPhi, dTheta ) {
+    this.phi += dPhi;
+    this.theta = Math.max( 1e-6, Math.min( Math.PI, this.theta + dTheta ) );
+
+    this.#updateViewMatrix();
+  }
+
+  pan( dx, dy ) {
+    const cos = Math.cos( this.phi );
+    const sin = Math.sin( this.phi );
+
+    this.center[ 0 ] +=  sin * dx + cos * dy;
+    this.center[ 2 ] += -cos * dx + sin * dy;
+
+    this.#updateViewMatrix();
+  }
+
+  zoom( dDistance ) {
+    this.distance = Math.max( MIN_DIST, Math.min( MAX_DIST, this.distance + dDistance ) );
+
+    this.#updateViewMatrix();
+  }
+
+  #updateViewMatrix() {
+    vec3.set(
+      this.#eyePos,
+      this.center[ 0 ] + this.distance * Math.cos( this.phi ) * Math.sin( this.theta ),
+      this.center[ 1 ] + this.distance * Math.cos( this.theta ),
+      this.center[ 2 ] + this.distance * Math.sin( this.phi ) * Math.sin( this.theta )
+    );
+
+    mat4.lookAt(
+      this.#viewMatrix,
+      this.#eyePos,
+      this.center,
+      [ 0, 1, 0 ],
+    );
+  }
+}
 
 export class Scene {
 
-  viewMatrix = mat4.create();
+  camera = new OrbitCamera();
+
   projectionMatrix = mat4.create();
 
-
   #normalMatrix = mat4.create();
-  #viewInverse = mat4.create();
   #eyePos = vec4.create();
 
   // // Should Scene be created with a gl context, or take it in every draw?
@@ -43,7 +107,7 @@ export class Scene {
     gl.useProgram( shader.program );
 
     gl.uniformMatrix4fv( shader.uniformLocations.modelMatrix, false, modelMatrix );
-    gl.uniformMatrix4fv( shader.uniformLocations.viewMatrix, false, this.viewMatrix );
+    gl.uniformMatrix4fv( shader.uniformLocations.viewMatrix, false, this.camera.getViewMatrix() );
     gl.uniformMatrix4fv( shader.uniformLocations.projectionMatrix, false, this.projectionMatrix );
 
     if ( shader.uniformLocations.normalMatrix ) {
@@ -54,15 +118,9 @@ export class Scene {
     }
 
     // TODO: Lighting -- can we make these structs, then check for struct location before passing in?
-    gl.uniform4fv( shader.uniformLocations.lightPos, [ 10, 10, 10, 1 ] );
+    gl.uniform3fv( shader.uniformLocations.lightPos, [ 10, 10, 10 ] );
     gl.uniform3fv( shader.uniformLocations.lightColor, [ 1, 1, 1 ] );
-
-    if ( shader.uniformLocations.eyePos ) {
-      mat4.invert( this.#viewInverse, this.viewMatrix );
-      vec4.set( this.#eyePos, viewInverse[ 12 ], viewInverse[ 13 ], viewInverse[ 14 ], 1 );
-
-      gl.uniformMatrix4fv( shader.uniformLocations.eyePos, false, this.#eyePos );
-    }
+    gl.uniform3fv( shader.uniformLocations.eyePos, this.camera.getEyePos() );
 
     // TODO: Where should this get stored? Passed in? Part of material settings?
     gl.uniform3fv( shader.uniformLocations.color, [ 1, 1, 1 ] );
