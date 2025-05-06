@@ -1,8 +1,6 @@
 import { mat4, vec3, vec4 } from '../../lib/gl-matrix.js';
 import * as ShaderCommon from './ShaderCommon.js';
 
-// TODO: Put camera code here, then have the class in scene
-
 const MIN_DIST = 1;
 const MAX_DIST = 100;
 
@@ -69,6 +67,8 @@ export class OrbitCamera {
 
 export class Scene {
 
+  // TODO: Look into Uniform Buffer Object for camera and lighting information? (not sure if worth it)
+  //       ex: https://gist.github.com/jialiang/2880d4cc3364df117320e8cb324c2880
   camera = new OrbitCamera();
 
   projectionMatrix = mat4.create();
@@ -81,7 +81,11 @@ export class Scene {
   //   this.gl = gl;
   // }
 
-  drawMesh( gl, mesh, shader, modelMatrix ) {
+  // TODO: Combine uniforms and shader into material?
+  drawMesh( gl, mesh, material, modelMatrix ) {
+    const shader = material.shader;
+    const uniforms = material.uniforms;
+
     if ( !shader.program ) {
       // Leave our shader load code as is for now, append to shader here
       Object.assign( shader, ShaderCommon.getShader( gl, shader ) );
@@ -123,7 +127,10 @@ export class Scene {
     gl.uniform3fv( shader.uniformLocations.eyePos, this.camera.getEyePos() );
 
     // TODO: Where should this get stored? Passed in? Part of material settings?
-    gl.uniform3fv( shader.uniformLocations.color, [ 1, 1, 1 ] );
+    for ( const name in uniforms ) {
+      // TODO: Check length of value and assign uniform appropriately
+      gl.uniform3fv( shader.uniformLocations[ name ], uniforms[ name ] );
+    }
 
     gl.bindVertexArray( mesh.vao );
     gl.drawElements( gl.TRIANGLES, mesh.indices.length, gl.UNSIGNED_SHORT, 0 );

@@ -68,7 +68,7 @@ canvas.draw = ( gl ) => {
 
           Entity.applyTransforms( modelMatrixStack.current, partInfo );
 
-          scene.drawMesh( gl, partInfo.mesh, ShaderCommon.Lighting, modelMatrixStack.current );
+          scene.drawMesh( gl, partInfo.mesh, partInfo.material, modelMatrixStack.current );
         }
 
         modelMatrixStack.restore();
