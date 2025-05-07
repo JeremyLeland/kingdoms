@@ -14,10 +14,53 @@ const TreeInfo = {
     shader: ShaderCommon.Lighting,
     uniforms: { color: [ 0.1, 0.5, 0.1 ] },
   },
+  ImpactRot: 0.1,
 };
 
 export const TreeModel = {
   bounds: [ TreeInfo.LeavesRadius, TreeInfo.TrunkHeight + TreeInfo.LeavesHeight, TreeInfo.LeavesRadius ],
+  animations: {
+    impact: {
+      duration: 500,
+    },
+    fell: {
+      duration: 1000,
+    },
+  },
+  keyframes: {
+    impact: [
+      {
+        time: 0,
+        rot: [ 0, 0, 0 ],
+      },
+      {
+        time: 0.25,
+        rot: [ 0, 0, TreeInfo.ImpactRot ],
+      },
+      {
+        time: 0.5,
+        rot: [ 0, 0, 0 ],
+      },
+      {
+        time: 0.75,
+        rot: [ 0, 0, -TreeInfo.ImpactRot ],
+      },
+      {
+        time: 1,
+        rot: [ 0, 0, 0 ],
+      },
+    ],
+    fell: [
+      {
+        time: 0,
+        rot: [ 0, 0, 0 ],
+      },
+      {
+        time: 1,
+        rot: [ 0, 0, Math.PI / 2 ],
+      },
+    ],
+  },
   parts: {
     Trunk: {
       mesh: MeshCommon.Cylinder(),

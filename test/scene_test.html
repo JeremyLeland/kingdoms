@@ -1,6 +1,8 @@
 <title>Scene class test</title>
 <link rel="stylesheet" href="../style.css">
 
+<div id="ui" style="position: absolute"></div>
+
 <script type="module">
 
 import { mat4, vec3 } from '../lib/gl-matrix.js';
@@ -14,6 +16,7 @@ import * as ShaderCommon from '../src/common/ShaderCommon.js';
 import * as Util from '../src/common/Util.js';
 
 import * as Buildings from '../src/entities/Buildings.js';
+import * as Environment from '../src/entities/Environment.js';
 import * as Resources from '../src/entities/Resources.js';
 import * as Worker from '../src/entities/Worker.js';
 import * as Entity from '../src/Entity.js';
@@ -40,10 +43,40 @@ canvas.update = ( dt ) => {
   entities.forEach( entity => entity.animation.time += dt );
 }
 
+function startAnimation( entity, name ) {
+  entity.animation.name = name;
+  entity.animation.time = 0;
+}
+
 
 const modelMatrixStack = new MatrixStack( mat4.create() );
 
 // TODO: Draw grid for ground (to help us see where things are and if they are underground)
+
+
+const blendInfo = {
+  pos: [ 0, 0, 0 ],
+  rot: [ 0, 0, 0 ],
+  scale: [ 1, 1, 1 ],
+};
+
+function linearBlend( a, b, perc ) {
+  return a + perc * ( b - a );
+}
+
+function sineBlend( a, b, perc ) {
+  return a + Math.sin( perc * Math.PI / 2 ) * ( b - a );
+}
+
+function doBlend( out, a, b, perc, func ) {
+  for ( const prop in a ) {
+    if ( prop != 'time' ) {
+      for ( let i = 0; i < 3; i ++ ) {
+        out[ prop ][ i ] = func( a[ prop ][ i ], b[ prop ][ i ], perc );
+      }
+    }
+  }
+}
 
 canvas.draw = ( gl ) => {
 
@@ -53,13 +86,42 @@ canvas.draw = ( gl ) => {
   mat4.perspective( scene.projectionMatrix, fieldOfView, canvas.canvas.width / canvas.canvas.height, zNear, zFar );
 
   entities.forEach( entity => {
-    // scene.draw( gl, Entity.ModelInfo[ entity.type ], ShaderCommon.Lighting, modelMatrixStack.current );
 
     modelMatrixStack.save(); {
 
       Entity.applyTransforms( modelMatrixStack.current, entity );
 
       const modelInfo = Entity.ModelInfo[ entity.type ];
+
+      // TODO: Part-specific animation as well (and share as much code as we can)
+      if ( entity.animation ) {
+        // Using fill to avoid garbage collection
+        blendInfo.pos.fill( 0 );
+        blendInfo.rot.fill( 0 );
+        blendInfo.scale.fill( 1 );
+
+        const keyframes = modelInfo.keyframes?.[ entity.animation.name ];
+
+        if ( keyframes ) {
+          const percentTime = entity.animation.time / modelInfo.animations[ entity.animation.name ].duration;
+
+          const nextIndex = keyframes.findIndex( e => e.time > percentTime );
+
+          if ( nextIndex >= 0 ) {
+            const prevFrame = keyframes[ nextIndex - 1 ];
+            const nextFrame = keyframes[ nextIndex ];
+
+            const partialTime = ( percentTime - prevFrame.time ) / ( nextFrame.time - prevFrame.time );
+
+            doBlend( blendInfo, prevFrame, nextFrame, partialTime, linearBlend );
+
+            Entity.applyTransforms( modelMatrixStack.current, blendInfo );
+          }
+          else {
+            Entity.applyTransforms( modelMatrixStack.current, keyframes.at( -1 ) );
+          }
+        }
+      }
 
       for ( const partName in modelInfo.parts ) {
         modelMatrixStack.save(); {
@@ -112,5 +174,21 @@ const ZOOM_SENSIVITY = -200;
 canvas.canvas.addEventListener( 'wheel', e => {
   scene.camera.zoom( e.wheelDelta / ZOOM_SENSIVITY );
 } );
+
+
+//
+// UI
+//
+const divUI = document.getElementById( 'ui' );
+
+for ( const name in Environment.TreeModel.animations ) {
+  const button = document.createElement( 'button' );
+  button.innerText = name;
+  button.addEventListener( 'click', e => {
+    startAnimation( entities[ 0 ], name );
+  } );
+
+  divUI.appendChild( button );
+}
 
 </script>
