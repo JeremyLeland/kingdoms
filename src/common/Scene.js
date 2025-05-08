@@ -83,6 +83,10 @@ export class Scene {
 
   // TODO: Combine uniforms and shader into material?
   drawMesh( gl, mesh, material, modelMatrix ) {
+    if ( !mesh || !material ) {
+      return;
+    }
+
     const shader = material.shader;
     const uniforms = material.uniforms;
 

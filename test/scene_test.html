@@ -27,7 +27,7 @@ const scene = new Scene( /*canvas.gl */ );
 
 const entities = [
   {
-    type: 'Tree',
+    type: 'Worker',
     pos: [ 0, 0, 0 ],
     animation: {
       name: 'idle',
@@ -54,15 +54,16 @@ const modelMatrixStack = new MatrixStack( mat4.create() );
 // TODO: Draw grid for ground (to help us see where things are and if they are underground)
 
 
-const blendInfo = {
-  pos: [ 0, 0, 0 ],
-  rot: [ 0, 0, 0 ],
-  scale: [ 1, 1, 1 ],
-};
 
 function linearBlend( a, b, perc ) {
   return a + perc * ( b - a );
 }
+
+function squareBlend( a, b, perc ) {
+  return a + Math.pow( perc, 3 ) * ( b - a );
+}
+
+// TODO: What are some useful blends? Square, maybe? Sine isn't quite doing what I envisioned
 
 function sineBlend( a, b, perc ) {
   return a + Math.sin( perc * Math.PI / 2 ) * ( b - a );
@@ -76,6 +77,52 @@ function doBlend( out, a, b, perc, func ) {
       }
     }
   }
+}
+
+const blendInfo = {
+  pos: [ 0, 0, 0 ],
+  rot: [ 0, 0, 0 ],
+  scale: [ 1, 1, 1 ],
+};
+
+function applyAnimationTransform( modelMatrix, entity, info ) {
+
+  // Start with info transforms if they exist, but will replace with any keyframe transforms below
+  //blendInfo.pos = info.pos ?? [ 0, 0, 0 ];
+  //blendInfo.rot = info.rot ?? [ 0, 0, 0 ];
+  //blendInfo.scale = info.scale ?? [ 1, 1, 1 ];
+
+  if ( entity.animation ) {
+    // Using fill to avoid garbage collection
+    blendInfo.pos.fill( 0 );
+    blendInfo.rot.fill( 0 );
+    blendInfo.scale.fill( 1 );
+
+    const keyframes = info.keyframes?.[ entity.animation.name ];
+
+    if ( keyframes ) {
+      const percentTime = entity.animation.time / Entity.ModelInfo[ entity.type ].animations[ entity.animation.name ].duration;
+
+      const nextIndex = keyframes.findIndex( e => e.time > percentTime );
+
+      if ( nextIndex >= 0 ) {
+        const prevFrame = keyframes[ nextIndex - 1 ];
+        const nextFrame = keyframes[ nextIndex ];
+
+        const partialTime = ( percentTime - prevFrame.time ) / ( nextFrame.time - prevFrame.time );
+
+        doBlend( blendInfo, prevFrame, nextFrame, partialTime, linearBlend );
+
+        Entity.applyTransforms( modelMatrix, blendInfo );
+      }
+      else {
+        Entity.applyTransforms( modelMatrix, keyframes.at( -1 ) );
+      }
+    }
+  }
+  
+  Entity.applyTransforms( modelMatrix, info );
+
 }
 
 canvas.draw = ( gl ) => {
@@ -93,42 +140,16 @@ canvas.draw = ( gl ) => {
 
       const modelInfo = Entity.ModelInfo[ entity.type ];
 
-      // TODO: Part-specific animation as well (and share as much code as we can)
-      if ( entity.animation ) {
-        // Using fill to avoid garbage collection
-        blendInfo.pos.fill( 0 );
-        blendInfo.rot.fill( 0 );
-        blendInfo.scale.fill( 1 );
-
-        const keyframes = modelInfo.keyframes?.[ entity.animation.name ];
-
-        if ( keyframes ) {
-          const percentTime = entity.animation.time / modelInfo.animations[ entity.animation.name ].duration;
-
-          const nextIndex = keyframes.findIndex( e => e.time > percentTime );
-
-          if ( nextIndex >= 0 ) {
-            const prevFrame = keyframes[ nextIndex - 1 ];
-            const nextFrame = keyframes[ nextIndex ];
-
-            const partialTime = ( percentTime - prevFrame.time ) / ( nextFrame.time - prevFrame.time );
-
-            doBlend( blendInfo, prevFrame, nextFrame, partialTime, linearBlend );
-
-            Entity.applyTransforms( modelMatrixStack.current, blendInfo );
-          }
-          else {
-            Entity.applyTransforms( modelMatrixStack.current, keyframes.at( -1 ) );
-          }
-        }
-      }
+      applyAnimationTransform( modelMatrixStack.current, entity, modelInfo );
 
       for ( const partName in modelInfo.parts ) {
         modelMatrixStack.save(); {
 
           const partInfo = modelInfo.parts[ partName ];
 
-          Entity.applyTransforms( modelMatrixStack.current, partInfo );
+          // TODO: Can't combine main and animated, need to do one or other
+          //Entity.applyTransforms( modelMatrixStack.current, partInfo );
+          applyAnimationTransform( modelMatrixStack.current, entity, partInfo );
 
           scene.drawMesh( gl, partInfo.mesh, partInfo.material, modelMatrixStack.current );
         }
@@ -181,7 +202,7 @@ canvas.canvas.addEventListener( 'wheel', e => {
 //
 const divUI = document.getElementById( 'ui' );
 
-for ( const name in Environment.TreeModel.animations ) {
+for ( const name in Worker.Model.animations ) {
   const button = document.createElement( 'button' );
   button.innerText = name;
   button.addEventListener( 'click', e => {

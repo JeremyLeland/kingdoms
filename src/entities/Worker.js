@@ -1,12 +1,19 @@
 import * as MeshCommon from '../common/MeshCommon.js';
+import * as ShaderCommon from '../common/ShaderCommon.js';
 
 export const Info = {
-  SkinColor: [ 0.7, 0.6, 0.5 ],
+  SkinMaterial: {
+    shader: ShaderCommon.Lighting,
+    uniforms: { color: [ 0.7, 0.6, 0.5 ] },
+  },
   Neck: 0.2,
   HeadRadius: 0.3,
   BodyRadius: 0.5,
   BodyHeight: 1,
-  BodyColor: [ 0.1, 0.2, 0.4 ],
+  BodyMaterial: {
+    shader: ShaderCommon.Lighting,
+    uniforms: { color: [ 0.1, 0.2, 0.4 ] },
+  },
   CarryWidth: 0.4,
   CarryHeight: 0.4,
   WalkTime: 1000,
@@ -14,7 +21,7 @@ export const Info = {
   TurnSpeed: 0.004,
   PickupDelay: 500,
   UnloadDelay: 500,
-}
+};
 
 // The "bob" part of the walk is used by head and hands
 const WalkBobFrames = [
@@ -23,23 +30,28 @@ const WalkBobFrames = [
     pos: [ 0, 0, 0 ],
   },
   {
-    time: Info.WalkTime / 2,
+    time: 0.5,
     pos: [ 0, -0.25, 0 ],
   },
   {
-    time: Info.WalkTime,
+    time: 1,
     pos: [ 0, 0, 0 ],
   },
 ];
 
 export const Model = {
   bounds: [ 0.5, 1.5, 0.5 ],
+  animations: {
+    walk: {
+      duration: 1000,
+    },
+  },
   parts: {
     Head: {
       mesh: MeshCommon.Sphere(),
       pos: [ 0, Info.BodyHeight + Info.Neck, 0 ],
       scale: [ Info.HeadRadius, Info.HeadRadius, Info.HeadRadius ],
-      color: Info.SkinColor,
+      material: Info.SkinMaterial,
       keyframes: {
         walk: WalkBobFrames,
       },
@@ -47,7 +59,7 @@ export const Model = {
     Body: {
       mesh: MeshCommon.Sphere( 32, 32, 0, Math.PI * 2, 0, Math.PI / 2 ),
       scale: [ Info.BodyRadius, Info.BodyHeight, Info.BodyRadius ],
-      color: Info.BodyColor,
+      material: Info.BodyMaterial,
       keyframes: {
         walk: [
           {
@@ -55,11 +67,11 @@ export const Model = {
             scale: [ 1, 1, 1 ],
           },
           {
-            time: Info.WalkTime / 2,
+            time: 0.5,
             scale: [ 1, 0.75, 1 ],
           },
           {
-            time: Info.WalkTime,
+            time: 1,
             scale: [ 1, 1, 1 ],
           },
         ],
@@ -69,7 +81,7 @@ export const Model = {
       mesh: MeshCommon.Sphere(),
       pos: [ Info.BodyRadius, Info.CarryHeight, -Info.CarryWidth ],
       scale: [ 0.1, 0.1, 0.1 ],
-      color: Info.SkinColor,
+      material: Info.SkinMaterial,
       keyframes: {
         walk: WalkBobFrames,
       },
@@ -78,7 +90,7 @@ export const Model = {
       mesh: MeshCommon.Sphere(),
       pos: [ Info.BodyRadius, Info.CarryHeight, Info.CarryWidth ],
       scale: [ 0.1, 0.1, 0.1 ],
-      color: Info.SkinColor,
+      material: Info.SkinMaterial,
       keyframes: {
         walk: WalkBobFrames,
       },
