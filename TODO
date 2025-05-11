@@ -1,16 +1,23 @@
-New test
+- New test
   - Scene class
     - Hold GL context
     - Camera and light information
-    - Functions to draw given entity, line, etc
-    - Lazy-loading for compiling shaders, preparing meshes, making VBAs, etc?
-  - Try using VBAs
-  - Draw single entity for now, with buttons (in HTML page) to click to trigger each animation
-    - Start with a tree, so we can have "impact" and "fell" animations
-      - Make tree have 3 cones, getting slightly smaller as you go up
-      - Button sets animation and time, updates revert these after animation completes
-      - Impact: slight woble back and forth on Z axis
-      - Fell: Fall all the way onto side on Z axis
+
+- Workers cut down trees
+  - Add "swing" animation
+  - Add axe (flat wide cone at top, simple cylinder for handle)
+    - Axe head could be narrowing cylinder flattened
+  - Need to attach axe to 'carry' attach point (or another?) when harvesting (and dettach when doing something else)
+    - Should the axe be tracked like an object that can be dropped? Or just be part of the model?
+    - If part of model, then need a way to account for parts of model only being visible during certain animations
+    - If not, then the axe is another entity in the world...where does it live when not being used?
+      - Does the axe have a lifecycle of sorts? Does it need to be picked up from somewhere and returned there?
+      - Maybe keep them by town center? Or lumber yard, if we build those?
+        - Stronghold has a building for each wood cutter. If we do that, the axe could be part of that building.
+
+- Animations
+  - Once or loop (just have loop: true or false?)
+  - Interpolation: linear, square, sine/cosine? (alternate sine and cosine for oscilation between keyframes?)
 
 - Workers avoid each other when walking
   - And avoid trees and stockpiles

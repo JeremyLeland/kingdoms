@@ -88,15 +88,16 @@ const blendInfo = {
 function applyAnimationTransform( modelMatrix, entity, info ) {
 
   // Start with info transforms if they exist, but will replace with any keyframe transforms below
-  //blendInfo.pos = info.pos ?? [ 0, 0, 0 ];
-  //blendInfo.rot = info.rot ?? [ 0, 0, 0 ];
-  //blendInfo.scale = info.scale ?? [ 1, 1, 1 ];
+  // TODO: Avoid garbage collection?
+  blendInfo.pos = info.pos ?? [ 0, 0, 0 ];
+  blendInfo.rot = info.rot ?? [ 0, 0, 0 ];
+  blendInfo.scale = info.scale ?? [ 1, 1, 1 ];
 
   if ( entity.animation ) {
     // Using fill to avoid garbage collection
-    blendInfo.pos.fill( 0 );
-    blendInfo.rot.fill( 0 );
-    blendInfo.scale.fill( 1 );
+    //blendInfo.pos.fill( 0 );
+    //blendInfo.rot.fill( 0 );
+    //blendInfo.scale.fill( 1 );
 
     const keyframes = info.keyframes?.[ entity.animation.name ];
 
@@ -105,23 +106,21 @@ function applyAnimationTransform( modelMatrix, entity, info ) {
 
       const nextIndex = keyframes.findIndex( e => e.time > percentTime );
 
-      if ( nextIndex >= 0 ) {
-        const prevFrame = keyframes[ nextIndex - 1 ];
-        const nextFrame = keyframes[ nextIndex ];
+      const prevFrame = keyframes.at( nextIndex - 1 );
+      const nextFrame = keyframes.at( nextIndex );
 
-        const partialTime = ( percentTime - prevFrame.time ) / ( nextFrame.time - prevFrame.time );
+      const partialTime = Math.min( 1, ( percentTime - prevFrame.time ) / ( nextFrame.time - prevFrame.time ) );
 
-        doBlend( blendInfo, prevFrame, nextFrame, partialTime, linearBlend );
+      doBlend( blendInfo, prevFrame, nextFrame, partialTime, linearBlend );
 
-        Entity.applyTransforms( modelMatrix, blendInfo );
-      }
-      else {
-        Entity.applyTransforms( modelMatrix, keyframes.at( -1 ) );
-      }
+      // Entity.applyTransforms( modelMatrix, blendInfo );
     }
   }
+
+  Entity.applyTransforms( modelMatrix, blendInfo );
   
-  Entity.applyTransforms( modelMatrix, info );
+  // TODO: Only apply if animation did not override it?
+  //Entity.applyTransforms( modelMatrix, info );
 
 }
 
@@ -136,7 +135,7 @@ canvas.draw = ( gl ) => {
 
     modelMatrixStack.save(); {
 
-      Entity.applyTransforms( modelMatrixStack.current, entity );
+      //Entity.applyTransforms( modelMatrixStack.current, entity );
 
       const modelInfo = Entity.ModelInfo[ entity.type ];
 

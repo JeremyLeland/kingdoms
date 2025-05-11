@@ -39,10 +39,19 @@ const WalkBobFrames = [
   },
 ];
 
+// TODO: Support cubic paths of some sort
+//       Maybe specify start and end points, then some number of control points?
+//       Control points for each keyframe?
+//       We can probably accomplish most of what we want for now with a single path
+
 export const Model = {
   bounds: [ 0.5, 1.5, 0.5 ],
   animations: {
     walk: {
+      duration: 1000,
+      loop: true,
+    },
+    swing: {
       duration: 1000,
     },
   },
@@ -53,7 +62,21 @@ export const Model = {
       scale: [ Info.HeadRadius, Info.HeadRadius, Info.HeadRadius ],
       material: Info.SkinMaterial,
       keyframes: {
-        walk: WalkBobFrames,
+        walk: [
+          {
+            time: 0,
+            pos: [ 0, Info.BodyHeight + Info.Neck, 0 ],
+          },
+          {
+            time: 0.5,
+            // TODO: Could we use vec3 here (so we can use add function?)
+            pos: [ 0, Info.BodyHeight + Info.Neck - 0.25, 0 ],
+          },
+          {
+            time: 1,
+            pos: [ 0, Info.BodyHeight + Info.Neck, 0 ],
+          },
+        ],
       },
     },
     Body: {
@@ -64,26 +87,57 @@ export const Model = {
         walk: [
           {
             time: 0,
-            scale: [ 1, 1, 1 ],
+            scale: [ Info.BodyRadius, Info.BodyHeight, Info.BodyRadius ],
           },
           {
             time: 0.5,
-            scale: [ 1, 0.75, 1 ],
+            scale: [ Info.BodyRadius, Info.BodyHeight * 0.75, Info.BodyRadius ],
           },
           {
             time: 1,
-            scale: [ 1, 1, 1 ],
+            scale: [ Info.BodyRadius, Info.BodyHeight, Info.BodyRadius ],
           },
         ],
       }
     },
+
+    // Currently, animated positions are added on to default positions
+    // Current hand positions are based on carry, which makes swinging weird
+    // Maybe hands should be at sides, then carry should be relative to that?
+    // Maybe animated position should replace default position?
+    //  - I'd have to redo the bob each time, but that may be better for overall clarity
+    //  - Yeah, do this. It's too confusing to have positions add
+
     LeftHand: {
       mesh: MeshCommon.Sphere(),
       pos: [ Info.BodyRadius, Info.CarryHeight, -Info.CarryWidth ],
       scale: [ 0.1, 0.1, 0.1 ],
       material: Info.SkinMaterial,
       keyframes: {
-        walk: WalkBobFrames,
+        walk: [
+          {
+            time: 0,
+            pos: [ Info.BodyRadius, Info.CarryHeight, -Info.CarryWidth ],
+          },
+          {
+            time: 0.5,
+            pos: [ Info.BodyRadius, Info.CarryHeight - 0.25, -Info.CarryWidth ],
+          },
+          {
+            time: 1,
+            pos: [ Info.BodyRadius, Info.CarryHeight, -Info.CarryWidth ],
+          },
+        ],
+        swing: [
+          {
+            time: 0,
+            pos: [ Info.BodyRadius, 1, 0 ],
+          },
+          {
+            time: 1,
+            pos: [ 0, 0, -Info.BodyRadius ],
+          },
+        ],
       },
     },
     RightHand: {
@@ -92,7 +146,30 @@ export const Model = {
       scale: [ 0.1, 0.1, 0.1 ],
       material: Info.SkinMaterial,
       keyframes: {
-        walk: WalkBobFrames,
+        walk: [
+          {
+            time: 0,
+            pos: [ Info.BodyRadius, Info.CarryHeight, Info.CarryWidth ],
+          },
+          {
+            time: 0.5,
+            pos: [ Info.BodyRadius, Info.CarryHeight - 0.25, Info.CarryWidth ],
+          },
+          {
+            time: 1,
+            pos: [ Info.BodyRadius, Info.CarryHeight, Info.CarryWidth ],
+          },
+        ],
+        swing: [
+          {
+            time: 0,
+            pos: [ 0, 1, Info.BodyRadius ],
+          },
+          {
+            time: 1,
+            pos: [ Info.BodyRadius, 0.5, 0 ],
+          },
+        ],
       },
     },
     Carry: {
