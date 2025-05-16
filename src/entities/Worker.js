@@ -24,6 +24,18 @@ export const Info = {
 };
 
 // The "bob" part of the walk is used by head and hands
+const WalkBobPath = {
+  start: {
+    pos: [ 0, 0, 0 ],
+  },
+  control1: {
+    pos: [ 0, -0.5, 0 ],
+  },
+  end: {
+    pos: [ 0, 0, 0 ],
+  },
+};
+
 const WalkBobFrames = [
   {
     time: 0,
@@ -61,6 +73,9 @@ export const Model = {
       pos: [ 0, Info.BodyHeight + Info.Neck, 0 ],
       scale: [ Info.HeadRadius, Info.HeadRadius, Info.HeadRadius ],
       material: Info.SkinMaterial,
+      animationPaths: {
+        walk: WalkBobPath,
+      },
       keyframes: {
         walk: WalkBobFrames,
       },
@@ -69,6 +84,19 @@ export const Model = {
       mesh: MeshCommon.Sphere( 32, 32, 0, Math.PI * 2, 0, Math.PI / 2 ),
       scale: [ Info.BodyRadius, Info.BodyHeight, Info.BodyRadius ],
       material: Info.BodyMaterial,
+      animationPaths: {
+        walk: {
+          start: {
+            scale: [ 1, 1, 1 ],
+          },
+          control1: {
+            scale: [ 1, 0.5, 1 ],
+          },
+          end: {
+            scale: [ 1, 1, 1 ],
+          },
+        },
+      },
       keyframes: {
         walk: [
           {
@@ -90,6 +118,9 @@ export const Model = {
       mesh: MeshCommon.Sphere(),
       scale: [ 0.1, 0.1, 0.1 ],
       material: Info.SkinMaterial,
+      animationPaths: {
+        walk: WalkBobPath,
+      },
       keyframes: {
         walk: WalkBobFrames,
         carry: {
@@ -112,6 +143,9 @@ export const Model = {
       mesh: MeshCommon.Sphere(),
       scale: [ 0.1, 0.1, 0.1 ],
       material: Info.SkinMaterial,
+      animationPaths: {
+        walk: WalkBobPath,
+      },
       keyframes: {
         walk: WalkBobFrames,
         carry: {
@@ -132,6 +166,9 @@ export const Model = {
     },
     Carry: {
       pos: [ Info.BodyRadius, Info.CarryHeight + 0.1, 0 ],
+      animationPaths: {
+        walk: WalkBobPath,
+      },
       keyframes: {
         walk: WalkBobFrames,
       },
