@@ -27,6 +27,25 @@ export const TreeModel = {
       duration: 1000,
     },
   },
+  // TODO: Paths instead of keyframes
+  //       Where to define? If its an overall path, should it be in the top level animation?
+  //       Then define animation paths as applicable in the inner parts?
+  //       Should each of these have a duration as well? Do they share parent one?
+  //       Seems like loop would need to be shared, or cause all sorts of problems. 
+  //       May as well have duration the same, too.
+  animationPaths: {
+    fell: {
+      start: {
+        rot: [ 0, 0, 0 ],
+      },
+      end: {
+        rot: [ 0, 0, Math.PI / 2 ],
+      },
+      control1: {
+        rot: [ 0, 0, 0.1 * Math.PI / 2 ],
+      },
+    },
+  },
   keyframes: {
     impact: [
       {
