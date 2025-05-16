@@ -62,21 +62,7 @@ export const Model = {
       scale: [ Info.HeadRadius, Info.HeadRadius, Info.HeadRadius ],
       material: Info.SkinMaterial,
       keyframes: {
-        walk: [
-          {
-            time: 0,
-            pos: [ 0, Info.BodyHeight + Info.Neck, 0 ],
-          },
-          {
-            time: 0.5,
-            // TODO: Could we use vec3 here (so we can use add function?)
-            pos: [ 0, Info.BodyHeight + Info.Neck - 0.25, 0 ],
-          },
-          {
-            time: 1,
-            pos: [ 0, Info.BodyHeight + Info.Neck, 0 ],
-          },
-        ],
+        walk: WalkBobFrames,
       },
     },
     Body: {
@@ -87,47 +73,29 @@ export const Model = {
         walk: [
           {
             time: 0,
-            scale: [ Info.BodyRadius, Info.BodyHeight, Info.BodyRadius ],
+            scale: [ 1, 1, 1 ],
           },
           {
             time: 0.5,
-            scale: [ Info.BodyRadius, Info.BodyHeight * 0.75, Info.BodyRadius ],
+            scale: [ 1, 0.75, 1 ],
           },
           {
             time: 1,
-            scale: [ Info.BodyRadius, Info.BodyHeight, Info.BodyRadius ],
+            scale: [ 1, 1, 1 ],
           },
         ],
       }
     },
-
-    // Currently, animated positions are added on to default positions
-    // Current hand positions are based on carry, which makes swinging weird
-    // Maybe hands should be at sides, then carry should be relative to that?
-    // Maybe animated position should replace default position?
-    //  - I'd have to redo the bob each time, but that may be better for overall clarity
-    //  - Yeah, do this. It's too confusing to have positions add
-
     LeftHand: {
       mesh: MeshCommon.Sphere(),
-      pos: [ Info.BodyRadius, Info.CarryHeight, -Info.CarryWidth ],
       scale: [ 0.1, 0.1, 0.1 ],
       material: Info.SkinMaterial,
       keyframes: {
-        walk: [
-          {
-            time: 0,
-            pos: [ Info.BodyRadius, Info.CarryHeight, -Info.CarryWidth ],
-          },
-          {
-            time: 0.5,
-            pos: [ Info.BodyRadius, Info.CarryHeight - 0.25, -Info.CarryWidth ],
-          },
-          {
-            time: 1,
-            pos: [ Info.BodyRadius, Info.CarryHeight, -Info.CarryWidth ],
-          },
-        ],
+        walk: WalkBobFrames,
+        carry: {
+          time: 0,
+          pos: [ Info.BodyRadius, Info.CarryHeight, -Info.CarryWidth ],
+        },
         swing: [
           {
             time: 0,
@@ -142,24 +110,14 @@ export const Model = {
     },
     RightHand: {
       mesh: MeshCommon.Sphere(),
-      pos: [ Info.BodyRadius, Info.CarryHeight, Info.CarryWidth ],
       scale: [ 0.1, 0.1, 0.1 ],
       material: Info.SkinMaterial,
       keyframes: {
-        walk: [
-          {
-            time: 0,
-            pos: [ Info.BodyRadius, Info.CarryHeight, Info.CarryWidth ],
-          },
-          {
-            time: 0.5,
-            pos: [ Info.BodyRadius, Info.CarryHeight - 0.25, Info.CarryWidth ],
-          },
-          {
-            time: 1,
-            pos: [ Info.BodyRadius, Info.CarryHeight, Info.CarryWidth ],
-          },
-        ],
+        walk: WalkBobFrames,
+        carry: {
+          time: 0,
+          pos: [ Info.BodyRadius, Info.CarryHeight, Info.CarryWidth ],
+        },
         swing: [
           {
             time: 0,

@@ -89,15 +89,19 @@ function applyAnimationTransform( modelMatrix, entity, info ) {
 
   // Start with info transforms if they exist, but will replace with any keyframe transforms below
   // TODO: Avoid garbage collection?
-  blendInfo.pos = info.pos ?? [ 0, 0, 0 ];
-  blendInfo.rot = info.rot ?? [ 0, 0, 0 ];
-  blendInfo.scale = info.scale ?? [ 1, 1, 1 ];
+  // blendInfo.pos = info.pos ?? [ 0, 0, 0 ];
+  // blendInfo.rot = info.rot ?? [ 0, 0, 0 ];
+  // blendInfo.scale = info.scale ?? [ 1, 1, 1 ];
 
   if ( entity.animation ) {
     // Using fill to avoid garbage collection
-    //blendInfo.pos.fill( 0 );
-    //blendInfo.rot.fill( 0 );
-    //blendInfo.scale.fill( 1 );
+    blendInfo.pos.fill( 0 );
+    blendInfo.rot.fill( 0 );
+    blendInfo.scale.fill( 1 );
+
+    // TODO: Support multiple animations at once (e.g. carry and walk)
+    //       These will probably need different animation times, since you might start a swing mid-walk
+    //       Could track these as a map of animation names and times, e.g. { 'walk': 2000, 'swing': 150 }
 
     const keyframes = info.keyframes?.[ entity.animation.name ];
 
@@ -113,14 +117,14 @@ function applyAnimationTransform( modelMatrix, entity, info ) {
 
       doBlend( blendInfo, prevFrame, nextFrame, partialTime, linearBlend );
 
-      // Entity.applyTransforms( modelMatrix, blendInfo );
+      Entity.applyTransforms( modelMatrix, blendInfo );
     }
   }
 
-  Entity.applyTransforms( modelMatrix, blendInfo );
+  // Entity.applyTransforms( modelMatrix, blendInfo );
   
   // TODO: Only apply if animation did not override it?
-  //Entity.applyTransforms( modelMatrix, info );
+  Entity.applyTransforms( modelMatrix, info );
 
 }
 
