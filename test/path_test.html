@@ -78,13 +78,6 @@ const blendInfo = {
 };
 
 function applyAnimationTransform( modelMatrix, entity, info ) {
-
-  // Start with info transforms if they exist, but will replace with any keyframe transforms below
-  // TODO: Avoid garbage collection?
-  // blendInfo.pos = info.pos ?? [ 0, 0, 0 ];
-  // blendInfo.rot = info.rot ?? [ 0, 0, 0 ];
-  // blendInfo.scale = info.scale ?? [ 1, 1, 1 ];
-
   if ( entity.animation ) {
     // Using fill to avoid garbage collection
     blendInfo.pos.fill( 0 );
@@ -106,11 +99,7 @@ function applyAnimationTransform( modelMatrix, entity, info ) {
     }
   }
 
-  // Entity.applyTransforms( modelMatrix, blendInfo );
-  
-  // TODO: Only apply if animation did not override it?
   Entity.applyTransforms( modelMatrix, info );
-
 }
 
 canvas.draw = ( gl ) => {
@@ -124,8 +113,6 @@ canvas.draw = ( gl ) => {
 
     modelMatrixStack.save(); {
 
-      //Entity.applyTransforms( modelMatrixStack.current, entity );
-
       const modelInfo = Entity.ModelInfo[ entity.type ];
 
       applyAnimationTransform( modelMatrixStack.current, entity, modelInfo );
@@ -135,8 +122,6 @@ canvas.draw = ( gl ) => {
 
           const partInfo = modelInfo.parts[ partName ];
 
-          // TODO: Can't combine main and animated, need to do one or other
-          //Entity.applyTransforms( modelMatrixStack.current, partInfo );
           applyAnimationTransform( modelMatrixStack.current, entity, partInfo );
 
           scene.drawMesh( gl, partInfo.mesh, partInfo.material, modelMatrixStack.current );
@@ -147,8 +132,6 @@ canvas.draw = ( gl ) => {
     }
 
     modelMatrixStack.restore();
-
-    // scene.drawMesh( gl, mesh, ShaderCommon.Lighting, modelMatrixStack.current );
   } );
 }
 

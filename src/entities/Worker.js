@@ -76,9 +76,6 @@ export const Model = {
       animationPaths: {
         walk: WalkBobPath,
       },
-      keyframes: {
-        walk: WalkBobFrames,
-      },
     },
     Body: {
       mesh: MeshCommon.Sphere( 32, 32, 0, Math.PI * 2, 0, Math.PI / 2 ),
@@ -97,22 +94,6 @@ export const Model = {
           },
         },
       },
-      keyframes: {
-        walk: [
-          {
-            time: 0,
-            scale: [ 1, 1, 1 ],
-          },
-          {
-            time: 0.5,
-            scale: [ 1, 0.75, 1 ],
-          },
-          {
-            time: 1,
-            scale: [ 1, 1, 1 ],
-          },
-        ],
-      }
     },
     LeftHand: {
       mesh: MeshCommon.Sphere(),
@@ -120,23 +101,17 @@ export const Model = {
       material: Info.SkinMaterial,
       animationPaths: {
         walk: WalkBobPath,
-      },
-      keyframes: {
-        walk: WalkBobFrames,
-        carry: {
-          time: 0,
-          pos: [ Info.BodyRadius, Info.CarryHeight, -Info.CarryWidth ],
-        },
-        swing: [
-          {
-            time: 0,
-            pos: [ Info.BodyRadius, 1, 0 ],
+        swing: {
+          start: {
+            pos: [ Info.BodyRadius, 0.5, 0 ],
           },
-          {
-            time: 1,
+          control1: {
+            pos: [ Info.BodyRadius, 0.25, -Info.BodyRadius ],
+          },
+          end: {
             pos: [ 0, 0, -Info.BodyRadius ],
           },
-        ],
+        },
       },
     },
     RightHand: {
@@ -145,32 +120,23 @@ export const Model = {
       material: Info.SkinMaterial,
       animationPaths: {
         walk: WalkBobPath,
-      },
-      keyframes: {
-        walk: WalkBobFrames,
-        carry: {
-          time: 0,
-          pos: [ Info.BodyRadius, Info.CarryHeight, Info.CarryWidth ],
-        },
-        swing: [
-          {
-            time: 0,
+        swing: {
+          start: {
             pos: [ 0, 1, Info.BodyRadius ],
           },
-          {
-            time: 1,
+          control1: {
+            pos: [ Info.BodyRadius, 0.75, Info.BodyRadius ],
+          },
+          end: {
             pos: [ Info.BodyRadius, 0.5, 0 ],
           },
-        ],
+        },
       },
     },
     Carry: {
       pos: [ Info.BodyRadius, Info.CarryHeight + 0.1, 0 ],
       animationPaths: {
         walk: WalkBobPath,
-      },
-      keyframes: {
-        walk: WalkBobFrames,
       },
       attach: 'carry',
       // TODO: attachFunc, something to specify how to draw multiple items
