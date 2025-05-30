@@ -14,6 +14,7 @@ export const Info = {
     shader: ShaderCommon.Lighting,
     uniforms: { color: [ 0.1, 0.2, 0.4 ] },
   },
+  HandRadius: 0.1,
   CarryWidth: 0.4,
   CarryHeight: 0.4,
   WalkTime: 1000,
@@ -36,20 +37,6 @@ const WalkBobPath = {
   },
 };
 
-const WalkBobFrames = [
-  {
-    time: 0,
-    pos: [ 0, 0, 0 ],
-  },
-  {
-    time: 0.5,
-    pos: [ 0, -0.25, 0 ],
-  },
-  {
-    time: 1,
-    pos: [ 0, 0, 0 ],
-  },
-];
 
 // TODO: Support cubic paths of some sort
 //       Maybe specify start and end points, then some number of control points?
@@ -69,17 +56,15 @@ export const Model = {
   },
   parts: {
     Head: {
-      mesh: MeshCommon.Sphere(),
+      mesh: MeshCommon.Sphere( Info.HeadRadius, Info.HeadRadius, Info.HeadRadius ),
       pos: [ 0, Info.BodyHeight + Info.Neck, 0 ],
-      scale: [ Info.HeadRadius, Info.HeadRadius, Info.HeadRadius ],
       material: Info.SkinMaterial,
       animationPaths: {
         walk: WalkBobPath,
       },
     },
     Body: {
-      mesh: MeshCommon.Sphere( 32, 32, 0, Math.PI * 2, 0, Math.PI / 2 ),
-      scale: [ Info.BodyRadius, Info.BodyHeight, Info.BodyRadius ],
+      mesh: MeshCommon.Sphere( Info.BodyRadius, Info.BodyHeight, Info.BodyRadius, 32, 32, 0, Math.PI * 2, 0, Math.PI / 2 ),
       material: Info.BodyMaterial,
       animationPaths: {
         walk: {
@@ -96,8 +81,7 @@ export const Model = {
       },
     },
     LeftHand: {
-      mesh: MeshCommon.Sphere(),
-      scale: [ 0.1, 0.1, 0.1 ],
+      mesh: MeshCommon.Sphere( Info.HandRadius, Info.HandRadius, Info.HandRadius ),
       material: Info.SkinMaterial,
       animationPaths: {
         walk: WalkBobPath,
@@ -115,8 +99,7 @@ export const Model = {
       },
     },
     RightHand: {
-      mesh: MeshCommon.Sphere(),
-      scale: [ 0.1, 0.1, 0.1 ],
+      mesh: MeshCommon.Sphere( Info.HandRadius, Info.HandRadius, Info.HandRadius ),
       material: Info.SkinMaterial,
       animationPaths: {
         walk: WalkBobPath,
@@ -134,9 +117,24 @@ export const Model = {
       },
     },
     Carry: {
-      pos: [ Info.BodyRadius, Info.CarryHeight + 0.1, 0 ],
+      // pos: [ Info.BodyRadius, Info.CarryHeight + 0.1, 0 ],
       animationPaths: {
         walk: WalkBobPath,
+        // Position for swing matches left hand, since this is the base of the axe
+        swing: {
+          start: {
+            pos: [ Info.BodyRadius, 0.5, 0 ],
+            rot: [ Math.PI / 4, 0, 0.6 ],
+          },
+          control1: {
+            pos: [ Info.BodyRadius, 0.25, -Info.BodyRadius ],
+            rot: [ Math.PI / 4, 0, -0.2 ],
+          },
+          end: {
+            pos: [ 0, 0, -Info.BodyRadius ],
+            rot: [ Math.PI / 4, 0, -0.8 ],
+          },
+        },
       },
       attach: 'carry',
       // TODO: attachFunc, something to specify how to draw multiple items

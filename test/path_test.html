@@ -87,6 +87,8 @@ const blendInfo = {
 };
 
 function applyAnimationTransform( modelMatrix, entity, info ) {
+  Entity.applyTransforms( modelMatrix, info );
+
   if ( entity.animation ) {
     // Using fill to avoid garbage collection
     blendInfo.pos.fill( 0 );
@@ -108,7 +110,7 @@ function applyAnimationTransform( modelMatrix, entity, info ) {
     }
   }
 
-  Entity.applyTransforms( modelMatrix, info );
+  //Entity.applyTransforms( modelMatrix, info );
 }
 
 function drawEntity( gl, entity, scene, modelMatrixStack ) {

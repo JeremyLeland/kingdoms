@@ -41,10 +41,11 @@ export function applyTransforms( matrix, transform ) {
     mat4.translate( matrix, matrix, transform.pos );
   }
 
+  // TODO: What order should these be in? Should I just use quaternions instead?
   if ( transform.rot ) {
-    mat4.rotate( matrix, matrix, transform.rot[ 2 ], [ 0, 0, 1 ] );
-    mat4.rotate( matrix, matrix, transform.rot[ 1 ], [ 0, 1, 0 ] );
     mat4.rotate( matrix, matrix, transform.rot[ 0 ], [ 1, 0, 0 ] );
+    mat4.rotate( matrix, matrix, transform.rot[ 1 ], [ 0, 1, 0 ] );
+    mat4.rotate( matrix, matrix, transform.rot[ 2 ], [ 0, 0, 1 ] );
   }
 
   if ( transform.scale ) {

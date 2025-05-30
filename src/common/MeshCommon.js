@@ -1,7 +1,7 @@
 import { vec3 } from '../../lib/gl-matrix.js';
 
 // Do we want to incorporate width, height, and depth during creation? Or just scale it later?
-export function Cube( /*width = 1, height = 1, depth = 1*/ ) {
+export function Cube( width = 1, height = 1, depth = 1 ) {
   return {
     positions: [
       // Back
@@ -39,7 +39,7 @@ export function Cube( /*width = 1, height = 1, depth = 1*/ ) {
        1, -1,  1,
        1, -1, -1,
       -1, -1, -1,
-    ] /*.map( ( e, index ) => e * [ width, height, depth ][ index % 3 ] )*/,
+    ].map( ( e, index ) => e * [ width, height, depth ][ index % 3 ] ),
     normals: [
       // Back
        0,  0, -1,
@@ -143,14 +143,14 @@ export function Cube( /*width = 1, height = 1, depth = 1*/ ) {
 }
 
 // TODO: Is there any reason to subdivide this into segments?
-export function Plane() {
+export function Plane( width = 1, height = 1, depth = 1 ) {
   return {
     positions: [
        1, -1,  0,
       -1, -1,  0,
       -1,  1,  0,
        1,  1,  0,
-    ],
+    ].map( ( e, index ) => e * [ width, height, depth ][ index % 3 ] ),
     normals: [
       0, 0, 1,
       0, 0, 1,
@@ -164,7 +164,7 @@ export function Plane() {
   };
 }
 
-export function Sphere( widthSegments = 32, heightSegments = 32, phiStart = 0, phiLength = Math.PI * 2, thetaStart = 0, thetaLength = Math.PI ) {
+export function Sphere( width = 1, height = 1, depth = 1, widthSegments = 32, heightSegments = 32, phiStart = 0, phiLength = Math.PI * 2, thetaStart = 0, thetaLength = Math.PI ) {
   const sphere = {
     positions: [],
     normals: [],
@@ -176,12 +176,14 @@ export function Sphere( widthSegments = 32, heightSegments = 32, phiStart = 0, p
       const phi   = phiStart   + phiLength   * col / widthSegments;
       const theta = thetaStart + thetaLength * row / heightSegments;
 
-      const x = Math.cos( phi ) * Math.sin( theta );
-      const y = Math.cos( theta );
-      const z = Math.sin( phi ) * Math.sin( theta );
+      const x = width * Math.cos( phi ) * Math.sin( theta );
+      const y = height * Math.cos( theta );
+      const z = depth * Math.sin( phi ) * Math.sin( theta );
 
       sphere.positions.push( x, y, z );
-      sphere.normals.push( x, y, z );
+
+      const normal = vec3.normalize( [], [ x / width ** 2, y / height ** 2, z / depth ** 2 ] );
+      sphere.normals.push( ...normal );
     }
   }
 
@@ -205,6 +207,7 @@ export function Sphere( widthSegments = 32, heightSegments = 32, phiStart = 0, p
 }
 
 
+// TODO: Scale cylinders by width/height/depth
 // TODO: Optional caps at top and bottom?
 // TODO: Is there any reason to subdivide this into height segments?
 export function Cylinder( radiusTop = 1, radiusBottom = 1, height = 1, widthSegments = 32, thetaStart = 0, thetaLength = Math.PI * 2 ) {

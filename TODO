@@ -1,3 +1,8 @@
+- Get rid of scaling in model info, apply it directly to meshes
+  - Scaling is causing issues with applying animations
+  - Tried this for cube, plane, and sphere. Still need to test, and figure out cylinder
+  
+
 - New test
   - Scene class
     - Hold GL context
