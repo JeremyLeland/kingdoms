@@ -16,13 +16,10 @@
         - Stronghold has a building for each wood cutter. If we do that, the axe could be part of that building.
 
 - Animations
-  - Put back the blending
-    - That way we can have walk bob + carry hands or axe holding hands, etc
-    - Go back to applying base positioning and scaling at the end
-    - If anim keyframes (eventually: path) apply that first
-    - Fix the hands issue by not specifying pos (making it 0,0,0)
+  - Blend multiple animations (e.g. walk and carry)
+  - Add swinging hands animation for walking without carrying anything
+  - Place axe in carry attachment and animate it as part of swing
   - Once or loop (just have loop: true or false?)
-  - Interpolation: linear, square, sine/cosine? (alternate sine and cosine for oscilation between keyframes?)
 
 - Workers avoid each other when walking
   - And avoid trees and stockpiles

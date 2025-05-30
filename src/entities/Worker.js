@@ -143,3 +143,26 @@ export const Model = {
     },
   }
 };
+
+export const Axe = {
+  parts: {
+    Head: {
+      mesh: MeshCommon.Cylinder(),
+      pos: [ 0, 1, 0 ],
+      scale: [ 0.3, 0.3, 0.05 ],
+      material: {
+        shader: ShaderCommon.Lighting,
+        uniforms: { color: [ 0.2, 0.2, 0.2 ] },
+      },
+    },
+    Handle: {
+      mesh: MeshCommon.Cylinder(),
+      pos: [ 0, 0, 0 ],
+      scale: [ 0.05, 1, 0.05 ],
+      material: {
+        shader: ShaderCommon.Lighting,
+        uniforms: { color: [ 0.3, 0.2, 0.1 ] },
+      },
+    },
+  }
+}

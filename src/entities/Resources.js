@@ -1,4 +1,5 @@
 import * as MeshCommon from '../common/MeshCommon.js';
+import * as ShaderCommon from '../common/ShaderCommon.js';
 
 // TODO: Want to keep track of overall bounds for objects
 // Should I just hardcode this separately from inner scales, or calculate it somehow?
@@ -17,7 +18,10 @@ export const WoodModel = {
       mesh: MeshCommon.Cube(),
       pos: [ 0, WoodBounds[ 1 ], 0 ],
       scale: WoodBounds,
-      color: [ 0.5, 0.2, 0.0 ],
+      material: {
+        shader: ShaderCommon.Lighting,
+        uniforms: { color: [ 0.5, 0.2, 0.0 ] },
+      }
     },
   }
 };
@@ -31,7 +35,10 @@ export const StoneModel = {
       mesh: MeshCommon.Cube(),
       pos: [ 0, StoneBounds[ 1 ], 0 ],
       scale: StoneBounds,
-      color: [ 0.4, 0.4, 0.4 ],
+      material: {
+        shader: ShaderCommon.Lighting,
+        uniforms: { color: [ 0.4, 0.4, 0.4 ] },
+      }
     },
   }
 };

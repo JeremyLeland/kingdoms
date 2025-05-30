@@ -25,6 +25,10 @@ import * as Entity from '../src/Entity.js';
 const canvas = new GLCanvas();
 const scene = new Scene( /*canvas.gl */ );
 
+// TODO: Try to draw in axe in the hands of the swing
+
+// TODO: Make animation be a map of animation names and their time, and apply all of them
+
 const entities = [
   {
     type: 'Worker',
@@ -32,8 +36,13 @@ const entities = [
     animation: {
       name: 'idle',
       time: 0,
+      // 'walk': 0,
+      // 'carry': 0,     // TODO: Does carry make sense as an animation? Maybe have a slight sway of the hands?
     },
     delay: 0,
+    carry: [
+      { type: 'Axe' },
+    ],
   },
 ];
 
@@ -102,6 +111,38 @@ function applyAnimationTransform( modelMatrix, entity, info ) {
   Entity.applyTransforms( modelMatrix, info );
 }
 
+function drawEntity( gl, entity, scene, modelMatrixStack ) {
+  modelMatrixStack.save(); {
+    
+    const modelInfo = Entity.ModelInfo[ entity.type ];
+
+    applyAnimationTransform( modelMatrixStack.current, entity, modelInfo );
+
+    for ( const partName in modelInfo.parts ) {
+      modelMatrixStack.save(); {
+
+        const partInfo = modelInfo.parts[ partName ];
+
+        applyAnimationTransform( modelMatrixStack.current, entity, partInfo );
+
+        scene.drawMesh( gl, partInfo.mesh, partInfo.material, modelMatrixStack.current );
+
+        if ( partInfo.attach ) {
+          const attachList = entity[ partInfo.attach ];
+
+          attachList.forEach( attached => {
+            drawEntity( gl, attached, scene, modelMatrixStack );
+          } );
+        }
+      }
+
+      modelMatrixStack.restore();
+    }
+  }
+
+  modelMatrixStack.restore();
+}
+
 canvas.draw = ( gl ) => {
 
   const fieldOfView = 45 * Math.PI / 180; // in radians
@@ -110,28 +151,7 @@ canvas.draw = ( gl ) => {
   mat4.perspective( scene.projectionMatrix, fieldOfView, canvas.canvas.width / canvas.canvas.height, zNear, zFar );
 
   entities.forEach( entity => {
-
-    modelMatrixStack.save(); {
-
-      const modelInfo = Entity.ModelInfo[ entity.type ];
-
-      applyAnimationTransform( modelMatrixStack.current, entity, modelInfo );
-
-      for ( const partName in modelInfo.parts ) {
-        modelMatrixStack.save(); {
-
-          const partInfo = modelInfo.parts[ partName ];
-
-          applyAnimationTransform( modelMatrixStack.current, entity, partInfo );
-
-          scene.drawMesh( gl, partInfo.mesh, partInfo.material, modelMatrixStack.current );
-        }
-
-        modelMatrixStack.restore();
-      }
-    }
-
-    modelMatrixStack.restore();
+    drawEntity( gl, entity, scene, modelMatrixStack );
   } );
 }
 

@@ -14,6 +14,7 @@ export const ModelInfo = {
   'Stone': Resources.StoneModel,
   'Stockpile': Buildings.StockpileModel,
   'Worker': Worker.Model,
+  'Axe': Worker.Axe,
   'Tree': Environment.TreeModel,
 
   // Why is ground so fucked up? Rotation isn't right at all, skews?
