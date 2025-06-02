@@ -13,7 +13,8 @@ export class OrbitCamera {
   #eyePos = vec3.create();
   #viewMatrix = mat4.create();
 
-  constructor() {
+  constructor( vals ) {
+    Object.assign( this, vals );
     this.#updateViewMatrix();
   }
 

@@ -3,13 +3,15 @@
 
 <div id="ui" style="position: absolute"></div>
 
+<input style="position: absolute; top: 32; width: 99%" id="time" type="range" min="0" value="0" max="1000" step="1" autocomplete="off"/>
+
 <script type="module">
 
 import { mat4, vec3 } from '../lib/gl-matrix.js';
 import { GLCanvas } from '../src/common/GLCanvas.js';
 import { MatrixStack } from '../src/common/MatrixStack.js';
 
-import { Scene } from '../src/common/Scene.js';
+import { OrbitCamera, Scene } from '../src/common/Scene.js';
 
 import * as MeshCommon from '../src/common/MeshCommon.js';
 import * as ShaderCommon from '../src/common/ShaderCommon.js';
@@ -25,7 +27,19 @@ import * as Entity from '../src/Entity.js';
 const canvas = new GLCanvas();
 const scene = new Scene( /*canvas.gl */ );
 
-// TODO: Try to draw in axe in the hands of the swing
+//
+// Persist camera state between sessions
+//
+const TestStateKey = 'kingdoms_pathTestState';
+
+const oldState = JSON.parse( localStorage.getItem( TestStateKey ) );
+if ( oldState ) {
+  scene.camera = new OrbitCamera( oldState );
+}
+
+window.addEventListener( 'beforeunload', ( e ) =>
+  localStorage.setItem( TestStateKey, JSON.stringify( scene.camera ) )
+);
 
 // TODO: Make animation be a map of animation names and their time, and apply all of them
 
@@ -34,7 +48,7 @@ const entities = [
     type: 'Worker',
     pos: [ 0, 0, 0 ],
     animation: {
-      name: 'idle',
+      name: 'swing',
       time: 0,
       // 'walk': 0,
       // 'carry': 0,     // TODO: Does carry make sense as an animation? Maybe have a slight sway of the hands?
@@ -46,8 +60,16 @@ const entities = [
   },
 ];
 
+
+const timeSlider = document.getElementById( 'time' );
+timeSlider.addEventListener( 'input', e => {
+  const newTime = +timeSlider.value;
+
+  entities.forEach( entity => entity.animation.time = newTime );
+} );
+
 canvas.update = ( dt ) => {
-  entities.forEach( entity => entity.animation.time += dt );
+  // entities.forEach( entity => entity.animation.time += dt );
 }
 
 function startAnimation( entity, name ) {
@@ -60,15 +82,15 @@ const modelMatrixStack = new MatrixStack( mat4.create() );
 
 // TODO: Draw grid for ground (to help us see where things are and if they are underground)
 
-
 function doBlend( out, animationPath, time ) {
-
+  
   const t = Math.max( 0, Math.min( 1, time ) );   // should we clamp this elsewhere?
-
+  
   const A = ( 1 - t ) ** 2;
   const B = 2 * ( 1 - t ) * t;
   const C = t ** 2;
-
+  
+  // For performance, would it be better to explicitly call out the possible properties?
   for ( const prop in animationPath.start ) {
     for ( let i = 0; i < 3; i ++ ) {
       const P0 = animationPath.start[ prop ][ i ];
@@ -84,16 +106,19 @@ const blendInfo = {
   pos: [ 0, 0, 0 ],
   rot: [ 0, 0, 0 ],
   scale: [ 1, 1, 1 ],
+  offset: [ 0, 0, 0 ],
 };
 
 function applyAnimationTransform( modelMatrix, entity, info ) {
-  Entity.applyTransforms( modelMatrix, info );
+  // Entity.applyTransforms( modelMatrix, info );
+  // moving this out so we can more easily draw animation path
 
   if ( entity.animation ) {
     // Using fill to avoid garbage collection
     blendInfo.pos.fill( 0 );
     blendInfo.rot.fill( 0 );
     blendInfo.scale.fill( 1 );
+    blendInfo.offset.fill( 0 );
 
     // TODO: Support multiple animations at once (e.g. carry and walk)
     //       These will probably need different animation times, since you might start a swing mid-walk
@@ -109,21 +134,72 @@ function applyAnimationTransform( modelMatrix, entity, info ) {
       Entity.applyTransforms( modelMatrix, blendInfo );
     }
   }
-
-  //Entity.applyTransforms( modelMatrix, info );
 }
+
+
+// TODO: For path debugging, have different colors for each path (increment counter as we draw so first red, second orange, etc)
+//       Use different meshes for start/end and control points
+//       Bonus: Draw the curved path with lines! (lots of blend calls to find points?)
+//       Move all this to Entity.js
+const pathPointMesh = MeshCommon.Cube( 0.05, 0.05, 0.05 );
+const pathPointMaterial = {
+  shader: ShaderCommon.Lighting,
+  uniforms: { color: [ 0.5, 0.5, 0.5 ] },
+};
+const pathControlPointMaterial = {
+  shader: ShaderCommon.Lighting,
+  uniforms: { color: [ 0.8, 0.8, 0.8 ] },
+};
 
 function drawEntity( gl, entity, scene, modelMatrixStack ) {
   modelMatrixStack.save(); {
     
     const modelInfo = Entity.ModelInfo[ entity.type ];
 
-    applyAnimationTransform( modelMatrixStack.current, entity, modelInfo );
+    Entity.applyTransforms( modelMatrixStack.current, modelInfo );    // NOTE: Do we ever have model-wide transforms?
+
+    // const animModelMatrix = mat4.create();
+    // const animationPath = modelInfo.animationPaths?.[ entity.animation.name ];
+
+    // if ( animationPath ) {
+    //   mat4.copy( animModelMatrix, modelMatrixStack.current );
+    //   Entity.applyTransforms( animModelMatrix, animationPath.start );
+    //   scene.drawMesh( gl, pathPointMesh, pathPointMaterial, animModelMatrix );
+
+    //   mat4.copy( animModelMatrix, modelMatrixStack.current );
+    //   Entity.applyTransforms( animModelMatrix, animationPath.control1 );
+    //   scene.drawMesh( gl, pathPointMesh, pathControlPointMaterial, animModelMatrix )
+
+    //   mat4.copy( animModelMatrix, modelMatrixStack.current );
+    //   Entity.applyTransforms( animModelMatrix, animationPath.end );
+    //   scene.drawMesh( gl, pathPointMesh, pathPointMaterial, animModelMatrix )
+    // }
+
+    applyAnimationTransform( modelMatrixStack.current, entity, modelInfo );   // we definitely have model-wide animations
 
     for ( const partName in modelInfo.parts ) {
       modelMatrixStack.save(); {
 
         const partInfo = modelInfo.parts[ partName ];
+
+        Entity.applyTransforms( modelMatrixStack.current, partInfo );
+
+        // const animModelMatrix = mat4.create();
+        // const animationPath = partInfo.animationPaths?.[ entity.animation.name ];
+
+        // if ( animationPath ) {
+        //   mat4.copy( animModelMatrix, modelMatrixStack.current );
+        //   Entity.applyTransforms( animModelMatrix, animationPath.start );
+        //   scene.drawMesh( gl, pathPointMesh, pathPointMaterial, animModelMatrix );
+
+        //   mat4.copy( animModelMatrix, modelMatrixStack.current );
+        //   Entity.applyTransforms( animModelMatrix, animationPath.control1 );
+        //   scene.drawMesh( gl, pathPointMesh, pathControlPointMaterial, animModelMatrix )
+
+        //   mat4.copy( animModelMatrix, modelMatrixStack.current );
+        //   Entity.applyTransforms( animModelMatrix, animationPath.end );
+        //   scene.drawMesh( gl, pathPointMesh, pathPointMaterial, animModelMatrix )
+        // }
 
         applyAnimationTransform( modelMatrixStack.current, entity, partInfo );
 

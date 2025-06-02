@@ -48,6 +48,10 @@ export function applyTransforms( matrix, transform ) {
     mat4.rotate( matrix, matrix, transform.rot[ 2 ], [ 0, 0, 1 ] );
   }
 
+  if ( transform.offset ) {
+    mat4.translate( matrix, matrix, transform.offset );
+  }
+
   if ( transform.scale ) {
     mat4.scale( matrix, matrix, transform.scale );
   }

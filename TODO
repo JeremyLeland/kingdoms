@@ -1,7 +1,18 @@
+- Offset: add an offset transform (which is applied before rotate). Might make some rotational animations easier
+  - Or, instead of that, maybe the offset is applied after everything else, so it's in that plane? (after/before is confusing)
+  - Make cylinders centered (like everything else) to make this easier
+    - Trying to center axe in front of worker, then move it down to side and rotate it.
+      - Once that looks ok, use offset for hands to place on handle
+
+- Save camera state so we aren't having to move everything after every reload
+
 - Get rid of scaling in model info, apply it directly to meshes
   - Scaling is causing issues with applying animations
   - Tried this for cube, plane, and sphere. Still need to test, and figure out cylinder
   
+- Slider to control playback of animation (so I can see the beginning)
+  - Bonus: Way to tweak animation from test page (so I don't have to keep refreshing?)
+  - May not matter if I can remember the slider position, then I can just refresh after changing in editor
 
 - New test
   - Scene class
@@ -19,6 +30,7 @@
       - Does the axe have a lifecycle of sorts? Does it need to be picked up from somewhere and returned there?
       - Maybe keep them by town center? Or lumber yard, if we build those?
         - Stronghold has a building for each wood cutter. If we do that, the axe could be part of that building.
+  - Eventual goal: worker walks up to tree, cuts it down, takes resulting logs to stockpile
 
 - Animations
   - Blend multiple animations (e.g. walk and carry)
