@@ -5,10 +5,6 @@
       - Once that looks ok, use offset for hands to place on handle
 
 - Save camera state so we aren't having to move everything after every reload
-
-- Get rid of scaling in model info, apply it directly to meshes
-  - Scaling is causing issues with applying animations
-  - Tried this for cube, plane, and sphere. Still need to test, and figure out cylinder
   
 - Slider to control playback of animation (so I can see the beginning)
   - Bonus: Way to tweak animation from test page (so I don't have to keep refreshing?)

@@ -151,21 +151,21 @@ export const Model = {
             //pos: [ Info.BodyRadius, 0, 0 ],
             // rot: [ Math.PI / 4, 0, 0.6 ],
             //offset: [ 1, 0, 0 ],
-            rot: [ Math.PI / 4, 0, 0 ],
+            // rot: [ Math.PI / 4, 0, 0 ],
           },
           control1: {
             pos: [ Info.BodyRadius, 0.25, -Info.BodyRadius ],
             //pos: [ Info.BodyRadius, 0, 0 ],
             // rot: [ Math.PI / 4, 0, -0.2 ],
             //offset: [ 1, 0, 0 ],
-            rot: [ Math.PI / 4, 0, -Math.PI / 4 ],
+            // rot: [ Math.PI / 4, 0, -Math.PI / 4 ],
           },
           end: {
             pos: [ 0, 0, -Info.BodyRadius ],
             //pos: [ Info.BodyRadius, 0, 0 ],
             // rot: [ Math.PI / 4, 0, -0.6 ],
             //offset: [ 1, 0, 0 ],
-            rot: [ Math.PI / 4, 0, -Math.PI / 2 ],
+            // rot: [ Math.PI / 4, 0, -Math.PI / 2 ],
           },
         },
       },
@@ -175,21 +175,29 @@ export const Model = {
   }
 };
 
+const AxeInfo = {
+  Head: {
+    Height: 0.3,
+    Width: 0.3,
+  },
+  Handle: {
+    Height: 0.7,
+    Radius: 0.05,
+  },
+}
+
 export const Axe = {
   parts: {
     Head: {
-      mesh: MeshCommon.Cylinder(),
-      pos: [ 0, 1, 0 ],
-      scale: [ 0.3, 0.3, 0.05 ],
+      mesh: MeshCommon.Cylinder( AxeInfo.Head.Width, AxeInfo.Head.Height, AxeInfo.Handle.Radius ),
+      pos: [ 0, ( AxeInfo.Handle.Height + AxeInfo.Head.Height ) / 2, 0 ],
       material: {
         shader: ShaderCommon.Lighting,
         uniforms: { color: [ 0.2, 0.2, 0.2 ] },
       },
     },
     Handle: {
-      mesh: MeshCommon.Cylinder(),
-      pos: [ 0, 0, 0 ],
-      scale: [ 0.05, 1, 0.05 ],
+      mesh: MeshCommon.Cylinder( AxeInfo.Handle.Radius, AxeInfo.Handle.Height, AxeInfo.Handle.Radius ),
       material: {
         shader: ShaderCommon.Lighting,
         uniforms: { color: [ 0.3, 0.2, 0.1 ] },

@@ -210,12 +210,14 @@ export function Sphere( width = 1, height = 1, depth = 1, widthSegments = 32, he
 // TODO: Scale cylinders by width/height/depth
 // TODO: Optional caps at top and bottom?
 // TODO: Is there any reason to subdivide this into height segments?
-export function Cylinder( radiusTop = 1, radiusBottom = 1, height = 1, widthSegments = 32, thetaStart = 0, thetaLength = Math.PI * 2 ) {
+export function Cylinder( width = 1, height = 1, depth = 1, radiusTop = 1, radiusBottom = 1, widthSegments = 32, thetaStart = 0, thetaLength = Math.PI * 2 ) {
   const cylinder = {
     positions: [],
     normals: [],
     indices: [],
   };
+
+  // TODO: Account for differences in width and depth
 
   const slope = ( radiusBottom - radiusTop ) / height;
 
@@ -223,15 +225,15 @@ export function Cylinder( radiusTop = 1, radiusBottom = 1, height = 1, widthSegm
   for ( let col = 0; col <= widthSegments; col ++ ) {
     const phi = thetaStart + thetaLength * col / widthSegments;
     
-    const cosTheta = Math.cos( phi );
-    const sinTheta = Math.sin( phi );
+    const cosTheta = width * Math.cos( phi );
+    const sinTheta = depth * Math.sin( phi );
 
-    const normal = vec3.normalize( [], [ cosTheta, slope, sinTheta ] );
+    const normal = vec3.normalize( [], [ cosTheta / width ** 2, slope / height ** 2, sinTheta / depth ** 2 ] );
 
-    cylinder.positions.push( radiusTop * cosTheta, height, radiusTop * sinTheta );
+    cylinder.positions.push( radiusTop * cosTheta, height / 2, radiusTop * sinTheta );
     cylinder.normals.push( ...normal );
 
-    cylinder.positions.push( radiusBottom * cosTheta, 0, radiusBottom * sinTheta );
+    cylinder.positions.push( radiusBottom * cosTheta, -height / 2, radiusBottom * sinTheta );
     cylinder.normals.push( ...normal );
   }
 
@@ -249,8 +251,8 @@ export function Cylinder( radiusTop = 1, radiusBottom = 1, height = 1, widthSegm
 // TODO: Optional cap at bottom?
 // TODO: Is there any reason to subdivide this into height segments?
 // TODO: Make this special case of Cylinder? (allow different top and bottom radius)
-export function Cone( widthSegments = 32, thetaStart = 0, thetaLength = Math.PI * 2 ) {
-  return Cylinder( 0, 1, 1, widthSegments, thetaStart, thetaLength );
+export function Cone( width = 1, height = 1, depth = 1, widthSegments = 32, thetaStart = 0, thetaLength = Math.PI * 2 ) {
+  return Cylinder( width, height, depth, 0, 1, widthSegments, thetaStart, thetaLength );
 }
 
 export function getMesh( gl, meshInfo ) {  
