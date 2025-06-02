@@ -43,17 +43,8 @@ const WalkBobPath = {
 //       Control points for each keyframe?
 //       We can probably accomplish most of what we want for now with a single path
 
-// TODO: Make the worker always use hands together (holding axe, carrying wood, etc)
-//       And the warriors can use hands separately? (sword in one, shield in other)
-//       What if we want a warrior to use an axe? And workers could walk with hands swinging separately?
-//       Having everything have separate paths is simplest, but figuring out the right paths is hard :(
-//       Maybe add an offset? So we could use rotation to move around offset instead of trying to figure out positions
 
-// TODO: It's easiest to animate one thing. A sword, an axe, a bundle of wood.
-//       Sometimes there is one hand attached to it, sometimes there are two.
-//       For my own sanity, I need a way to specify what the hands are moving based on
-//       Giving the hands and axe the same transforms is the same as attaching them.
-//       Maybe the "offset" should be relative to that?
+// TODO: Helper function to add offsets to existing path
 
 export const Model = {
   bounds: [ 0.5, 1.5, 0.5 ],
@@ -99,19 +90,19 @@ export const Model = {
         walk: WalkBobPath,
         swing: {
           start: {
-            // pos: [ Info.BodyRadius, 0.5, 0 ],
-            // offset: [ 1, 0, 0 ],
-            // rot: [ 1, 0, 1 ],
+            pos: [ Info.BodyRadius - 0.2, 1, Info.BodyRadius ],
+            rot: [ Math.PI / 4, 0, Math.PI / 4 ],
+            offset: [ 0, 0.2, 0 ],
           },
           control1: {
-            // pos: [ Info.BodyRadius, 0.25, -Info.BodyRadius ],
-            // offset: [ 1, 0, 0 ],
-            // rot: [ 2, 0, 2 ],
+            pos: [ Info.BodyRadius, 0.5, -Info.BodyRadius ],
+            rot: [ Math.PI / 4, 0, -Math.PI / 4 ],
+            offset: [ 0, 0.2, 0 ],
           },
           end: {
-            // pos: [ 0, 0, -Info.BodyRadius ],
-            // offset: [ 1, 0, 0 ],
-            // rot: [ 3, 0, 3 ],
+            pos: [ 0, 0.25, -Info.BodyRadius ],
+            rot: [ Math.PI / 4, 0, -Math.PI / 2 ],
+            offset: [ 0, 0.2, 0 ],
           },
         },
       },
@@ -123,19 +114,19 @@ export const Model = {
         walk: WalkBobPath,
         swing: {
           start: {
-            // pos: [ 0, 1, Info.BodyRadius ],
-            // offset: [ 1, 0, 0 ],
-            // rot: [ 1, 0, 0 ],
+            pos: [ Info.BodyRadius - 0.2, 1, Info.BodyRadius ],
+            rot: [ Math.PI / 4, 0, Math.PI / 4 ],
+            offset: [ 0, -0.2, 0 ],
           },
           control1: {
-            // pos: [ Info.BodyRadius + 0.2, 1.2, Info.BodyRadius ],
-            // offset: [ 1, 0, 0 ],
-            // rot: [ 2, 0, 1 ],
+            pos: [ Info.BodyRadius, 0.5, -Info.BodyRadius ],
+            rot: [ Math.PI / 4, 0, -Math.PI / 4 ],
+            offset: [ 0, -0.2, 0 ],
           },
           end: {
-            // pos: [ Info.BodyRadius, 0.5, 0 ],
-            // offset: [ 1, 0, 0 ],
-            // rot: [ 3, 0, 2 ],
+            pos: [ 0, 0.25, -Info.BodyRadius ],
+            rot: [ Math.PI / 4, 0, -Math.PI / 2 ],
+            offset: [ 0, -0.2, 0 ],
           },
         },
       },
@@ -147,25 +138,16 @@ export const Model = {
         // Position for swing matches left hand, since this is the base of the axe
         swing: {
           start: {
-            pos: [ Info.BodyRadius, 0.5, 0 ],
-            //pos: [ Info.BodyRadius, 0, 0 ],
-            // rot: [ Math.PI / 4, 0, 0.6 ],
-            //offset: [ 1, 0, 0 ],
-            // rot: [ Math.PI / 4, 0, 0 ],
+            pos: [ Info.BodyRadius - 0.2, 1, Info.BodyRadius ],
+            rot: [ Math.PI / 4, 0, Math.PI / 4 ],
           },
           control1: {
-            pos: [ Info.BodyRadius, 0.25, -Info.BodyRadius ],
-            //pos: [ Info.BodyRadius, 0, 0 ],
-            // rot: [ Math.PI / 4, 0, -0.2 ],
-            //offset: [ 1, 0, 0 ],
-            // rot: [ Math.PI / 4, 0, -Math.PI / 4 ],
+            pos: [ Info.BodyRadius, 0.5, -Info.BodyRadius ],
+            rot: [ Math.PI / 4, 0, -Math.PI / 4 ],
           },
           end: {
-            pos: [ 0, 0, -Info.BodyRadius ],
-            //pos: [ Info.BodyRadius, 0, 0 ],
-            // rot: [ Math.PI / 4, 0, -0.6 ],
-            //offset: [ 1, 0, 0 ],
-            // rot: [ Math.PI / 4, 0, -Math.PI / 2 ],
+            pos: [ 0, 0.25, -Info.BodyRadius ],
+            rot: [ Math.PI / 4, 0, -Math.PI / 2 ],
           },
         },
       },

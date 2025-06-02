@@ -127,7 +127,7 @@ export class Scene {
     }
 
     // TODO: Lighting -- can we make these structs, then check for struct location before passing in?
-    gl.uniform3fv( shader.uniformLocations.lightPos, [ 10, 10, 10 ] );
+    gl.uniform3fv( shader.uniformLocations.lightPos, [ 10, 0, 0 ] );
     gl.uniform3fv( shader.uniformLocations.lightColor, [ 1, 1, 1 ] );
     gl.uniform3fv( shader.uniformLocations.eyePos, this.camera.getEyePos() );
 
