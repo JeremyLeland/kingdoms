@@ -1,20 +1,3 @@
-- Offset: add an offset transform (which is applied before rotate). Might make some rotational animations easier
-  - Or, instead of that, maybe the offset is applied after everything else, so it's in that plane? (after/before is confusing)
-  - Make cylinders centered (like everything else) to make this easier
-    - Trying to center axe in front of worker, then move it down to side and rotate it.
-      - Once that looks ok, use offset for hands to place on handle
-
-- Save camera state so we aren't having to move everything after every reload
-  
-- Slider to control playback of animation (so I can see the beginning)
-  - Bonus: Way to tweak animation from test page (so I don't have to keep refreshing?)
-  - May not matter if I can remember the slider position, then I can just refresh after changing in editor
-
-- New test
-  - Scene class
-    - Hold GL context
-    - Camera and light information
-
 - Workers cut down trees
   - Add "swing" animation
   - Add axe (flat wide cone at top, simple cylinder for handle)
@@ -28,10 +11,16 @@
         - Stronghold has a building for each wood cutter. If we do that, the axe could be part of that building.
   - Eventual goal: worker walks up to tree, cuts it down, takes resulting logs to stockpile
 
+- Scene class
+  - Hold GL context (not sure if I want to do this or pass it in)
+  - Camera and light information (still need to this, lighting is currently hardcoded)
+    - Maybe this is more of a World thing than a Scene thing?
+      - Lights should be in the world at least
+      - Camera may be more of a local state...not sure if makes sense for world
+
 - Animations
   - Blend multiple animations (e.g. walk and carry)
   - Add swinging hands animation for walking without carrying anything
-  - Place axe in carry attachment and animate it as part of swing
   - Once or loop (just have loop: true or false?)
 
 - Workers avoid each other when walking
@@ -59,3 +48,7 @@
   - Carrots are orange cone and green stuff
     - Slowly raise so part of orange sticks up and make green part bigger?
     - Carry carrots in basket?
+
+- Control harvesting by setting desired minimums
+  - Show table of available resources next to number input to set desired level
+  - Grab more any time actual number drops below desired

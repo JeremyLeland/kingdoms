@@ -57,6 +57,60 @@ export function applyTransforms( matrix, transform ) {
   }
 }
 
+function doBlend( out, animationPath, time ) {
+  
+  const t = Math.max( 0, Math.min( 1, time ) );   // should we clamp this elsewhere?
+  
+  const A = ( 1 - t ) ** 2;
+  const B = 2 * ( 1 - t ) * t;
+  const C = t ** 2;
+  
+  // For performance, would it be better to explicitly call out the possible properties?
+  for ( const prop in animationPath.start ) {
+    for ( let i = 0; i < 3; i ++ ) {
+      const P0 = animationPath.start[ prop ][ i ];
+      const P1 = animationPath.control1[ prop ][ i ];
+      const P2 = animationPath.end[ prop ][ i ];
+
+      out[ prop ][ i ] = A * P0 + B * P1 + C * P2;
+    }
+  }
+}
+
+const blendInfo = {
+  pos: [ 0, 0, 0 ],
+  rot: [ 0, 0, 0 ],
+  scale: [ 1, 1, 1 ],
+  offset: [ 0, 0, 0 ],
+};
+
+function applyAnimationTransform( modelMatrix, entity, info ) {
+  // applyTransforms( modelMatrix, info );
+  // moving this out so we can more easily draw animation path
+
+  if ( entity.animation ) {
+    // Using fill to avoid garbage collection
+    blendInfo.pos.fill( 0 );
+    blendInfo.rot.fill( 0 );
+    blendInfo.scale.fill( 1 );
+    blendInfo.offset.fill( 0 );
+
+    // TODO: Support multiple animations at once (e.g. carry and walk)
+    //       These will probably need different animation times, since you might start a swing mid-walk
+    //       Could track these as a map of animation names and times, e.g. { 'walk': 2000, 'swing': 150 }
+
+    const animationPath = info.animationPaths?.[ entity.animation.name ];
+
+    if ( animationPath ) {
+      const percentTime = entity.animation.time / ModelInfo[ entity.type ].animations[ entity.animation.name ].duration;
+
+      doBlend( blendInfo, animationPath, percentTime );
+
+      applyTransforms( modelMatrix, blendInfo );
+    }
+  }
+}
+
 const normalMatrix = mat4.create();
 
 const blend = {
@@ -64,147 +118,86 @@ const blend = {
   scale: [ 1, 1, 1 ],
 };
 
-// TODO: Render scene instead of taking in all of this extra info
+// TODO: For path debugging, have different colors for each path (increment counter as we draw so first red, second orange, etc)
+//       Use different meshes for start/end and control points
+//       Bonus: Draw the curved path with lines! (lots of blend calls to find points?)
+const pathPointMesh = MeshCommon.Cube( 0.05, 0.05, 0.05 );
+const pathPointMaterial = {
+  shader: ShaderCommon.Lighting,
+  uniforms: { color: [ 0.5, 0.5, 0.5 ] },
+};
+const pathControlPointMaterial = {
+  shader: ShaderCommon.Lighting,
+  uniforms: { color: [ 0.8, 0.8, 0.8 ] },
+};
 
-export function draw( entity, gl, modelMatrixStack, viewMatrix, projectionMatrix, eyePos ) {
 
-  modelMatrixStack.save();
+export function draw( gl, entity, scene, modelMatrixStack ) {
+  modelMatrixStack.save(); {
+    
+    const modelInfo = ModelInfo[ entity.type ];
 
-  applyTransforms( modelMatrixStack.current, entity );
+    applyTransforms( modelMatrixStack.current, modelInfo );    // NOTE: Do we ever have model-wide transforms?
 
-  const modelInfo = ModelInfo[ entity.type ];
+    // const animModelMatrix = mat4.create();
+    // const animationPath = modelInfo.animationPaths?.[ entity.animation.name ];
 
-  for ( const partName in modelInfo.parts ) {
-    const partInfo = modelInfo.parts[ partName ];
+    // if ( animationPath ) {
+    //   mat4.copy( animModelMatrix, modelMatrixStack.current );
+    //   Entity.applyTransforms( animModelMatrix, animationPath.start );
+    //   scene.drawMesh( gl, pathPointMesh, pathPointMaterial, animModelMatrix );
 
-    modelMatrixStack.save();
+    //   mat4.copy( animModelMatrix, modelMatrixStack.current );
+    //   Entity.applyTransforms( animModelMatrix, animationPath.control1 );
+    //   scene.drawMesh( gl, pathPointMesh, pathControlPointMaterial, animModelMatrix )
 
-    if ( entity.animation ) {
+    //   mat4.copy( animModelMatrix, modelMatrixStack.current );
+    //   Entity.applyTransforms( animModelMatrix, animationPath.end );
+    //   scene.drawMesh( gl, pathPointMesh, pathPointMaterial, animModelMatrix )
+    // }
 
-      // TODO: Where should animation specific transforms go? Here?
-      // Using fill to avoid garbage collection
-      blend.pos.fill( 0 );
-      blend.scale.fill( 1 );
-      
-      const keyframes = partInfo.keyframes?.[ entity.animation.name ];
+    applyAnimationTransform( modelMatrixStack.current, entity, modelInfo );   // we definitely have model-wide animations
 
-      if ( keyframes ) {
-        const totalTime = keyframes[ keyframes.length - 1 ].time;
-        const loopTime = entity.animation.time % totalTime;
-        
-        let nextIndex = 0;
-        for ( let i = 0; i < keyframes.length; i ++ ) {
-          if ( keyframes[ i ].time > loopTime ) {
-            nextIndex = i;
-            break;
-          }
+    for ( const partName in modelInfo.parts ) {
+      modelMatrixStack.save(); {
+
+        const partInfo = modelInfo.parts[ partName ];
+
+        applyTransforms( modelMatrixStack.current, partInfo );
+
+        // const animModelMatrix = mat4.create();
+        // const animationPath = partInfo.animationPaths?.[ entity.animation.name ];
+
+        // if ( animationPath ) {
+        //   mat4.copy( animModelMatrix, modelMatrixStack.current );
+        //   Entity.applyTransforms( animModelMatrix, animationPath.start );
+        //   scene.drawMesh( gl, pathPointMesh, pathPointMaterial, animModelMatrix );
+
+        //   mat4.copy( animModelMatrix, modelMatrixStack.current );
+        //   Entity.applyTransforms( animModelMatrix, animationPath.control1 );
+        //   scene.drawMesh( gl, pathPointMesh, pathControlPointMaterial, animModelMatrix )
+
+        //   mat4.copy( animModelMatrix, modelMatrixStack.current );
+        //   Entity.applyTransforms( animModelMatrix, animationPath.end );
+        //   scene.drawMesh( gl, pathPointMesh, pathPointMaterial, animModelMatrix )
+        // }
+
+        applyAnimationTransform( modelMatrixStack.current, entity, partInfo );
+
+        scene.drawMesh( gl, partInfo.mesh, partInfo.material, modelMatrixStack.current );
+
+        if ( partInfo.attach ) {
+          const attachList = entity[ partInfo.attach ];
+
+          attachList.forEach( attached => {
+            draw( gl, attached, scene, modelMatrixStack );
+          } );
         }
-
-        // NOTE: This assumes a keyframe at zero. Should we create one automatically?
-        const prevFrame = keyframes[ nextIndex - 1 ];
-        const nextFrame = keyframes[ nextIndex ];
-
-        const partialTime = ( entity.animation.time - prevFrame.time ) / ( nextFrame.time - prevFrame.time );
-
-        for ( let i = 0; i < 3; i ++ ) {
-          if ( prevFrame.pos ) {
-            blend.pos[ i ] = prevFrame.pos[ i ] + partialTime * ( nextFrame.pos[ i ] - prevFrame.pos[ i ] );
-          }
-
-          if ( prevFrame.scale ) {
-            blend.scale[ i ] = prevFrame.scale[ i ] + partialTime * ( nextFrame.scale[ i ] - prevFrame.scale[ i ] );
-          }
-        }
-
-        applyTransforms( modelMatrixStack.current, blend );
       }
+
+      modelMatrixStack.restore();
     }
-
-    applyTransforms( modelMatrixStack.current, partInfo );
-
-
-    mat4.invert( normalMatrix, modelMatrixStack.current );
-    mat4.transpose( normalMatrix, normalMatrix );
-
-    // TODO: Map of shaders, like Map of meshes below
-    if ( shader == null ) {
-      shader = ShaderCommon.getShader( gl, ShaderCommon.Lighting );
-    }
-
-    gl.useProgram( shader.program );
-    gl.uniformMatrix4fv( shader.uniformLocations.modelMatrix, false, modelMatrixStack.current );
-    gl.uniformMatrix4fv( shader.uniformLocations.viewMatrix, false, viewMatrix );
-    gl.uniformMatrix4fv( shader.uniformLocations.projectionMatrix, false, projectionMatrix );
-    gl.uniformMatrix4fv( shader.uniformLocations.normalMatrix, false, normalMatrix );
-
-    if ( partInfo.color ) {
-      gl.uniform3fv( shader.uniformLocations.color, partInfo.color );
-    }
-
-    // TODO: Better place for lighting info? Should this be part of a Scene that knows everything?
-    gl.uniform4fv( shader.uniformLocations.lightPos, [ 10, 10, 10, 1 ] );
-    gl.uniform3fv( shader.uniformLocations.lightColor, [ 1, 1, 1 ] );
-    gl.uniform4fv( shader.uniformLocations.eyePos, eyePos );
-
-    if ( partInfo.mesh ) {
-      if ( !Meshes.has( partName ) ) {
-        Meshes.set( partName, MeshCommon.getMesh( gl, partInfo.mesh ) );
-      }
-      
-      const mesh = Meshes.get( partName );
-      
-      gl.bindBuffer( gl.ARRAY_BUFFER, mesh.positionBuffer );
-      gl.vertexAttribPointer( shader.attribLocations.position, 3, gl.FLOAT, false, 0, 0 );
-      gl.enableVertexAttribArray( shader.attribLocations.position );
-      
-      gl.bindBuffer( gl.ARRAY_BUFFER, mesh.normalBuffer );
-      gl.vertexAttribPointer( shader.attribLocations.normal, 3, gl.FLOAT, false, 0, 0 );
-      gl.enableVertexAttribArray( shader.attribLocations.normal );
-      
-      gl.bindBuffer( gl.ELEMENT_ARRAY_BUFFER, mesh.indexBuffer );
-      gl.drawElements( gl.TRIANGLES, mesh.length, gl.UNSIGNED_SHORT, 0 );
-    }
-
-    if ( partInfo.attach ) {
-      const attachList = entity[ partInfo.attach ];
-
-      attachList.forEach( attached => {
-        draw( attached, gl, modelMatrixStack, viewMatrix, projectionMatrix, eyePos );
-      } );
-    }
-
-    modelMatrixStack.restore();
   }
 
   modelMatrixStack.restore();
-
-  if ( entity.avoid ) {
-    if ( lineShader == null ) {
-      lineShader = ShaderCommon.getShader( gl, ShaderCommon.SolidColor );
-    }
-
-    gl.useProgram( lineShader.program );
-    gl.uniformMatrix4fv( lineShader.uniformLocations.modelMatrix, false, modelMatrixStack.current );
-    gl.uniformMatrix4fv( lineShader.uniformLocations.viewMatrix, false, viewMatrix );
-    gl.uniformMatrix4fv( lineShader.uniformLocations.projectionMatrix, false, projectionMatrix );
-    // gl.uniformMatrix4fv( lineShader.uniformLocations.normalMatrix, false, normalMatrix );
-
-    gl.uniform3fv( lineShader.uniformLocations.color, [ 1, 1, 1 ] );
-
-    const linePositions = [
-      entity.pos[ 0 ],
-      entity.pos[ 1 ] + 1,
-      entity.pos[ 2 ],
-      entity.pos[ 0 ],
-      entity.pos[ 1 ],
-      entity.pos[ 2 ],
-      entity.pos[ 0 ],
-      entity.pos[ 1 ],
-      entity.pos[ 2 ],
-      entity.pos[ 0 ] + entity.avoid[ 0 ],
-      entity.pos[ 1 ] + entity.avoid[ 1 ],
-      entity.pos[ 2 ] + entity.avoid[ 2 ],
-    ];
-    MeshCommon.drawLine( gl, linePositions, lineShader );
-  }
 }

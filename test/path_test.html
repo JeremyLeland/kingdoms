@@ -45,7 +45,7 @@ window.addEventListener( 'beforeunload', ( e ) =>
 
 const entities = [
   {
-    type: 'Worker',
+    type: 'Tree',
     pos: [ 0, 0, 0 ],
     animation: {
       name: 'swing',
@@ -82,144 +82,6 @@ const modelMatrixStack = new MatrixStack( mat4.create() );
 
 // TODO: Draw grid for ground (to help us see where things are and if they are underground)
 
-function doBlend( out, animationPath, time ) {
-  
-  const t = Math.max( 0, Math.min( 1, time ) );   // should we clamp this elsewhere?
-  
-  const A = ( 1 - t ) ** 2;
-  const B = 2 * ( 1 - t ) * t;
-  const C = t ** 2;
-  
-  // For performance, would it be better to explicitly call out the possible properties?
-  for ( const prop in animationPath.start ) {
-    for ( let i = 0; i < 3; i ++ ) {
-      const P0 = animationPath.start[ prop ][ i ];
-      const P1 = animationPath.control1[ prop ][ i ];
-      const P2 = animationPath.end[ prop ][ i ];
-
-      out[ prop ][ i ] = A * P0 + B * P1 + C * P2;
-    }
-  }
-}
-
-const blendInfo = {
-  pos: [ 0, 0, 0 ],
-  rot: [ 0, 0, 0 ],
-  scale: [ 1, 1, 1 ],
-  offset: [ 0, 0, 0 ],
-};
-
-function applyAnimationTransform( modelMatrix, entity, info ) {
-  // Entity.applyTransforms( modelMatrix, info );
-  // moving this out so we can more easily draw animation path
-
-  if ( entity.animation ) {
-    // Using fill to avoid garbage collection
-    blendInfo.pos.fill( 0 );
-    blendInfo.rot.fill( 0 );
-    blendInfo.scale.fill( 1 );
-    blendInfo.offset.fill( 0 );
-
-    // TODO: Support multiple animations at once (e.g. carry and walk)
-    //       These will probably need different animation times, since you might start a swing mid-walk
-    //       Could track these as a map of animation names and times, e.g. { 'walk': 2000, 'swing': 150 }
-
-    const animationPath = info.animationPaths?.[ entity.animation.name ];
-
-    if ( animationPath ) {
-      const percentTime = entity.animation.time / Entity.ModelInfo[ entity.type ].animations[ entity.animation.name ].duration;
-
-      doBlend( blendInfo, animationPath, percentTime );
-
-      Entity.applyTransforms( modelMatrix, blendInfo );
-    }
-  }
-}
-
-
-// TODO: For path debugging, have different colors for each path (increment counter as we draw so first red, second orange, etc)
-//       Use different meshes for start/end and control points
-//       Bonus: Draw the curved path with lines! (lots of blend calls to find points?)
-//       Move all this to Entity.js
-const pathPointMesh = MeshCommon.Cube( 0.05, 0.05, 0.05 );
-const pathPointMaterial = {
-  shader: ShaderCommon.Lighting,
-  uniforms: { color: [ 0.5, 0.5, 0.5 ] },
-};
-const pathControlPointMaterial = {
-  shader: ShaderCommon.Lighting,
-  uniforms: { color: [ 0.8, 0.8, 0.8 ] },
-};
-
-function drawEntity( gl, entity, scene, modelMatrixStack ) {
-  modelMatrixStack.save(); {
-    
-    const modelInfo = Entity.ModelInfo[ entity.type ];
-
-    Entity.applyTransforms( modelMatrixStack.current, modelInfo );    // NOTE: Do we ever have model-wide transforms?
-
-    // const animModelMatrix = mat4.create();
-    // const animationPath = modelInfo.animationPaths?.[ entity.animation.name ];
-
-    // if ( animationPath ) {
-    //   mat4.copy( animModelMatrix, modelMatrixStack.current );
-    //   Entity.applyTransforms( animModelMatrix, animationPath.start );
-    //   scene.drawMesh( gl, pathPointMesh, pathPointMaterial, animModelMatrix );
-
-    //   mat4.copy( animModelMatrix, modelMatrixStack.current );
-    //   Entity.applyTransforms( animModelMatrix, animationPath.control1 );
-    //   scene.drawMesh( gl, pathPointMesh, pathControlPointMaterial, animModelMatrix )
-
-    //   mat4.copy( animModelMatrix, modelMatrixStack.current );
-    //   Entity.applyTransforms( animModelMatrix, animationPath.end );
-    //   scene.drawMesh( gl, pathPointMesh, pathPointMaterial, animModelMatrix )
-    // }
-
-    applyAnimationTransform( modelMatrixStack.current, entity, modelInfo );   // we definitely have model-wide animations
-
-    for ( const partName in modelInfo.parts ) {
-      modelMatrixStack.save(); {
-
-        const partInfo = modelInfo.parts[ partName ];
-
-        Entity.applyTransforms( modelMatrixStack.current, partInfo );
-
-        // const animModelMatrix = mat4.create();
-        // const animationPath = partInfo.animationPaths?.[ entity.animation.name ];
-
-        // if ( animationPath ) {
-        //   mat4.copy( animModelMatrix, modelMatrixStack.current );
-        //   Entity.applyTransforms( animModelMatrix, animationPath.start );
-        //   scene.drawMesh( gl, pathPointMesh, pathPointMaterial, animModelMatrix );
-
-        //   mat4.copy( animModelMatrix, modelMatrixStack.current );
-        //   Entity.applyTransforms( animModelMatrix, animationPath.control1 );
-        //   scene.drawMesh( gl, pathPointMesh, pathControlPointMaterial, animModelMatrix )
-
-        //   mat4.copy( animModelMatrix, modelMatrixStack.current );
-        //   Entity.applyTransforms( animModelMatrix, animationPath.end );
-        //   scene.drawMesh( gl, pathPointMesh, pathPointMaterial, animModelMatrix )
-        // }
-
-        applyAnimationTransform( modelMatrixStack.current, entity, partInfo );
-
-        scene.drawMesh( gl, partInfo.mesh, partInfo.material, modelMatrixStack.current );
-
-        if ( partInfo.attach ) {
-          const attachList = entity[ partInfo.attach ];
-
-          attachList.forEach( attached => {
-            drawEntity( gl, attached, scene, modelMatrixStack );
-          } );
-        }
-      }
-
-      modelMatrixStack.restore();
-    }
-  }
-
-  modelMatrixStack.restore();
-}
 
 canvas.draw = ( gl ) => {
 
@@ -229,7 +91,7 @@ canvas.draw = ( gl ) => {
   mat4.perspective( scene.projectionMatrix, fieldOfView, canvas.canvas.width / canvas.canvas.height, zNear, zFar );
 
   entities.forEach( entity => {
-    drawEntity( gl, entity, scene, modelMatrixStack );
+    Entity.draw( gl, entity, scene, modelMatrixStack );
   } );
 }
 

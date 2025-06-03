@@ -27,12 +27,6 @@ export const TreeModel = {
       duration: 1000,
     },
   },
-  // TODO: Paths instead of keyframes
-  //       Where to define? If its an overall path, should it be in the top level animation?
-  //       Then define animation paths as applicable in the inner parts?
-  //       Should each of these have a duration as well? Do they share parent one?
-  //       Seems like loop would need to be shared, or cause all sorts of problems. 
-  //       May as well have duration the same, too.
   animationPaths: {
     fell: {
       start: {
@@ -45,63 +39,37 @@ export const TreeModel = {
         rot: [ 0, 0, 0.1 * Math.PI / 2 ],
       },
     },
-  },
-  keyframes: {
-    impact: [
-      {
-        time: 0,
+    impact: {
+      start: {
         rot: [ 0, 0, 0 ],
       },
-      {
-        time: 0.25,
+      control1: {
         rot: [ 0, 0, TreeInfo.ImpactRot ],
       },
-      {
-        time: 0.5,
+      end: {
         rot: [ 0, 0, 0 ],
       },
-      {
-        time: 0.75,
-        rot: [ 0, 0, -TreeInfo.ImpactRot ],
-      },
-      {
-        time: 1,
-        rot: [ 0, 0, 0 ],
-      },
-    ],
-    fell: [
-      {
-        time: 0,
-        rot: [ 0, 0, 0 ],
-      },
-      {
-        time: 1,
-        rot: [ 0, 0, Math.PI / 2 ],
-      },
-    ],
+    },
   },
   parts: {
     Trunk: {
-      mesh: MeshCommon.Cylinder(),
-      scale: [ TreeInfo.TrunkRadius, TreeInfo.TrunkHeight, TreeInfo.TrunkRadius ],
+      mesh: MeshCommon.Cylinder( TreeInfo.TrunkRadius, TreeInfo.TrunkHeight, TreeInfo.TrunkRadius ),
+      pos: [ 0, TreeInfo.TrunkHeight / 2, 0 ],
       material: TreeInfo.TrunkMaterial,
     },
     Leaves: {
-      mesh: MeshCommon.Cone( 32 ),
-      pos: [ 0, TreeInfo.TrunkHeight, 0 ],
-      scale: [ TreeInfo.LeavesRadius, TreeInfo.LeavesHeight, TreeInfo.LeavesRadius ],
+      mesh: MeshCommon.Cone( TreeInfo.LeavesRadius, TreeInfo.LeavesHeight, TreeInfo.LeavesRadius ),
+      pos: [ 0, ( TreeInfo.TrunkHeight + TreeInfo.LeavesHeight ) / 2, 0 ],
       material: TreeInfo.LeavesMaterial,
     },
     Leaves2: {
-      mesh: MeshCommon.Cone( 32 ),
-      pos: [ 0, TreeInfo.TrunkHeight + 0.6, 0 ],
-      scale: [ TreeInfo.LeavesRadius * 0.9, TreeInfo.LeavesHeight * 0.9, TreeInfo.LeavesRadius * 0.9 ],
+      mesh: MeshCommon.Cone( TreeInfo.LeavesRadius * 0.9, TreeInfo.LeavesHeight * 0.9, TreeInfo.LeavesRadius * 0.9 ),
+      pos: [ 0, ( TreeInfo.TrunkHeight + TreeInfo.LeavesHeight ) / 2 + 0.6, 0 ],
       material: TreeInfo.LeavesMaterial,
     },
     Leaves3: {
-      mesh: MeshCommon.Cone( 32 ),
-      pos: [ 0, TreeInfo.TrunkHeight + 1.2, 0 ],
-      scale: [ TreeInfo.LeavesRadius * 0.8, TreeInfo.LeavesHeight * 0.8, TreeInfo.LeavesRadius * 0.8 ],
+      mesh: MeshCommon.Cone( TreeInfo.LeavesRadius * 0.8, TreeInfo.LeavesHeight * 0.8, TreeInfo.LeavesRadius * 0.8  ),
+      pos: [ 0, ( TreeInfo.TrunkHeight + TreeInfo.LeavesHeight ) / 2 + 1.2, 0 ],
       material: TreeInfo.LeavesMaterial,
     }
   }
