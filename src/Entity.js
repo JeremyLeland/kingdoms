@@ -134,6 +134,8 @@ const pathControlPointMaterial = {
 
 export function draw( gl, entity, scene, modelMatrixStack ) {
   modelMatrixStack.save(); {
+
+    applyTransforms( modelMatrixStack.current, entity );     // Should this have another stack save level?
     
     const modelInfo = ModelInfo[ entity.type ];
 

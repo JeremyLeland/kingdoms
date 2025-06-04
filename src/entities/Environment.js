@@ -14,14 +14,14 @@ const TreeInfo = {
     shader: ShaderCommon.Lighting,
     uniforms: { color: [ 0.1, 0.5, 0.1 ] },
   },
-  ImpactRot: 0.1,
+  ImpactRot: 0.2,
 };
 
 export const TreeModel = {
   bounds: [ TreeInfo.LeavesRadius, TreeInfo.TrunkHeight + TreeInfo.LeavesHeight, TreeInfo.LeavesRadius ],
   animations: {
     impact: {
-      duration: 500,
+      duration: 300,
     },
     fell: {
       duration: 1000,

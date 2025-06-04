@@ -54,7 +54,7 @@ export const Model = {
       loop: true,
     },
     swing: {
-      duration: 1000,
+      duration: 800,
     },
   },
   parts: {
