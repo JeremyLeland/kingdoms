@@ -23,7 +23,7 @@ export const ModelInfo = {
   'Ground': {
     parts: {
       Grass: {
-        mesh: MeshCommon.Plane(),
+        mesh: MeshCommon.Plane( 5, 1, 5 ),
         pos: [ 0, 0, 0 ],
         rot: [ -Math.PI / 2, 0, 0 ],
         color: [ 0.0, 0.6, 0.0 ],

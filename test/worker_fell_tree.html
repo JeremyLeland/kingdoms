@@ -59,11 +59,21 @@ const entities = [
   {
     type: 'Ground',
     pos: [ 0, 0, 0 ],
-    scale: [ 5, 1, 5 ],
   },
   {
     type: 'Tree',
+    health: 4,
     pos: [ 0, 0, 0 ],
+  },
+  {
+    type: 'Tree',
+    health: 4,
+    pos: [ 3, 0, 0 ],
+  },
+  {
+    type: 'Tree',
+    health: 4,
+    pos: [ 2, 0, 2 ],
   },
 ];
 
@@ -168,7 +178,7 @@ const WorkerActions = {
   Harvest: {
     targetFunc: ( entity ) => {
       return closestTo( entity,
-        entities.filter( e => e.type == 'Tree' )
+        entities.filter( e => e.type == 'Tree' && e.health > 0 )
       );
     },
     actionFunc: ( entity, target ) => {
@@ -176,10 +186,21 @@ const WorkerActions = {
         name: 'swing',
         time: 0,
       };
-      target.animation = {
-        name: 'impact',
-        time: -400,
-      };
+
+      target.health -= 1;   // eventually: entity cut damage? (so better axes cut faster)
+
+      if ( target.health > 0 ) {
+        target.animation = {
+          name: 'impact',
+          time: -400,
+        };
+      }
+      else {
+        target.animation = {
+          name: 'fell',
+          time: -400,
+        };
+      }
       // TODO: Should we delay here? Maybe better to cancel further updating if certain animations are in proress
     },
   }
