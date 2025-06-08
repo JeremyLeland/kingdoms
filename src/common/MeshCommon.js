@@ -174,7 +174,7 @@ export function Plane( width = 1, height = 1, widthSegments = 1, heightSegments 
 
   for ( let row = 0; row <= heightSegments; row ++ ) {
     for ( let col = 0; col <= widthSegments; col ++ ) {
-      plane.positions.push( col * width / widthSegments, 0, row * height / heightSegments );
+      plane.positions.push( width * ( -0.5 + col / widthSegments ), 0, height * ( -0.5 + row / heightSegments ) );
       plane.normals.push( 0, 0, 1 );
     }
   }

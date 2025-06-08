@@ -26,6 +26,9 @@ export const TreeModel = {
     fell: {
       duration: 1000,
     },
+    sink: {
+      duration: 2000,
+    },
   },
   animationPaths: {
     fell: {
@@ -48,6 +51,20 @@ export const TreeModel = {
       },
       end: {
         rot: [ 0, 0, 0 ],
+      },
+    },
+    sink: {
+      start: {
+        pos: [ 0, 0, 0 ],
+        rot: [ 0, 0, Math.PI / 2 ],
+      },
+      control1: {
+        pos: [ 0, -0.5, 0 ],
+        rot: [ 0, 0, Math.PI / 2 ],
+      },
+      end: {
+        pos: [ 0, -1.5, 0 ],
+        rot: [ 0, 0, Math.PI / 2 ],
       },
     },
   },

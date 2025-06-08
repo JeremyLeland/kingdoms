@@ -56,19 +56,23 @@ const entities = [
     pos: [ -3, 0, 3 ],
     pile: [],
   },
-  // {
-  //   type: 'Ground',
-  //   pos: [ 0, 0, 0 ],
-  // },
   {
-    type: 'Tree',
-    health: 4,
+    type: 'Ground',
     pos: [ 0, 0, 0 ],
   },
   {
     type: 'Tree',
     health: 4,
+    pos: [ 0, 0, 0 ],
+    delay: 400,
+    action: 'impact',
+  },
+  {
+    type: 'Tree',
+    health: 4,
     pos: [ 3, 0, 0 ],
+    delay: 200,
+    action: 'impact',
   },
   {
     type: 'Tree',
@@ -83,23 +87,69 @@ canvas.update = ( dt ) => {
 
   entities.forEach( entity => {
 
+    if ( entity.animation ) {
+      entity.animation.time += dt;
+
+      // if ( entity.animation.time < Entity.ModelInfo[ entity.type ].animations[ entity.animation.name ].duration ) {
+      //   return;    // TODO: Only bail if certain animations are playing? Or should this just be part of delay?
+      // }
+
+      // TODO: Clear animation when done? stay at last frame? (Loop it if it loops)
+    }
+
     if ( entity.delay > 0 ) {
       entity.delay -= dt;   // or max( delay - dt, zero )?
       return;
     }
 
-    if ( entity.animation ) {
-      entity.animation.time += dt;
-
-      if ( entity.animation.time < Entity.ModelInfo[ entity.type ].animations[ entity.animation.name ].duration ) {
-        return;    // TODO: Only bail if certain animations are playing? Or should this just be part of delay?
-      }
-
-      // TODO: Clear animation when done? stay at last frame? (Loop it if it loops)
-    }
-
     if ( entity.type == 'Worker' ) {
       updateWorker( entity, workers, dt );
+    }
+
+    if ( entity.type == 'Tree' ) {
+      if ( entity.action == 'impact' ) {
+        entity.health -= 1;   // eventually: entity cut damage? (so better axes cut faster)
+
+        if ( entity.health > 0 ) {
+          entity.animation = {
+            name: 'impact',
+            time: 0,
+          };
+          entity.delay = 500;
+          entity.action = 'idle';
+        }
+        else {
+          entity.animation = {
+            name: 'fell',
+            time: 0,
+          };
+          entity.delay = 2000;
+          entity.action = 'sink';
+
+          // Spawn some wood!
+          const SPAWN_COUNT = 8, SPAWN_DIST = 1.5;
+          for ( let i = 0; i < SPAWN_COUNT; i ++ ) {
+            const angle = ( i / SPAWN_COUNT ) * Math.PI * 2;
+
+            const dist = SPAWN_DIST;
+            const offset = [ dist * Math.cos( angle ), 0, dist * Math.sin( angle ) ];
+
+            entities.push( { 
+              type: 'Wood',
+              pos: vec3.add( [], entity.pos, offset ),
+              rot: [ 0, -angle, 0 ],
+            } );
+          }
+        }
+      }
+      else if ( entity.action == 'sink' ) {
+        entity.animation = {
+          name: 'sink',
+          time: 0,
+        };
+        entity.delay = 2000;
+        entity.action = 'dead';
+      }
     }
   } );
 }
@@ -186,40 +236,21 @@ const WorkerActions = {
         name: 'swing',
         time: 0,
       };
+      entity.delay = 1000;
 
-      target.health -= 1;   // eventually: entity cut damage? (so better axes cut faster)
+      target.action = 'impact';
+      target.delay = 400;
 
-      if ( target.health > 0 ) {
-        target.animation = {
-          name: 'impact',
-          time: -400,
-        };
-      }
-      else {
-        target.animation = {
-          name: 'fell',
-          time: -400,
-        };
-
-        // Spawn some wood!
-        const SPAWN_COUNT = 4, SPAWN_DIST = 0.8;
-        for ( let i = 0; i < SPAWN_COUNT; i ++ ) {
-          const angle = ( i / SPAWN_COUNT ) * Math.PI * 2;
-
-          const dist = SPAWN_DIST;
-          const offset = [ dist * Math.cos( angle ), 0, dist * Math.sin( angle ) ];
-
-          entities.push( { 
-            type: 'Wood',
-            pos: vec3.add( [], target.pos, offset ),
-            rot: [ 0, angle, 0 ],
-          } );
-        }
-      }
       // TODO: Should we delay here? Maybe better to cancel further updating if certain animations are in proress
     },
   }
 }
+
+// TODO: Trying to figure out how to sequence this:
+//       1) Start worker swing animation
+//       2) 400ms later, damage tree and start impact or fell animation
+//       3) If tree dead, wait 400ms then spawn wood
+
 
 function closestTo( target, entities ) {
   let closestEntity, closestDist = Infinity;

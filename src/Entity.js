@@ -23,7 +23,7 @@ export const ModelInfo = {
   'Ground': {
     parts: {
       Grass: {
-        mesh: MeshCommon.Plane( 5, 5, 5, 5 ),
+        mesh: MeshCommon.Plane( 10, 10 ),
         material: {
           shader: ShaderCommon.Lighting,
           uniforms: { color: [ 0.0, 0.6, 0.0 ] },
