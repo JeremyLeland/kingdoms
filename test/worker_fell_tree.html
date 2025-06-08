@@ -56,10 +56,10 @@ const entities = [
     pos: [ -3, 0, 3 ],
     pile: [],
   },
-  {
-    type: 'Ground',
-    pos: [ 0, 0, 0 ],
-  },
+  // {
+  //   type: 'Ground',
+  //   pos: [ 0, 0, 0 ],
+  // },
   {
     type: 'Tree',
     health: 4,
@@ -335,6 +335,8 @@ function bump( x ) {
 const modelMatrixStack = new MatrixStack( mat4.create() );
 
 // TODO: Draw grid for ground (to help us see where things are and if they are underground)
+const gridMesh = MeshCommon.Grid();
+const gridModelMatrix = mat4.create();
 
 canvas.draw = ( gl ) => {
 
@@ -342,6 +344,8 @@ canvas.draw = ( gl ) => {
   const zNear = 0.1;
   const zFar = 100.0;
   mat4.perspective( scene.projectionMatrix, fieldOfView, canvas.canvas.width / canvas.canvas.height, zNear, zFar );
+
+  scene.drawLines( gl, gridMesh, gridModelMatrix );
 
   entities.forEach( entity => {
     Entity.draw( gl, entity, scene, modelMatrixStack );

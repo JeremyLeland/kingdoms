@@ -142,26 +142,60 @@ export function Cube( width = 1, height = 1, depth = 1 ) {
   }
 }
 
-// TODO: Is there any reason to subdivide this into segments?
-export function Plane( width = 1, height = 1, depth = 1 ) {
-  return {
-    positions: [
-       1, -1,  0,
-      -1, -1,  0,
-      -1,  1,  0,
-       1,  1,  0,
-    ].map( ( e, index ) => e * [ width, height, depth ][ index % 3 ] ),
-    normals: [
-      0, 0, 1,
-      0, 0, 1,
-      0, 0, 1,
-      0, 0, 1,
-    ],
-    indices: [
-      0, 1, 2,
-      0, 2, 3,
-    ],
+export function Grid( left = -5, top = -5, right = 5, bottom = 5 ) {
+  const grid = {
+    positions: [],
+    normals: [],
   };
+
+  for ( let x = left; x <= right; x ++ ) {
+    grid.positions.push(
+      x, 0, top,
+      x, 0, bottom,
+    );
+  }
+
+  for ( let z = top; z <= bottom; z ++ ) {
+    grid.positions.push(
+      left, 0, z, 
+      right, 0, z
+    );
+  }
+
+  return grid;
+}
+
+export function Plane( width = 1, height = 1, widthSegments = 1, heightSegments = 1 ) {
+  const plane = {
+    positions: [],
+    normals: [],
+    indices: [],
+  };
+
+  for ( let row = 0; row <= heightSegments; row ++ ) {
+    for ( let col = 0; col <= widthSegments; col ++ ) {
+      plane.positions.push( col * width / widthSegments, 0, row * height / heightSegments );
+      plane.normals.push( 0, 0, 1 );
+    }
+  }
+
+  for ( let row = 0; row < heightSegments; row ++ ) {
+    for ( let col = 0; col < widthSegments; col ++ ) {
+      plane.indices.push( 
+        ( widthSegments + 1 ) * row + col,
+        ( widthSegments + 1 ) * ( row + 1 ) + col,
+        ( widthSegments + 1 ) * ( row + 1 ) + col + 1,
+      );
+
+      plane.indices.push( 
+        ( widthSegments + 1 ) * row + col,
+        ( widthSegments + 1 ) * row + col + 1,
+        ( widthSegments + 1 ) * ( row + 1 ) + col + 1,
+      );
+    }
+  }
+
+  return plane;
 }
 
 export function Sphere( width = 1, height = 1, depth = 1, widthSegments = 32, heightSegments = 32, phiStart = 0, phiLength = Math.PI * 2, thetaStart = 0, thetaLength = Math.PI ) {
@@ -253,45 +287,4 @@ export function Cylinder( width = 1, height = 1, depth = 1, radiusTop = 1, radiu
 // TODO: Make this special case of Cylinder? (allow different top and bottom radius)
 export function Cone( width = 1, height = 1, depth = 1, widthSegments = 32, thetaStart = 0, thetaLength = Math.PI * 2 ) {
   return Cylinder( width, height, depth, 0, 1, widthSegments, thetaStart, thetaLength );
-}
-
-export function getMesh( gl, meshInfo ) {  
-  return {
-    positionBuffer: createArrayBuffer( gl, meshInfo.positions ),
-    normalBuffer: createArrayBuffer( gl, meshInfo.normals ),
-    uvBuffer: createArrayBuffer( gl, meshInfo.uvs ),
-    indexBuffer: createIndexBuffer( gl, meshInfo.indices ),
-    length: meshInfo.indices.length,
-  };
-}
-
-// TODO: Should these be STATIC_DRAW, DYNAMIC_DRAW, or STREAM_DRAW?
-function createArrayBuffer( gl, array ) {
-  const arrayBuffer = gl.createBuffer();
-  gl.bindBuffer( gl.ARRAY_BUFFER, arrayBuffer );
-  gl.bufferData( gl.ARRAY_BUFFER, new Float32Array( array ), gl.STATIC_DRAW );
-  return arrayBuffer;
-}
-
-function createIndexBuffer( gl, indices ) {
-  const indexBuffer = gl.createBuffer();
-  gl.bindBuffer( gl.ELEMENT_ARRAY_BUFFER, indexBuffer );
-  gl.bufferData( gl.ELEMENT_ARRAY_BUFFER, new Uint16Array( indices ), gl.STATIC_DRAW );
-  return indexBuffer;
-}
-
-// TODO: getLine function like getMesh that creates buffers and everything
-// TODO: Helper function to drawMesh and drawLine here? (take code from drawEntity in Entity.js)
-
-export function drawLine( gl, positions, shader ) {
-  const positionBuffer = gl.createBuffer();
-  gl.bindBuffer( gl.ARRAY_BUFFER, positionBuffer );
-  gl.bufferData( gl.ARRAY_BUFFER, new Float32Array( positions ), gl.STATIC_DRAW );
-
-  // gl.useProgram( shader.program );
-  gl.enableVertexAttribArray( shader.attribLocations.position );
-  gl.bindBuffer( gl.ARRAY_BUFFER, positionBuffer );
-  gl.vertexAttribPointer( shader.attribLocations.position, 3, gl.FLOAT, false, 0, 0 );
-
-  gl.drawArrays( gl.LINES, 0, positions.length / 3 );
 }

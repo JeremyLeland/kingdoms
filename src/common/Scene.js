@@ -77,12 +77,13 @@ export class Scene {
   #normalMatrix = mat4.create();
   #eyePos = vec4.create();
 
+  #lineShader;
+
   // // Should Scene be created with a gl context, or take it in every draw?
   // constructor( gl ) {
   //   this.gl = gl;
   // }
 
-  // TODO: Combine uniforms and shader into material?
   drawMesh( gl, mesh, material, modelMatrix ) {
     if ( !mesh || !material ) {
       return;
@@ -127,7 +128,7 @@ export class Scene {
     }
 
     // TODO: Lighting -- can we make these structs, then check for struct location before passing in?
-    gl.uniform3fv( shader.uniformLocations.lightPos, [ 10, 0, 0 ] );
+    gl.uniform3fv( shader.uniformLocations.lightPos, [ 10, 10, 10 ] );
     gl.uniform3fv( shader.uniformLocations.lightColor, [ 1, 1, 1 ] );
     gl.uniform3fv( shader.uniformLocations.eyePos, this.camera.getEyePos() );
 
@@ -139,6 +140,38 @@ export class Scene {
 
     gl.bindVertexArray( mesh.vao );
     gl.drawElements( gl.TRIANGLES, mesh.indices.length, gl.UNSIGNED_SHORT, 0 );
+  }
+
+  // // TODO: cache the lines so we aren't recreating every time? (useful for grid, less useful for debugging)
+  // //       maybe can use uniforms of some sort for positions so we aren't altering VAO in that case?
+  // was trying to use this for drawing lines that would be different every frame
+
+  drawLines( gl, mesh, modelMatrix ) {
+    this.#lineShader ??= ShaderCommon.getShader( gl, ShaderCommon.SolidColor );
+
+    const shader = this.#lineShader;
+    
+    if ( !mesh.vao ) {
+      mesh.vao = gl.createVertexArray();
+      gl.bindVertexArray( mesh.vao );
+
+      gl.bindBuffer( gl.ARRAY_BUFFER, createArrayBuffer( gl, mesh.positions ) );
+      gl.vertexAttribPointer( shader.attribLocations.position, 3, gl.FLOAT, false, 0, 0 );
+      gl.enableVertexAttribArray( shader.attribLocations.position );
+
+      gl.bindVertexArray( null );
+    }
+
+    gl.useProgram( shader.program );
+
+    gl.uniformMatrix4fv( shader.uniformLocations.modelMatrix, false, modelMatrix );
+    gl.uniformMatrix4fv( shader.uniformLocations.viewMatrix, false, this.camera.getViewMatrix() );
+    gl.uniformMatrix4fv( shader.uniformLocations.projectionMatrix, false, this.projectionMatrix );
+    
+    gl.uniform3fv( shader.uniformLocations.color, [ 1, 1, 1 ] );
+
+    gl.bindVertexArray( mesh.vao );
+    gl.drawArrays( gl.LINES, 0, mesh.positions.length / 3 );
   }
 }
 
