@@ -200,6 +200,21 @@ const WorkerActions = {
           name: 'fell',
           time: -400,
         };
+
+        // Spawn some wood!
+        const SPAWN_COUNT = 4, SPAWN_DIST = 0.8;
+        for ( let i = 0; i < SPAWN_COUNT; i ++ ) {
+          const angle = ( i / SPAWN_COUNT ) * Math.PI * 2;
+
+          const dist = SPAWN_DIST;
+          const offset = [ dist * Math.cos( angle ), 0, dist * Math.sin( angle ) ];
+
+          entities.push( { 
+            type: 'Wood',
+            pos: vec3.add( [], target.pos, offset ),
+            rot: [ 0, angle, 0 ],
+          } );
+        }
       }
       // TODO: Should we delay here? Maybe better to cancel further updating if certain animations are in proress
     },
