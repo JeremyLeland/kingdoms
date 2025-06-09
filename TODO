@@ -1,15 +1,6 @@
-- Workers cut down trees
-  - Add "swing" animation
-  - Add axe (flat wide cone at top, simple cylinder for handle)
-    - Axe head could be narrowing cylinder flattened
-  - Need to attach axe to 'carry' attach point (or another?) when harvesting (and dettach when doing something else)
-    - Should the axe be tracked like an object that can be dropped? Or just be part of the model?
-    - If part of model, then need a way to account for parts of model only being visible during certain animations
-    - If not, then the axe is another entity in the world...where does it live when not being used?
-      - Does the axe have a lifecycle of sorts? Does it need to be picked up from somewhere and returned there?
-      - Maybe keep them by town center? Or lumber yard, if we build those?
-        - Stronghold has a building for each wood cutter. If we do that, the axe could be part of that building.
-  - Eventual goal: worker walks up to tree, cuts it down, takes resulting logs to stockpile
+- Does the axe have a lifecycle of sorts? Does it need to be picked up from somewhere and returned there?
+  - Maybe keep them by town center? Or lumber yard, if we build those?
+    - Stronghold has a building for each wood cutter. If we do that, the axe could be part of that building.
 
 - Scene class
   - Hold GL context (not sure if I want to do this or pass it in)

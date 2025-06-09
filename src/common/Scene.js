@@ -1,4 +1,4 @@
-import { mat4, vec3, vec4 } from '../../lib/gl-matrix.js';
+import { mat4, vec3 } from '../../lib/gl-matrix.js';
 import * as ShaderCommon from './ShaderCommon.js';
 
 const MIN_DIST = 1;

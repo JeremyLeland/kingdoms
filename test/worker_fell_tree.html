@@ -395,7 +395,7 @@ function bump( x ) {
 
 const modelMatrixStack = new MatrixStack( mat4.create() );
 
-// TODO: Draw grid for ground (to help us see where things are and if they are underground)
+// Draw grid for ground (to help us see where things are and if they are underground)
 const gridMesh = MeshCommon.Grid( -10, -10, 10, 10 );
 const gridMaterial = {
   shader: ShaderCommon.SolidColor,
