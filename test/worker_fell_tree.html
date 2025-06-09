@@ -232,6 +232,11 @@ const WorkerActions = {
 
       entity.carry.push( ...entities.splice( entities.indexOf( target ), 1 ) );
       entity.delay += Worker.Info.PickupDelay;
+
+      entity.animation = {
+        name: 'carry',
+        time: 0,
+      };
     },
   },
   Harvest: {

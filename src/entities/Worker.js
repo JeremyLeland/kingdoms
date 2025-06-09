@@ -53,6 +53,10 @@ export const Model = {
       duration: 1000,
       loop: true,
     },
+    carry: {
+      duration: 1000,
+      loop: true,
+    },
     swing: {
       duration: 800,
     },
@@ -88,6 +92,17 @@ export const Model = {
       material: Info.SkinMaterial,
       animationPaths: {
         walk: WalkBobPath,
+        carry: {
+          start: {
+            pos: [ Info.BodyRadius, Info.CarryHeight, -Info.BodyRadius ],
+          },
+          control1: {
+            pos: [ Info.BodyRadius + 0.1, Info.CarryHeight, -Info.BodyRadius ],
+          },
+          end: {
+            pos: [ Info.BodyRadius, Info.CarryHeight, -Info.BodyRadius ],
+          }
+        },
         swing: {
           start: {
             pos: [ Info.BodyRadius - 0.2, 1, Info.BodyRadius ],
@@ -112,6 +127,17 @@ export const Model = {
       material: Info.SkinMaterial,
       animationPaths: {
         walk: WalkBobPath,
+        carry: {
+          start: {
+            pos: [ Info.BodyRadius, Info.CarryHeight, Info.BodyRadius ],
+          },
+          control1: {
+            pos: [ Info.BodyRadius + 0.1, Info.CarryHeight, Info.BodyRadius ],
+          },
+          end: {
+            pos: [ Info.BodyRadius, Info.CarryHeight, Info.BodyRadius ],
+          }
+        },
         swing: {
           start: {
             pos: [ Info.BodyRadius - 0.2, 1, Info.BodyRadius ],
@@ -135,6 +161,17 @@ export const Model = {
       // pos: [ Info.BodyRadius, Info.CarryHeight + 0.1, 0 ],
       animationPaths: {
         walk: WalkBobPath,
+        carry: {
+          start: {
+            pos: [ Info.BodyRadius, Info.CarryHeight, 0 ],
+          },
+          control1: {
+            pos: [ Info.BodyRadius + 0.1, Info.CarryHeight, 0 ],
+          },
+          end: {
+            pos: [ Info.BodyRadius, Info.CarryHeight, 0 ],
+          }
+        },
         // Position for swing matches left hand, since this is the base of the axe
         swing: {
           start: {
