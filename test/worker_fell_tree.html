@@ -46,7 +46,15 @@ const entities = [
     pos: [ 0, 0, 3 ],
     rot: [ 0, 0, 0 ],
     carry: [
-      { type: 'Axe' },
+    ],
+    delay: 0,
+    job: 'Harvest',
+  },
+  {
+    type: 'Worker', 
+    pos: [ 1, 0, 3 ],
+    rot: [ 0, 0, 0 ],
+    carry: [
     ],
     delay: 0,
     job: 'Harvest',
@@ -57,6 +65,11 @@ const entities = [
     pile: [],
   },
   {
+    type: 'Stockpile',
+    pos: [ -2, 0, 3 ],
+    pile: [],
+  },
+  {
     type: 'Ground',
     pos: [ 0, 0, 0 ],
   },
@@ -64,15 +77,11 @@ const entities = [
     type: 'Tree',
     health: 4,
     pos: [ 0, 0, 0 ],
-    delay: 400,
-    action: 'impact',
   },
   {
     type: 'Tree',
     health: 4,
     pos: [ 3, 0, 0 ],
-    delay: 200,
-    action: 'impact',
   },
   {
     type: 'Tree',
@@ -177,7 +186,7 @@ function addItemToStockpile( target, item ) {
   target.pile.push( item );
 }
 
-const CARRY_MAX = 1; //3;
+const CARRY_MAX = 3;
 const CARRY_GAP = 0.05;
 const STOCKPILE_MAX = 9;
 
@@ -291,15 +300,31 @@ function updateWorker( entity, others, dt ) {
   entity.avoid = avoid;
 
 
-  if ( entity.job == 'PickUp' ) {
-    if ( entity.carry.length >= CARRY_MAX ) {
+  const woodCount = entities.filter( e => e.type == 'Wood' ).length;
+
+  if ( woodCount == 0 ) {
+    if ( entity.carry.length > 0 && entity.carry[ 0 ].type == 'Wood' ) {
       entity.job = 'DropOff';
     }
-  }
-  else if ( entity.job == 'DropOff' ) {
-    if ( entity.carry.length == 0 ) {
-      entity.job = 'PickUp';
+    else {
+      entity.job = 'Harvest';
+      entity.carry = [ { type: 'Axe' } ];
     }
+  }
+
+  if ( entity.job == 'Harvest' ) {
+    if ( woodCount > 0 ) {
+      entity.job = 'PickUp';
+      entity.carry = [];
+    }
+  }
+
+  if ( entity.job == 'PickUp' && entity.carry.length >= CARRY_MAX ) {
+    entity.job = 'DropOff';
+  }
+
+  if ( entity.job == 'DropOff' && entity.carry.length == 0 ) {
+    entity.job = 'PickUp';
   }
 
   const workerAction = WorkerActions[ entity.job ];
