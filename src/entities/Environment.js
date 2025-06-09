@@ -12,7 +12,7 @@ const TreeInfo = {
   LeavesHeight: 2.5,
   LeavesMaterial: {
     shader: ShaderCommon.Lighting,
-    uniforms: { color: [ 0.1, 0.5, 0.1 ] },
+    uniforms: { color: [ 0.1, 0.3, 0.1 ] },
   },
   ImpactRot: 0.2,
 };

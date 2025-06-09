@@ -75,9 +75,6 @@ export class Scene {
   projectionMatrix = mat4.create();
 
   #normalMatrix = mat4.create();
-  #eyePos = vec4.create();
-
-  #lineShader;
 
   // // Should Scene be created with a gl context, or take it in every draw?
   // constructor( gl ) {
@@ -146,10 +143,18 @@ export class Scene {
   // //       maybe can use uniforms of some sort for positions so we aren't altering VAO in that case?
   // was trying to use this for drawing lines that would be different every frame
 
-  drawLines( gl, mesh, modelMatrix ) {
-    this.#lineShader ??= ShaderCommon.getShader( gl, ShaderCommon.SolidColor );
+  drawLines( gl, mesh, material, modelMatrix ) {
+    if ( !mesh || !material ) {
+      return;
+    }
 
-    const shader = this.#lineShader;
+    const shader = material.shader;
+    const uniforms = material.uniforms;
+
+    if ( !shader.program ) {
+      // Leave our shader load code as is for now, append to shader here
+      Object.assign( shader, ShaderCommon.getShader( gl, shader ) );
+    }
     
     if ( !mesh.vao ) {
       mesh.vao = gl.createVertexArray();
@@ -168,7 +173,7 @@ export class Scene {
     gl.uniformMatrix4fv( shader.uniformLocations.viewMatrix, false, this.camera.getViewMatrix() );
     gl.uniformMatrix4fv( shader.uniformLocations.projectionMatrix, false, this.projectionMatrix );
     
-    gl.uniform3fv( shader.uniformLocations.color, [ 1, 1, 1 ] );
+    gl.uniform3fv( shader.uniformLocations.color, uniforms.color ?? [ 1, 1, 1 ] );
 
     gl.bindVertexArray( mesh.vao );
     gl.drawArrays( gl.LINES, 0, mesh.positions.length / 3 );
