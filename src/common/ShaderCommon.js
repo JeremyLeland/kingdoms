@@ -196,6 +196,9 @@ export const Lighting = {
         // return vec4( light.color * material.color * ( diffuse + specular ) );
         return vec4( lightColor * color * diffuse, 1 );
       }
+      else {
+        return vec4( 0, 0, 0, 1 );
+      }
     }
 
     void main() {
