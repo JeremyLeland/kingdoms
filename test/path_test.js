@@ -20,18 +20,18 @@ import * as Entity from '../src/Entity.js';
 // TODO: Make animation be a map of animation names and their time, and apply all of them
 const entities = [
   {
-    type: 'Tree',
+    type: 'Farm',
     pos: [ 0, 0, 0 ],
     animation: {
-      name: 'swing',
-      time: 0,
+      // name: 'swing',
+      // time: 0,
       // 'walk': 0,
       // 'carry': 0,     // TODO: Does carry make sense as an animation? Maybe have a slight sway of the hands?
     },
     delay: 0,
-    carry: [
-      { type: 'Axe' },
-    ],
+    // carry: [
+    //   { type: 'Axe' },
+    // ],
   },
 ];
 

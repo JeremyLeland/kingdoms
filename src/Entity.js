@@ -13,13 +13,11 @@ export const ModelInfo = {
   'Wood': Resources.WoodModel,
   'Stone': Resources.StoneModel,
   'Stockpile': Buildings.StockpileModel,
+  'Farm': Buildings.FarmModel,
   'Worker': Worker.Model,
   'Axe': Worker.Axe,
   'Tree': Environment.TreeModel,
 
-  // Why is ground so fucked up? Rotation isn't right at all, skews?
-  // And it won't draw at all without rotation?
-  // Normals change based on other things being drawn...
   'Ground': {
     parts: {
       Grass: {

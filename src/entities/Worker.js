@@ -196,11 +196,11 @@ export const Model = {
 
 const AxeInfo = {
   Head: {
-    Height: 0.3,
+    Height: 0.15,
     Width: 0.3,
   },
   Handle: {
-    Height: 0.7,
+    Height: 0.35,
     Radius: 0.05,
   },
 }
@@ -209,7 +209,7 @@ export const Axe = {
   parts: {
     Head: {
       mesh: MeshCommon.Cylinder( AxeInfo.Head.Width, AxeInfo.Head.Height, AxeInfo.Handle.Radius ),
-      pos: [ 0, ( AxeInfo.Handle.Height + AxeInfo.Head.Height ) / 2, 0 ],
+      pos: [ 0, ( AxeInfo.Handle.Height + AxeInfo.Head.Height ), 0 ],
       material: {
         shader: ShaderCommon.Lighting,
         uniforms: { color: [ 0.2, 0.2, 0.2 ] },

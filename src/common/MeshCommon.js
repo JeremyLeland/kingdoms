@@ -241,10 +241,11 @@ export function Sphere( width = 1, height = 1, depth = 1, widthSegments = 32, he
 }
 
 
-// TODO: Scale cylinders by width/height/depth
-// TODO: Optional caps at top and bottom?
+// TODO: Optional caps at top and bottom? Bonus: Rounded caps? (cap height?)
+//       In theory, we could have Sphere and Cylinder be special cases of a common Pill with top height, mid height, and bottom height
+//       Sphere is equal top and bottom height with no mid, cylinder is all mid
 // TODO: Is there any reason to subdivide this into height segments?
-export function Cylinder( width = 1, height = 1, depth = 1, radiusTop = 1, radiusBottom = 1, widthSegments = 32, thetaStart = 0, thetaLength = Math.PI * 2 ) {
+export function Cylinder( width = 1, height = 1, depth = 1, radiusTop = 1, radiusBottom = 1, thetaStart = 0, thetaLength = Math.PI * 2, widthSegments = 32 ) {
   const cylinder = {
     positions: [],
     normals: [],
@@ -264,10 +265,10 @@ export function Cylinder( width = 1, height = 1, depth = 1, radiusTop = 1, radiu
 
     const normal = vec3.normalize( [], [ cosTheta / width ** 2, slope / height ** 2, sinTheta / depth ** 2 ] );
 
-    cylinder.positions.push( radiusTop * cosTheta, height / 2, radiusTop * sinTheta );
+    cylinder.positions.push( radiusTop * cosTheta, height, radiusTop * sinTheta );
     cylinder.normals.push( ...normal );
 
-    cylinder.positions.push( radiusBottom * cosTheta, -height / 2, radiusBottom * sinTheta );
+    cylinder.positions.push( radiusBottom * cosTheta, -height, radiusBottom * sinTheta );
     cylinder.normals.push( ...normal );
   }
 
