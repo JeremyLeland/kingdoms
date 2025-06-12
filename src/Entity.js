@@ -59,26 +59,6 @@ export function applyTransforms( matrix, transform ) {
   }
 }
 
-function doBlend( out, animationPath, time ) {
-  
-  const t = Math.max( 0, Math.min( 1, time ) );   // should we clamp this elsewhere?
-  
-  const A = ( 1 - t ) ** 2;
-  const B = 2 * ( 1 - t ) * t;
-  const C = t ** 2;
-  
-  // For performance, would it be better to explicitly call out the possible properties?
-  for ( const prop in animationPath.start ) {
-    for ( let i = 0; i < 3; i ++ ) {
-      const P0 = animationPath.start[ prop ][ i ];
-      const P1 = animationPath.control1[ prop ][ i ];
-      const P2 = animationPath.end[ prop ][ i ];
-
-      out[ prop ][ i ] = A * P0 + B * P1 + C * P2;
-    }
-  }
-}
-
 const blendInfo = {
   pos: [ 0, 0, 0 ],
   rot: [ 0, 0, 0 ],
@@ -104,9 +84,25 @@ function applyAnimationTransform( modelMatrix, entity, info ) {
     const animationPath = info.animationPaths?.[ entity.animation.name ];
 
     if ( animationPath ) {
-      const percentTime = entity.animation.time / ModelInfo[ entity.type ].animations[ entity.animation.name ].duration;
+      const animInfo = ModelInfo[ entity.type ].animations[ entity.animation.name ];
+      const percentTime = entity.animation.time / animInfo.duration;
 
-      doBlend( blendInfo, animationPath, percentTime );
+      const t = Math.max( 0, Math.min( 1, percentTime ) );   // should we clamp this elsewhere?
+  
+      const A = ( 1 - t ) ** 2;
+      const B = 2 * ( 1 - t ) * t;
+      const C = t ** 2;
+  
+      // For performance, would it be better to explicitly call out the possible properties?
+      for ( const prop in animationPath.start ) {
+        for ( let i = 0; i < 3; i ++ ) {
+          const P0 = animationPath.start[ prop ][ i ];
+          const P1 = animationPath.control1[ prop ][ i ];
+          const P2 = animationPath.end[ prop ][ i ];
+
+          blendInfo[ prop ][ i ] = A * P0 + B * P1 + C * P2;
+        }
+      }
 
       applyTransforms( modelMatrix, blendInfo );
     }

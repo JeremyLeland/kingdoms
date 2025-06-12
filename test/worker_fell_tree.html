@@ -97,7 +97,13 @@ canvas.update = ( dt ) => {
   entities.forEach( entity => {
 
     if ( entity.animation ) {
+      const animInfo = Entity.ModelInfo[ entity.type ].animations[ entity.animation.name ];
+    
       entity.animation.time += dt;
+
+      if ( animInfo.loop ) {
+        entity.animation.time %= animInfo.duration;
+      }
 
       // if ( entity.animation.time < Entity.ModelInfo[ entity.type ].animations[ entity.animation.name ].duration ) {
       //   return;    // TODO: Only bail if certain animations are playing? Or should this just be part of delay?
@@ -233,10 +239,12 @@ const WorkerActions = {
       entity.carry.push( ...entities.splice( entities.indexOf( target ), 1 ) );
       entity.delay += Worker.Info.PickupDelay;
 
-      entity.animation = {
-        name: 'carry',
-        time: 0,
-      };
+      if ( entity.animation.name != 'carry' ) {
+        entity.animation = {
+          name: 'carry',
+          time: 0,
+        };
+      }
     },
   },
   Harvest: {

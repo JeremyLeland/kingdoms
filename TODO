@@ -1,5 +1,6 @@
 Next:
-  - Animation loop (for walk/carry)
+  - Make swing come up, strike fast, and return to neural
+    - Neutral position should match how we carry the axe (doesn't make sense to carry sideways like wood or stone)
   - Quaternions (for more reliable rotation, especially once I make axes lay flat by default)
 
 - Scene class
