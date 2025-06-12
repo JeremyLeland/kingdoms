@@ -17,21 +17,18 @@ import * as Worker from '../src/entities/Worker.js';
 import * as Entity from '../src/Entity.js';
 
 
-// TODO: Make animation be a map of animation names and their time, and apply all of them
 const entities = [
   {
-    type: 'Farm',
+    type: 'Tree',
     pos: [ 0, 0, 0 ],
     animation: {
-      // name: 'swing',
-      // time: 0,
-      // 'walk': 0,
-      // 'carry': 0,     // TODO: Does carry make sense as an animation? Maybe have a slight sway of the hands?
+      name: 'swing',
+      time: 0,
     },
     delay: 0,
-    // carry: [
-    //   { type: 'Axe' },
-    // ],
+    carry: [
+      { type: 'Axe' },
+    ],
   },
 ];
 
@@ -45,11 +42,26 @@ document.body.appendChild( divUI );
 for ( const name in Entity.ModelInfo[ entities[ 0 ].type ].animations ) {
   const button = document.createElement( 'button' );
   button.innerText = name;
-  button.addEventListener( 'click', e => {
+  button.addEventListener( 'click', _ => {
     startAnimation( entities[ 0 ], name );
   } );
 
   divUI.appendChild( button );
+
+  // If we ever try to do multiple animations...
+  // const button = document.createElement( 'input' );
+  // button.type = 'checkbox';
+  // button.id = `cb_${ name }`;
+  // button.addEventListener( 'click', _ => {
+  //   startAnimation( entities[ 0 ], name );
+  // } );
+
+  // const label = document.createElement( 'label' );
+  // label.for = button.id;
+  // label.innerText = name;
+
+  // divUI.appendChild( button );
+  // divUI.appendChild( label );
 }
 
 const timeSlider = document.createElement( 'input' );
@@ -72,10 +84,11 @@ Object.assign( timeSlider, {
 
 document.body.appendChild( timeSlider );
 
-timeSlider.addEventListener( 'input', e => {
+timeSlider.addEventListener( 'input', _ => {
   const newTime = +timeSlider.value;
 
   entities.forEach( entity => entity.animation.time = newTime );
+  canvas.redraw();
 } );
 
 //
@@ -94,7 +107,7 @@ if ( oldState ) {
   scene.camera = new OrbitCamera( oldState );
 }
 
-window.addEventListener( 'beforeunload', ( e ) =>
+window.addEventListener( 'beforeunload', _ =>
   localStorage.setItem( TestStateKey, JSON.stringify( scene.camera ) )
 );
 
@@ -108,6 +121,8 @@ function startAnimation( entity, name ) {
 
   timeSlider.value = 0;
   timeSlider.max = Entity.ModelInfo[ entity.type ].animations[ name ].duration;
+
+  canvas.redraw();
 }
 
 
@@ -136,7 +151,8 @@ canvas.draw = ( gl ) => {
   } );
 }
 
-canvas.start();
+// canvas.start();
+canvas.redraw();
 
 
 const X_TURN_SENSITIVITY = 100;
@@ -151,6 +167,8 @@ canvas.canvas.addEventListener( 'pointermove', e => {
     const dTheta = e.movementY / Y_TURN_SENSITIVITY;
 
     scene.camera.rotate( dPhi, dTheta );
+
+    canvas.redraw();
   }
 
   // Pan with right mouse button
@@ -159,6 +177,8 @@ canvas.canvas.addEventListener( 'pointermove', e => {
     const dy = e.movementY / Y_MOVE_SENSITIVITY;
 
     scene.camera.pan( dx, dy );
+
+    canvas.redraw();
   }
 } );
 
@@ -166,4 +186,6 @@ const ZOOM_SENSIVITY = -200;
 
 canvas.canvas.addEventListener( 'wheel', e => {
   scene.camera.zoom( e.wheelDelta / ZOOM_SENSIVITY );
+
+  canvas.redraw();
 } );

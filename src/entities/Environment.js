@@ -3,13 +3,13 @@ import * as ShaderCommon from '../common/ShaderCommon.js';
 
 const TreeInfo = {
   TrunkRadius: 0.4,
-  TrunkHeight: 0.75,
+  TrunkHeight: 0.375,
   TrunkMaterial: {
     shader: ShaderCommon.Lighting,
     uniforms: { color: [ 0.5, 0.2, 0.0 ] },
   },
   LeavesRadius: 1.25,
-  LeavesHeight: 2.5,
+  LeavesHeight: 1.25,
   LeavesMaterial: {
     shader: ShaderCommon.Lighting,
     uniforms: { color: [ 0.1, 0.3, 0.1 ] },
@@ -71,22 +71,22 @@ export const TreeModel = {
   parts: {
     Trunk: {
       mesh: MeshCommon.Cylinder( TreeInfo.TrunkRadius, TreeInfo.TrunkHeight, TreeInfo.TrunkRadius ),
-      pos: [ 0, TreeInfo.TrunkHeight / 2, 0 ],
+      pos: [ 0, TreeInfo.TrunkHeight, 0 ],
       material: TreeInfo.TrunkMaterial,
     },
     Leaves: {
       mesh: MeshCommon.Cone( TreeInfo.LeavesRadius, TreeInfo.LeavesHeight, TreeInfo.LeavesRadius ),
-      pos: [ 0, ( TreeInfo.TrunkHeight + TreeInfo.LeavesHeight ) / 2, 0 ],
+      pos: [ 0, TreeInfo.TrunkHeight + TreeInfo.LeavesHeight, 0 ],
       material: TreeInfo.LeavesMaterial,
     },
     Leaves2: {
       mesh: MeshCommon.Cone( TreeInfo.LeavesRadius * 0.9, TreeInfo.LeavesHeight * 0.9, TreeInfo.LeavesRadius * 0.9 ),
-      pos: [ 0, ( TreeInfo.TrunkHeight + TreeInfo.LeavesHeight ) / 2 + 0.6, 0 ],
+      pos: [ 0, TreeInfo.TrunkHeight + TreeInfo.LeavesHeight + 0.6, 0 ],
       material: TreeInfo.LeavesMaterial,
     },
     Leaves3: {
       mesh: MeshCommon.Cone( TreeInfo.LeavesRadius * 0.8, TreeInfo.LeavesHeight * 0.8, TreeInfo.LeavesRadius * 0.8  ),
-      pos: [ 0, ( TreeInfo.TrunkHeight + TreeInfo.LeavesHeight ) / 2 + 1.2, 0 ],
+      pos: [ 0, TreeInfo.TrunkHeight + TreeInfo.LeavesHeight + 1.2, 0 ],
       material: TreeInfo.LeavesMaterial,
     }
   }

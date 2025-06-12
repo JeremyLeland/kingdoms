@@ -1,3 +1,4 @@
+import { vec3 } from '../../lib/gl-matrix.js';
 import * as MeshCommon from '../common/MeshCommon.js';
 import * as ShaderCommon from '../common/ShaderCommon.js';
 
@@ -37,6 +38,28 @@ const WalkBobPath = {
   },
 };
 
+const WalkBodyPath = {
+  start: {
+    scale: [ 1, 1, 1 ],
+  },
+  control1: {
+    scale: [ 1, 0.5, 1 ],
+  },
+  end: {
+    scale: [ 1, 1, 1 ],
+  },
+};
+
+const CarryPos = {
+  Left:  [ Info.BodyRadius, Info.CarryHeight, -Info.BodyRadius ],
+  Right: [ Info.BodyRadius, Info.CarryHeight,  Info.BodyRadius ],
+  Carry: [ Info.BodyRadius, Info.CarryHeight,  0 ],
+};
+
+const SwingOffset = {
+  Left:  [ 0,  0.2, 0 ],
+  Right: [ 0, -0.2, 0 ],
+};
 
 // TODO: Support cubic paths of some sort
 //       Maybe specify start and end points, then some number of control points?
@@ -68,56 +91,50 @@ export const Model = {
       material: Info.SkinMaterial,
       animationPaths: {
         walk: WalkBobPath,
+        carry: WalkBobPath,
       },
     },
     Body: {
       mesh: MeshCommon.Sphere( Info.BodyRadius, Info.BodyHeight, Info.BodyRadius, 32, 32, 0, Math.PI * 2, 0, Math.PI / 2 ),
       material: Info.BodyMaterial,
       animationPaths: {
-        walk: {
-          start: {
-            scale: [ 1, 1, 1 ],
-          },
-          control1: {
-            scale: [ 1, 0.5, 1 ],
-          },
-          end: {
-            scale: [ 1, 1, 1 ],
-          },
-        },
+        walk: WalkBodyPath,
+        carry: WalkBodyPath,
       },
     },
     LeftHand: {
       mesh: MeshCommon.Sphere( Info.HandRadius, Info.HandRadius, Info.HandRadius ),
       material: Info.SkinMaterial,
       animationPaths: {
+        // TODO: Combine WalkBobPath with current carry path
+        // TODO: Have walk path include some arm swinging (will this require 2 control points?)
         walk: WalkBobPath,
         carry: {
           start: {
-            pos: [ Info.BodyRadius, Info.CarryHeight, -Info.BodyRadius ],
+            pos: vec3.add( [], WalkBobPath.start.pos, CarryPos.Left ),
           },
           control1: {
-            pos: [ Info.BodyRadius + 0.1, Info.CarryHeight, -Info.BodyRadius ],
+            pos: vec3.add( [], WalkBobPath.control1.pos, CarryPos.Left ),
           },
           end: {
-            pos: [ Info.BodyRadius, Info.CarryHeight, -Info.BodyRadius ],
+            pos: vec3.add( [], WalkBobPath.end.pos, CarryPos.Left ),
           }
         },
         swing: {
           start: {
             pos: [ Info.BodyRadius - 0.2, 1, Info.BodyRadius ],
             rot: [ Math.PI / 4, 0, Math.PI / 4 ],
-            offset: [ 0, 0.2, 0 ],
+            offset: SwingOffset.Left,
           },
           control1: {
             pos: [ Info.BodyRadius, 0.5, -Info.BodyRadius ],
             rot: [ Math.PI / 4, 0, -Math.PI / 4 ],
-            offset: [ 0, 0.2, 0 ],
+            offset: SwingOffset.Left,
           },
           end: {
             pos: [ 0, 0.25, -Info.BodyRadius ],
             rot: [ Math.PI / 4, 0, -Math.PI / 2 ],
-            offset: [ 0, 0.2, 0 ],
+            offset: SwingOffset.Left,
           },
         },
       },
@@ -129,30 +146,30 @@ export const Model = {
         walk: WalkBobPath,
         carry: {
           start: {
-            pos: [ Info.BodyRadius, Info.CarryHeight, Info.BodyRadius ],
+            pos: vec3.add( [], WalkBobPath.start.pos, CarryPos.Right ),
           },
           control1: {
-            pos: [ Info.BodyRadius + 0.1, Info.CarryHeight, Info.BodyRadius ],
+            pos: vec3.add( [], WalkBobPath.control1.pos, CarryPos.Right ),
           },
           end: {
-            pos: [ Info.BodyRadius, Info.CarryHeight, Info.BodyRadius ],
+            pos: vec3.add( [], WalkBobPath.end.pos, CarryPos.Right ),
           }
         },
         swing: {
           start: {
             pos: [ Info.BodyRadius - 0.2, 1, Info.BodyRadius ],
             rot: [ Math.PI / 4, 0, Math.PI / 4 ],
-            offset: [ 0, -0.2, 0 ],
+            offset: SwingOffset.Right,
           },
           control1: {
             pos: [ Info.BodyRadius, 0.5, -Info.BodyRadius ],
             rot: [ Math.PI / 4, 0, -Math.PI / 4 ],
-            offset: [ 0, -0.2, 0 ],
+            offset: SwingOffset.Right,
           },
           end: {
             pos: [ 0, 0.25, -Info.BodyRadius ],
             rot: [ Math.PI / 4, 0, -Math.PI / 2 ],
-            offset: [ 0, -0.2, 0 ],
+            offset: SwingOffset.Right,
           },
         },
       },
@@ -163,13 +180,13 @@ export const Model = {
         walk: WalkBobPath,
         carry: {
           start: {
-            pos: [ Info.BodyRadius, Info.CarryHeight, 0 ],
+            pos: vec3.add( [], WalkBobPath.start.pos, CarryPos.Carry ),
           },
           control1: {
-            pos: [ Info.BodyRadius + 0.1, Info.CarryHeight, 0 ],
+            pos: vec3.add( [], WalkBobPath.control1.pos, CarryPos.Carry ),
           },
           end: {
-            pos: [ Info.BodyRadius, Info.CarryHeight, 0 ],
+            pos: vec3.add( [], WalkBobPath.end.pos, CarryPos.Carry ),
           }
         },
         // Position for swing matches left hand, since this is the base of the axe

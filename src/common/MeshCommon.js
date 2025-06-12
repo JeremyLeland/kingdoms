@@ -286,6 +286,6 @@ export function Cylinder( width = 1, height = 1, depth = 1, radiusTop = 1, radiu
 // TODO: Optional cap at bottom?
 // TODO: Is there any reason to subdivide this into height segments?
 // TODO: Make this special case of Cylinder? (allow different top and bottom radius)
-export function Cone( width = 1, height = 1, depth = 1, widthSegments = 32, thetaStart = 0, thetaLength = Math.PI * 2 ) {
-  return Cylinder( width, height, depth, 0, 1, widthSegments, thetaStart, thetaLength );
+export function Cone( width = 1, height = 1, depth = 1, thetaStart = 0, thetaLength = Math.PI * 2, widthSegments = 32 ) {
+  return Cylinder( width, height, depth, 0, 1, thetaStart, thetaLength, widthSegments);
 }

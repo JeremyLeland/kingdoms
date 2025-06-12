@@ -1,6 +1,6 @@
-- Does the axe have a lifecycle of sorts? Does it need to be picked up from somewhere and returned there?
-  - Maybe keep them by town center? Or lumber yard, if we build those?
-    - Stronghold has a building for each wood cutter. If we do that, the axe could be part of that building.
+Next:
+  - Animation loop (for walk/carry)
+  - Quaternions (for more reliable rotation, especially once I make axes lay flat by default)
 
 - Scene class
   - Hold GL context (not sure if I want to do this or pass it in)
@@ -11,8 +11,16 @@
 
 - Animations
   - Blend multiple animations (e.g. walk and carry)
+    - Actually, hold off on this. The main case for this is combining walking and carrying
+    - For now, we can just blend these manually so that carry and walk both bob
+      - If we want workers to stop bobbing if they aren't moving, we need to tie frame advancement to movement
+    - See how far we can get with that before we blow up the animation system
   - Add swinging hands animation for walking without carrying anything
   - Once or loop (just have loop: true or false?)
+
+- Pick a common orientation for carried items
+  - e.g. a swung piece of wood should look the same as a swung axe
+    - model everything upright and then rotate it? or model everything as if its lying flat?
 
 - Workers avoid each other when walking
   - And avoid trees and stockpiles
