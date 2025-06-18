@@ -35,11 +35,14 @@ export const TreeModel = {
       start: {
         rot: [ 0, 0, 0 ],
       },
-      end: {
-        rot: [ 0, 0, Math.PI / 2 ],
-      },
       control1: {
         rot: [ 0, 0, 0.1 * Math.PI / 2 ],
+      },
+      control2: {
+        rot: [ 0, 0, 0.2 * Math.PI / 2 ],
+      },
+      end: {
+        rot: [ 0, 0, Math.PI / 2 ],
       },
     },
     impact: {
@@ -48,6 +51,9 @@ export const TreeModel = {
       },
       control1: {
         rot: [ 0, 0, TreeInfo.ImpactRot ],
+      },
+      control2: {
+        rot: [ 0, 0, -TreeInfo.ImpactRot ],
       },
       end: {
         rot: [ 0, 0, 0 ],
@@ -59,6 +65,10 @@ export const TreeModel = {
         rot: [ 0, 0, Math.PI / 2 ],
       },
       control1: {
+        pos: [ 0, -0.5, 0 ],
+        rot: [ 0, 0, Math.PI / 2 ],
+      },
+      control2: {
         pos: [ 0, -0.5, 0 ],
         rot: [ 0, 0, Math.PI / 2 ],
       },

@@ -34,10 +34,6 @@ export const ModelInfo = {
   },
 };
 
-const Meshes = new Map();
-
-let shader, lineShader;
-
 export function applyTransforms( matrix, transform ) {
   if ( transform.pos ) {
     mat4.translate( matrix, matrix, transform.pos );
@@ -89,18 +85,25 @@ function applyAnimationTransform( modelMatrix, entity, info ) {
 
       const t = Math.max( 0, Math.min( 1, percentTime ) );   // should we clamp this elsewhere?
   
-      const A = ( 1 - t ) ** 2;
-      const B = 2 * ( 1 - t ) * t;
-      const C = t ** 2;
+      // const A = ( 1 - t ) ** 2;
+      // const B = 2 * ( 1 - t ) * t;
+      // const C = t ** 2;
+
+      // Cubic Bezier
+      const A =              ( 1 - t ) ** 3;
+      const B = 3 * t      * ( 1 - t ) ** 2;
+      const C = 3 * t ** 2 * ( 1 - t );
+      const D =     t ** 3;
   
       // For performance, would it be better to explicitly call out the possible properties?
       for ( const prop in animationPath.start ) {
         for ( let i = 0; i < 3; i ++ ) {
           const P0 = animationPath.start[ prop ][ i ];
           const P1 = animationPath.control1[ prop ][ i ];
-          const P2 = animationPath.end[ prop ][ i ];
+          const P2 = animationPath.control2[ prop ][ i ];
+          const P3 = animationPath.end[ prop ][ i ];
 
-          blendInfo[ prop ][ i ] = A * P0 + B * P1 + C * P2;
+          blendInfo[ prop ][ i ] = A * P0 + B * P1 + C * P2 + D * P3;
         }
       }
 
@@ -109,28 +112,40 @@ function applyAnimationTransform( modelMatrix, entity, info ) {
   }
 }
 
-const normalMatrix = mat4.create();
 
-const blend = {
-  pos: [ 0, 0, 0 ],
-  scale: [ 1, 1, 1 ],
-};
+// TODO: Use different meshes for start/end and control points? (except cube is good for showing rotation...hm)
+//       Show path, either with lines or lots of little cubes? (cubes show rotation, not sure how useful this is)
 
-// TODO: For path debugging, have different colors for each path (increment counter as we draw so first red, second orange, etc)
-//       Use different meshes for start/end and control points
-//       Bonus: Draw the curved path with lines! (lots of blend calls to find points?)
 const pathPointMesh = MeshCommon.Cube( 0.05, 0.05, 0.05 );
-const pathPointMaterial = {
-  shader: ShaderCommon.Lighting,
-  uniforms: { color: [ 0.5, 0.5, 0.5 ] },
-};
-const pathControlPointMaterial = {
-  shader: ShaderCommon.Lighting,
-  uniforms: { color: [ 0.8, 0.8, 0.8 ] },
-};
+const pathControlPointMesh = MeshCommon.Cube( 0.025, 0.025, 0.025 );
+
+const DebugColors = [
+  [ 1, 0, 0 ],
+  [ 1, 1, 0 ],
+  [ 0, 1, 0 ],
+  [ 0, 0, 1 ],
+  [ 0, 1, 1 ],
+];
+
+const pathMaterials = DebugColors.map( color => (
+  {
+    shader: ShaderCommon.Lighting,
+    uniforms: { color: color },
+  } 
+) );
+
+const lineMatrials = DebugColors.map( color => (
+  {
+    shader: ShaderCommon.SolidColor,
+    uniforms: { color: color },
+  } 
+) );
 
 
 export function draw( gl, entity, scene, modelMatrixStack ) {
+
+  let pathIndex = 0;
+
   modelMatrixStack.save(); {
 
     applyTransforms( modelMatrixStack.current, entity );     // Should this have another stack save level?
@@ -139,22 +154,34 @@ export function draw( gl, entity, scene, modelMatrixStack ) {
 
     applyTransforms( modelMatrixStack.current, modelInfo );    // NOTE: Do we ever have model-wide transforms?
 
-    // const animModelMatrix = mat4.create();
-    // const animationPath = modelInfo.animationPaths?.[ entity.animation.name ];
+    // DEBUG: Draw path
+    const animModelMatrix = mat4.create();
+    const animationPath = modelInfo.animationPaths?.[ entity.animation.name ];
+    const material = pathMaterials[ pathIndex ];
 
-    // if ( animationPath ) {
-    //   mat4.copy( animModelMatrix, modelMatrixStack.current );
-    //   Entity.applyTransforms( animModelMatrix, animationPath.start );
-    //   scene.drawMesh( gl, pathPointMesh, pathPointMaterial, animModelMatrix );
+    if ( animationPath ) {
+      mat4.copy( animModelMatrix, modelMatrixStack.current );
+      applyTransforms( animModelMatrix, animationPath.start );
+      scene.drawMesh( gl, pathPointMesh, material, animModelMatrix );
 
-    //   mat4.copy( animModelMatrix, modelMatrixStack.current );
-    //   Entity.applyTransforms( animModelMatrix, animationPath.control1 );
-    //   scene.drawMesh( gl, pathPointMesh, pathControlPointMaterial, animModelMatrix )
+      mat4.copy( animModelMatrix, modelMatrixStack.current );
+      applyTransforms( animModelMatrix, animationPath.control1 );
+      scene.drawMesh( gl, pathControlPointMesh, material, animModelMatrix );
 
-    //   mat4.copy( animModelMatrix, modelMatrixStack.current );
-    //   Entity.applyTransforms( animModelMatrix, animationPath.end );
-    //   scene.drawMesh( gl, pathPointMesh, pathPointMaterial, animModelMatrix )
-    // }
+      mat4.copy( animModelMatrix, modelMatrixStack.current );
+      applyTransforms( animModelMatrix, animationPath.control2 );
+      scene.drawMesh( gl, pathControlPointMesh, material, animModelMatrix );
+
+      mat4.copy( animModelMatrix, modelMatrixStack.current );
+      applyTransforms( animModelMatrix, animationPath.end );
+      scene.drawMesh( gl, pathPointMesh, material, animModelMatrix );
+
+      const linePathMesh = MeshCommon.BezierCurve( animationPath.start.pos, animationPath.control1.pos, animationPath.control2.position, animationPath.end.pos );
+      scene.drawLines( gl, linePathMesh, lineMatrials[ pathIndex ], modelMatrixStack.current );
+
+      pathIndex ++;
+    }
+    // END DEBUG: Draw path
 
     applyAnimationTransform( modelMatrixStack.current, entity, modelInfo );   // we definitely have model-wide animations
 
@@ -165,22 +192,41 @@ export function draw( gl, entity, scene, modelMatrixStack ) {
 
         applyTransforms( modelMatrixStack.current, partInfo );
 
-        // const animModelMatrix = mat4.create();
-        // const animationPath = partInfo.animationPaths?.[ entity.animation.name ];
+        // DEBUG: Draw path
+        const animModelMatrix = mat4.create();
+        const animationPath = partInfo.animationPaths?.[ entity.animation.name ];
+        const material = pathMaterials[ pathIndex ];
 
-        // if ( animationPath ) {
-        //   mat4.copy( animModelMatrix, modelMatrixStack.current );
-        //   Entity.applyTransforms( animModelMatrix, animationPath.start );
-        //   scene.drawMesh( gl, pathPointMesh, pathPointMaterial, animModelMatrix );
+        if ( animationPath ) {
+          mat4.copy( animModelMatrix, modelMatrixStack.current );
+          applyTransforms( animModelMatrix, animationPath.start );
+          scene.drawMesh( gl, pathPointMesh, material, animModelMatrix );
 
-        //   mat4.copy( animModelMatrix, modelMatrixStack.current );
-        //   Entity.applyTransforms( animModelMatrix, animationPath.control1 );
-        //   scene.drawMesh( gl, pathPointMesh, pathControlPointMaterial, animModelMatrix )
+          mat4.copy( animModelMatrix, modelMatrixStack.current );
+          applyTransforms( animModelMatrix, animationPath.control1 );
+          scene.drawMesh( gl, pathControlPointMesh, material, animModelMatrix );
 
-        //   mat4.copy( animModelMatrix, modelMatrixStack.current );
-        //   Entity.applyTransforms( animModelMatrix, animationPath.end );
-        //   scene.drawMesh( gl, pathPointMesh, pathPointMaterial, animModelMatrix )
-        // }
+          mat4.copy( animModelMatrix, modelMatrixStack.current );
+          applyTransforms( animModelMatrix, animationPath.control2 );
+          scene.drawMesh( gl, pathControlPointMesh, material, animModelMatrix );
+
+          mat4.copy( animModelMatrix, modelMatrixStack.current );
+          applyTransforms( animModelMatrix, animationPath.end );
+          scene.drawMesh( gl, pathPointMesh, material, animModelMatrix );
+
+          // TODO: Take into account offset
+          //       Would drawing more cubes with applyTransforms take care of this for us?
+          const linePathMesh = MeshCommon.BezierCurve( 
+            animationPath.start.pos, 
+            animationPath.control1.pos, 
+            animationPath.control2.pos, 
+            animationPath.end.pos,
+          );
+          scene.drawLines( gl, linePathMesh, lineMatrials[ pathIndex ], modelMatrixStack.current );
+
+          pathIndex ++;
+        }
+        // END DEBUG: Draw path
 
         applyAnimationTransform( modelMatrixStack.current, entity, partInfo );
 

@@ -19,7 +19,7 @@ import * as Entity from '../src/Entity.js';
 
 const entities = [
   {
-    type: 'Tree',
+    type: 'Worker',
     pos: [ 0, 0, 0 ],
     animation: {
       name: 'swing',

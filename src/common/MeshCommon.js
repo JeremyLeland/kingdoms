@@ -145,7 +145,6 @@ export function Cube( width = 1, height = 1, depth = 1 ) {
 export function Grid( left = -5, top = -5, right = 5, bottom = 5 ) {
   const grid = {
     positions: [],
-    normals: [],
   };
 
   for ( let x = left; x <= right; x ++ ) {
@@ -163,6 +162,41 @@ export function Grid( left = -5, top = -5, right = 5, bottom = 5 ) {
   }
 
   return grid;
+}
+
+export function BezierCurve( start, control1, control2, end, numPoints = 50 ) {
+  const points = {
+    positions: [],
+  };
+
+  const step = 1 / numPoints;
+
+  for ( let i = 0; i <= numPoints; i ++ ) {
+    const t = i * step;
+
+    // Cubic Bezier
+    const A =              ( 1 - t ) ** 3;
+    const B = 3 * t      * ( 1 - t ) ** 2;
+    const C = 3 * t ** 2 * ( 1 - t );
+    const D =     t ** 3;
+
+    // Repeat all points except first and last (since we are defining individual lines)
+    const shouldRepeat = i != 0 && i != numPoints;
+    for ( let repeat = 0; repeat <= shouldRepeat ? 1 : 0; repeat ++ ) { 
+      for ( let j = 0; j < 3; j ++ ) {
+        const P0 = start[ j ];
+        const P1 = control1[ j ];
+        const P2 = control2[ j ];
+        const P3 = end[ j ];
+
+        points.positions.push(
+          A * P0 + B * P1 + C * P2 + D * P3
+        );
+      }
+    }
+  }
+
+  return points;
 }
 
 export function Plane( width = 1, height = 1, widthSegments = 1, heightSegments = 1 ) {

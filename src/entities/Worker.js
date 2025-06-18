@@ -33,6 +33,9 @@ const WalkBobPath = {
   control1: {
     pos: [ 0, -0.5, 0 ],
   },
+  control2: {
+    pos: [ 0, -0.5, 0 ],
+  },
   end: {
     pos: [ 0, 0, 0 ],
   },
@@ -43,6 +46,9 @@ const WalkBodyPath = {
     scale: [ 1, 1, 1 ],
   },
   control1: {
+    scale: [ 1, 0.5, 1 ],
+  },
+  control2: {
     scale: [ 1, 0.5, 1 ],
   },
   end: {
@@ -56,18 +62,45 @@ const CarryPos = {
   Carry: [ Info.BodyRadius, Info.CarryHeight,  0 ],
 };
 
+// TODO: Probably need to string multiple paths together to get the swing I want
+//         - One for downswing, one for upswing?
+// TODO: Maybe make this easier by
+//         1) Show paths (maybe a bunch of intermediate points as well control points?)
+//         2) Allow path to be edited in real time with HTML input controls?
+
+const SwingPath = {
+  start: {
+    pos: [ Info.BodyRadius - 0.1, 0.75, Info.BodyRadius ],
+    rot: [ Math.PI / 4, 0, Math.PI / 4 ],
+  },
+  control1: {
+    pos: [ Info.BodyRadius - 1, 0.95, Info.BodyRadius + 0.2 ],
+    rot: [ Math.PI / 4, 0, Math.PI ],
+  },
+  control2: {
+    pos: [ Info.BodyRadius + 1.25, 0.45, 0 ],
+    rot: [ Math.PI / 4, 0, -Math.PI / 4 ],
+  },
+  end: {
+    pos: [ Info.BodyRadius - 0.1, 0.25, -Info.BodyRadius ],
+    rot: [ Math.PI / 4, 0, -Math.PI / 2 ],
+  },
+};
+
 const SwingOffset = {
   Left:  [ 0,  0.2, 0 ],
   Right: [ 0, -0.2, 0 ],
 };
 
-// TODO: Support cubic paths of some sort
-//       Maybe specify start and end points, then some number of control points?
-//       Control points for each keyframe?
-//       We can probably accomplish most of what we want for now with a single path
+function getOffsetPath( path, offset ) {
+  const copy = structuredClone( path );
 
+  for ( const key in copy ) {
+    copy[ key ].offset = offset;     // someday, use Object.assign() here for things besides offset?
+  }
 
-// TODO: Helper function to add offsets to existing path
+  return copy;
+}
 
 export const Model = {
   bounds: [ 0.5, 1.5, 0.5 ],
@@ -116,27 +149,14 @@ export const Model = {
           control1: {
             pos: vec3.add( [], WalkBobPath.control1.pos, CarryPos.Left ),
           },
+          control2: {
+            pos: vec3.add( [], WalkBobPath.control2.pos, CarryPos.Left ),
+          },
           end: {
             pos: vec3.add( [], WalkBobPath.end.pos, CarryPos.Left ),
           }
         },
-        swing: {
-          start: {
-            pos: [ Info.BodyRadius - 0.2, 1, Info.BodyRadius ],
-            rot: [ Math.PI / 4, 0, Math.PI / 4 ],
-            offset: SwingOffset.Left,
-          },
-          control1: {
-            pos: [ Info.BodyRadius, 0.5, -Info.BodyRadius ],
-            rot: [ Math.PI / 4, 0, -Math.PI / 4 ],
-            offset: SwingOffset.Left,
-          },
-          end: {
-            pos: [ 0, 0.25, -Info.BodyRadius ],
-            rot: [ Math.PI / 4, 0, -Math.PI / 2 ],
-            offset: SwingOffset.Left,
-          },
-        },
+        swing: getOffsetPath( SwingPath, SwingOffset.Left ),
       },
     },
     RightHand: {
@@ -151,27 +171,14 @@ export const Model = {
           control1: {
             pos: vec3.add( [], WalkBobPath.control1.pos, CarryPos.Right ),
           },
+          control2: {
+            pos: vec3.add( [], WalkBobPath.control2.pos, CarryPos.Right ),
+          },
           end: {
             pos: vec3.add( [], WalkBobPath.end.pos, CarryPos.Right ),
           }
         },
-        swing: {
-          start: {
-            pos: [ Info.BodyRadius - 0.2, 1, Info.BodyRadius ],
-            rot: [ Math.PI / 4, 0, Math.PI / 4 ],
-            offset: SwingOffset.Right,
-          },
-          control1: {
-            pos: [ Info.BodyRadius, 0.5, -Info.BodyRadius ],
-            rot: [ Math.PI / 4, 0, -Math.PI / 4 ],
-            offset: SwingOffset.Right,
-          },
-          end: {
-            pos: [ 0, 0.25, -Info.BodyRadius ],
-            rot: [ Math.PI / 4, 0, -Math.PI / 2 ],
-            offset: SwingOffset.Right,
-          },
-        },
+        swing: getOffsetPath( SwingPath, SwingOffset.Right ),
       },
     },
     Carry: {
@@ -185,25 +192,15 @@ export const Model = {
           control1: {
             pos: vec3.add( [], WalkBobPath.control1.pos, CarryPos.Carry ),
           },
+          control2: {
+            pos: vec3.add( [], WalkBobPath.control2.pos, CarryPos.Carry ),
+          },
           end: {
             pos: vec3.add( [], WalkBobPath.end.pos, CarryPos.Carry ),
           }
         },
         // Position for swing matches left hand, since this is the base of the axe
-        swing: {
-          start: {
-            pos: [ Info.BodyRadius - 0.2, 1, Info.BodyRadius ],
-            rot: [ Math.PI / 4, 0, Math.PI / 4 ],
-          },
-          control1: {
-            pos: [ Info.BodyRadius, 0.5, -Info.BodyRadius ],
-            rot: [ Math.PI / 4, 0, -Math.PI / 4 ],
-          },
-          end: {
-            pos: [ 0, 0.25, -Info.BodyRadius ],
-            rot: [ Math.PI / 4, 0, -Math.PI / 2 ],
-          },
-        },
+        swing: SwingPath,
       },
       attach: 'carry',
       // TODO: attachFunc, something to specify how to draw multiple items
