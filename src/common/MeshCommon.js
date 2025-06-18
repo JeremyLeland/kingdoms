@@ -165,6 +165,11 @@ export function Grid( left = -5, top = -5, right = 5, bottom = 5 ) {
 }
 
 export function BezierCurve( start, control1, control2, end, numPoints = 50 ) {
+
+  if ( !control2 ) {
+    debugger;
+  }
+
   const points = {
     positions: [],
   };
