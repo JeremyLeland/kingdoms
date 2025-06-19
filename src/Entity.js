@@ -225,6 +225,7 @@ export function draw( gl, entity, scene, modelMatrixStack ) {
             if ( animationPath.start.pos ) {
               // TODO: Take into account offset
               //       Would drawing more cubes with applyTransforms take care of this for us?
+              //       I think cubes will be the way to go -- more clearly show faster and slower movement as well
               const linePathMesh = MeshCommon.BezierCurve( 
                 animationPath.start.pos, 
                 animationPath.control1.pos, 

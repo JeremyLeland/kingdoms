@@ -1,47 +1,47 @@
 Next:
-  - Make swing come up, strike fast, and return to neural
-    - Neutral position should match how we carry the axe (doesn't make sense to carry sideways like wood or stone)
-  - Quaternions (for more reliable rotation, especially once I make axes lay flat by default)
+  - Pan camera with arrow keys (just get it done)
+  - Stone (draw it, harvest it, work on phases and whatever results)  
 
-- Scene class
-  - Hold GL context (not sure if I want to do this or pass it in)
-  - Camera and light information (still need to this, lighting is currently hardcoded)
-    - Maybe this is more of a World thing than a Scene thing?
-      - Lights should be in the world at least
-      - Camera may be more of a local state...not sure if makes sense for world
+- Should we drop resource on ground to pick up, or harvest them directly from source?
+  - Instead of dropping wood on ground in circle, maybe just have worker swing on downed tree a few times
+    - Then directly place 3 pieces of wood in carry?
+  - Could do same for stone. Swing a few times, then a chunk is gone and walk off with a block or two.
+  - Do the low two-handed gather motion from bush, then walk away with basket full of berries
+  - Do a slower higher gather from tree, walk away with basket full of apples
+  - Resources can still be dropped onto the ground (e.g. if worker emergently changes jobs, or dies)
+    - But it probably makes sense to be mostly taking directly from source or picking up from stockpile
 
-- Animations
-  - Blend multiple animations (e.g. walk and carry)
-    - Actually, hold off on this. The main case for this is combining walking and carrying
-    - For now, we can just blend these manually so that carry and walk both bob
-      - If we want workers to stop bobbing if they aren't moving, we need to tie frame advancement to movement
-    - See how far we can get with that before we blow up the animation system
-  - Add swinging hands animation for walking without carrying anything
-  - Once or loop (just have loop: true or false?)
+- Resources
+  - Wood (forest trees)
+    - Chop down tree first, then harvest from felled tree
+    - Should add a stump to remain after tree is felled
+    - Harvesting from felled tree makes felled part sink? Or hide sections of leaves for 25percent, 50percent, etc?
+  - Stone (rocks)
+    - Break off pieces of stone in phases
+    - Small flat bit of rock remains
+  - Berries (bushes)
+    - Fill basket with berries from tree
+    - Draw fewer berries in tree as they are harvested? (not necessarily 1:1)
+    - Regrow over time? Pick down first, then wait for regrow?
+  - Apples (orchard trees)
+    - Fill basket with apples from tree
+    - Draw fewer apples in tree as they are havested? (not necessarily 1:1)
+    - Regrow over time?
+  - Farms
+    - Low gather motion for harvesting. percent phases apply to individual plants?
 
-- Pick a common orientation for carried items
-  - e.g. a swung piece of wood should look the same as a swung axe
-    - model everything upright and then rotate it? or model everything as if its lying flat?
-
-- Workers avoid each other when walking
-  - And avoid trees and stockpiles
-  - Make 2D test of this to try different avoidance techniques
-    - Will want pathing at some point (e.g. account for lower transport costs for roads)
-    - Classic avoid vector leads to lots of weird turning
-      - What about yielding? Maybe one avoids, the other yields? Upper left always yields, for instance
-      - What if we only turned right? Aim right until no longer close, then resume normal aiming?
-
-- Stockpiles have their own delay?
-  - So several workers can't dump several items at same time
-
-- Pan camera with arrow keys
-
-- Bush with berries
-  - Bucket with berries to carry
-    - Combine meshes? (create a bunch of half spheres and stick them together as one?)
-      - Is this more efficient than a dozen or so individual spheres?
+- "Visible" property
+  - As resources are harvested, we remove parts of them (tree top vanishes, parts of rock vanish, berries vanish)
+  - Maybe we add a 'hidden' or 'visible' property (whichever makes more sense, maybe visible defaulting to true)
+  - Resources maybe have a 'state' or 'status' or 'mode' (kind of like an animation) where certain properties can be applied?
+    - Status for resources could be 'felled' or '25percent'
+    - Status for workers could be 'harvest_wood' or 'harvest_stone'
+    - We could potentially use this to show axe, pick, weapon, etc when worker is in given harvest mode
+      - Then we could bind whatever axe they have to 'axe' without having to add and remove it every time they change actions
 
 - Farm
+  - Farms are just the framework, harvest individual plants that are attached?
+  - Maybe till the soil animation for the farm itself, but then harvest individual plants?
   - Rows of cylinders, sphere end caps
   - Plants start folded up under ground
   - Animation raises them and opens them up? (for corn, maybe?)
@@ -49,6 +49,44 @@ Next:
     - Slowly raise so part of orange sticks up and make green part bigger?
     - Carry carrots in basket?
 
+- Animations
+  - Add swinging hands animation for walking without carrying anything
+  - Will this happen? 
+    - If they are walking to harvest, they can carry the harvest tool
+    - If they are dropping off, then they are carrying resource
+    - Maybe it happens if they are going to stockpile to pick something up
+
+
 - Control harvesting by setting desired minimums
   - Show table of available resources next to number input to set desired level
   - Grab more any time actual number drops below desired
+
+- Stockpiles have their own delay?
+  - Makes things look better, but not high priority
+  - So several workers can't dump several items at same time
+
+- Workers avoid each other when walking
+  - NOW: Currently avoiding each other decently enough for now, postpone the rest of this
+  - And avoid trees and stockpiles
+  - Make 2D test of this to try different avoidance techniques
+    - Will want pathing at some point (e.g. account for lower transport costs for roads)
+    - Classic avoid vector leads to lots of weird turning
+      - What about yielding? Maybe one avoids, the other yields? Upper left always yields, for instance
+      - What if we only turned right? Aim right until no longer close, then resume normal aiming?
+
+
+- Pick a common orientation for carried items
+  - e.g. a swung piece of wood should look the same as a swung axe
+    - model everything upright and then rotate it? or model everything as if its lying flat?
+    - Leaning toward workers always having tools, not picking them up off ground
+    - May still make nicer tools that need to be shown on ground at some point, but not priority
+  - Quaternions (for more reliable rotation, especially once I make axes lay flat by default)
+    - Eventually, not blocking for the moment -- especially if tools won't be laying on ground for now
+
+- Scene class
+  - NOW: Organizational, but not blocking anything for now
+  - Hold GL context (not sure if I want to do this or pass it in)
+  - Camera and light information (still need to this, lighting is currently hardcoded)
+    - Maybe this is more of a World thing than a Scene thing?
+      - Lights should be in the world at least
+      - Camera may be more of a local state...not sure if makes sense for world
