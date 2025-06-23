@@ -17,6 +17,7 @@ export const ModelInfo = {
   'Worker': Worker.Model,
   'Axe': Worker.Axe,
   'Tree': Environment.TreeModel,
+  'Bush': Environment.BushModel,
 
   'Ground': {
     parts: {

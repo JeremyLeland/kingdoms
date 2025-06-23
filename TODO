@@ -1,6 +1,6 @@
 Next:
   - Pan camera with arrow keys (just get it done)
-  - Stone (draw it, harvest it, work on phases and whatever results)  
+  - Stone (draw it, harvest it, work on phases and whatever results)
 
 - Should we drop resource on ground to pick up, or harvest them directly from source?
   - Instead of dropping wood on ground in circle, maybe just have worker swing on downed tree a few times
@@ -55,6 +55,15 @@ Next:
     - If they are walking to harvest, they can carry the harvest tool
     - If they are dropping off, then they are carrying resource
     - Maybe it happens if they are going to stockpile to pick something up
+
+- Hands and tools/weapons
+  - The worker needs to control how hands are rendered (e.g. skin color )
+  - The tool/weapon knows where the hand(s) should go
+    - e.g. how wide apart to hold wood vs stone
+    - e.g. two hands at bottom of big sword, hands spread apart along axe, single hand for small sword or shield
+  - Is there a way for the tool/weapon to control hand placement but the worker to manage hand drawing?
+    - worker provides initial location and rotation, tool provides offset from animation (and applies this to hands)
+    - Tool motion is relative to worker, but hand motion is relative to tool
 
 
 - Control harvesting by setting desired minimums

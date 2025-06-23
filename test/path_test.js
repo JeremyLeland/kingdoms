@@ -19,7 +19,7 @@ import * as Entity from '../src/Entity.js';
 
 const entities = [
   {
-    type: 'Worker',
+    type: 'Bush',
     pos: [ 0, 0, 0 ],
     animation: {
       name: 'swing',
@@ -29,6 +29,9 @@ const entities = [
     carry: [
       { type: 'Axe' },
     ],
+  },
+  {
+    type: 'Ground',
   },
 ];
 

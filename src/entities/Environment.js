@@ -100,4 +100,47 @@ export const TreeModel = {
       material: TreeInfo.LeavesMaterial,
     }
   }
+};
+
+const BushInfo = {
+  Radius: 0.5,
+  BelowGround: 0.3,
+  Material: {
+    shader: ShaderCommon.Lighting,
+    uniforms: { color: [ 0.1, 0.3, 0.1 ] },
+  },
+  NumBerries: 41,
+  BerryRadius: 0.02,
+  BerryMaterial: {
+    shader: ShaderCommon.Lighting,
+    uniforms: { color: [ 0.7, 0.1, 0.2 ] },
+  },
+};
+
+export const BushModel = {
+  bounds: [ BushInfo.Radius, BushInfo.Radius, BushInfo.Radius ],
+  parts: {
+    Main: {
+      mesh: MeshCommon.Sphere( BushInfo.Radius, BushInfo.Radius, BushInfo.Radius ),
+      pos: [ 0, BushInfo.BelowGround, 0 ],
+      material: BushInfo.Material,
+    },
+  },
+};
+
+for ( let i = 0; i < BushInfo.NumBerries; i ++ ) {
+  const phi = ( i / BushInfo.NumBerries ) * Math.PI * 2;
+  const theta = 0.25 + 0.75 * Math.sin( ( i / BushInfo.NumBerries ) * Math.PI * 32 );
+
+  // Why are berries only on one side? Trying to get them evenly distributed, sort of
+
+  const x = BushInfo.Radius * Math.cos( phi ) * Math.cos( theta );
+  const y = BushInfo.Radius * Math.sin( theta ) + BushInfo.BelowGround;
+  const z = BushInfo.Radius * Math.sin( phi ) * Math.cos( theta );
+
+  BushModel.parts[ `Berry${ i }` ] = {
+    mesh: MeshCommon.Sphere( BushInfo.BerryRadius, BushInfo.BerryRadius, BushInfo.BerryRadius ),
+    pos: [ x, y, z ],
+    material: BushInfo.BerryMaterial,
+  }
 }
