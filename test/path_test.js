@@ -157,6 +157,32 @@ canvas.draw = ( gl ) => {
 // canvas.start();
 canvas.redraw();
 
+const KEYBOARD_MOVE_SENSITIVITY = 0.2;
+
+const InputActions = {
+  MoveForward:  _ => scene.camera.pan(  0, -KEYBOARD_MOVE_SENSITIVITY ),
+  MoveBackward: _ => scene.camera.pan(  0,  KEYBOARD_MOVE_SENSITIVITY ),
+  MoveLeft:     _ => scene.camera.pan( -KEYBOARD_MOVE_SENSITIVITY,  0 ),
+  MoveRight:    _ => scene.camera.pan(  KEYBOARD_MOVE_SENSITIVITY,  0 ),
+};
+
+const KeyMapping = {
+  'w': InputActions.MoveForward,
+  'a': InputActions.MoveLeft,
+  's': InputActions.MoveBackward,
+  'd': InputActions.MoveRight,
+
+  'ArrowUp': InputActions.MoveForward,
+  'ArrowLeft': InputActions.MoveLeft,
+  'ArrowDown': InputActions.MoveBackward,
+  'ArrowRight': InputActions.MoveRight,
+};
+
+document.addEventListener( 'keydown', e => {
+  KeyMapping[ e.key ]?.();
+
+  canvas.redraw();
+} );
 
 const X_TURN_SENSITIVITY = 100;
 const Y_TURN_SENSITIVITY = -100;
