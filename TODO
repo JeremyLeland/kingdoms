@@ -3,6 +3,7 @@ Next:
     - Low gather animation
     - Carry bowl of berries back to stockpile
   - Stone (draw it, harvest it, work on phases and whatever results)
+  - Draw wireframe bounds for entities (to validate)
 
 - Should we drop resource on ground to pick up, or harvest them directly from source?
   - Instead of dropping wood on ground in circle, maybe just have worker swing on downed tree a few times

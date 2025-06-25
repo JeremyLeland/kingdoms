@@ -26,9 +26,21 @@ export class OrbitCamera {
     return this.#viewMatrix;
   }
 
+  // TODO: Don't duplicate this from above, just do it once
+  reset() {
+    this.center = [ 0, 0, 0 ];
+    this.distance = 10;
+    this.phi = Math.PI / 2;
+    this.theta = Math.PI / 3;
+
+    this.#updateViewMatrix();
+  }
+
   rotate( dPhi, dTheta ) {
     this.phi += dPhi;
-    this.theta = Math.max( 1e-6, Math.min( Math.PI, this.theta + dTheta ) );
+
+    // Avoid theta of exactly 0 or Math.PI, things get weird
+    this.theta = Math.max( 1e-6, Math.min( Math.PI - 1e-6, this.theta + dTheta ) );
 
     this.#updateViewMatrix();
   }

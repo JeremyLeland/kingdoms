@@ -116,28 +116,28 @@ export function Cube( width = 1, height = 1, depth = 1 ) {
     ],
     indices: [
       // back
-      0, 1, 2, 
-      0, 2, 3,
+      0, 2, 1, 
+      0, 3, 2,
 
       // right
-      4, 5, 6, 
-      4, 6, 7,
+      4, 6, 5, 
+      4, 7, 6, 
       
       // front
-      8, 9, 10, 
-      8, 10, 11,
+      8, 10, 9, 
+      8, 11, 10,
       
       // left
-      12, 13, 14, 
-      12, 14, 15, 
+      12, 14, 13, 
+      12, 15, 14, 
       
       // top
-      16, 17, 18, 
-      16, 18, 19,
+      16, 18, 17, 
+      16, 19, 18,
       
       // bottom
-      20, 21, 22, 
-      20, 22, 23
+      20, 22, 21, 
+      20, 23, 22,
     ],
   }
 }
@@ -228,8 +228,8 @@ export function Plane( width = 1, height = 1, widthSegments = 1, heightSegments 
 
       plane.indices.push( 
         ( widthSegments + 1 ) * row + col,
-        ( widthSegments + 1 ) * row + col + 1,
         ( widthSegments + 1 ) * ( row + 1 ) + col + 1,
+        ( widthSegments + 1 ) * row + col + 1,
       );
     }
   }
@@ -264,8 +264,8 @@ export function Sphere( width = 1, height = 1, depth = 1, widthSegments = 32, he
     for ( let col = 0; col < widthSegments; col ++ ) {
       sphere.indices.push( 
         ( widthSegments + 1 ) * row + col,
-        ( widthSegments + 1 ) * ( row + 1 ) + col,
         ( widthSegments + 1 ) * ( row + 1 ) + col + 1,
+        ( widthSegments + 1 ) * ( row + 1 ) + col,
       );
 
       sphere.indices.push( 
@@ -315,8 +315,8 @@ export function Cylinder( width = 1, height = 1, depth = 1, radiusTop = 1, radiu
 
   const heightSegments = 2;
   for ( let col = 0; col < widthSegments; col ++ ) {
-    cylinder.indices.push( col * heightSegments, col * heightSegments + 1, col * heightSegments + 3 );
     cylinder.indices.push( col * heightSegments, col * heightSegments + 2, col * heightSegments + 3 );
+    cylinder.indices.push( col * heightSegments, col * heightSegments + 3, col * heightSegments + 1 );
   }
 
   return cylinder;

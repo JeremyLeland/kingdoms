@@ -18,21 +18,24 @@ import * as Entity from '../src/Entity.js';
 
 
 const entities = [
+  // {
+  //   type: 'Bush',
+  //   pos: [ 0, 0, 0 ],
+  //   animation: {
+  //     name: 'swing',
+  //     time: 0,
+  //   },
+  //   delay: 0,
+  //   carry: [
+  //     { type: 'Axe' },
+  //   ],
+  // },
   {
-    type: 'Bush',
-    pos: [ 0, 0, 0 ],
-    animation: {
-      name: 'swing',
-      time: 0,
-    },
-    delay: 0,
-    carry: [
-      { type: 'Axe' },
-    ],
+    type: 'Basket',
   },
-  {
-    type: 'Ground',
-  },
+  // {
+  //   type: 'Ground',
+  // },
 ];
 
 //
@@ -132,7 +135,7 @@ function startAnimation( entity, name ) {
 const modelMatrixStack = new MatrixStack( mat4.create() );
 
 // Draw grid for ground (to help us see where things are and if they are underground)
-const gridMesh = MeshCommon.Grid( -10, -10, 10, 10 );
+const gridMesh = MeshCommon.Grid( -5, -10, 5, 10 );
 const gridMaterial = {
   shader: ShaderCommon.SolidColor,
   uniforms: { color: [ 0.5, 0.5, 0.5 ] },
@@ -164,6 +167,7 @@ const InputActions = {
   MoveBackward: _ => scene.camera.pan(  0,  KEYBOARD_MOVE_SENSITIVITY ),
   MoveLeft:     _ => scene.camera.pan( -KEYBOARD_MOVE_SENSITIVITY,  0 ),
   MoveRight:    _ => scene.camera.pan(  KEYBOARD_MOVE_SENSITIVITY,  0 ),
+  Reset:        _ => scene.camera.reset(),
 };
 
 const KeyMapping = {
@@ -176,6 +180,8 @@ const KeyMapping = {
   'ArrowLeft': InputActions.MoveLeft,
   'ArrowDown': InputActions.MoveBackward,
   'ArrowRight': InputActions.MoveRight,
+
+  ' ': InputActions.Reset,
 };
 
 document.addEventListener( 'keydown', e => {

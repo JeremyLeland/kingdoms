@@ -32,3 +32,19 @@ export const StoneModel = {
     },
   },
 };
+
+const BasketBounds = [ 0.5, 0.2, 0.5 ];
+
+export const BasketModel = {
+  bounds: BasketBounds,
+  parts: {
+    Basket: {
+      mesh: MeshCommon.Sphere( ...BasketBounds, 32, 32, 0, Math.PI * 2, Math.PI / 2, Math.PI / 2 ),//, 32, 32, 0, Math.PI * 2, Math.PI / 2, Math.PI ),
+      pos: [ 0, BasketBounds[ 1 ], 0 ],
+      material: {
+        shader: ShaderCommon.Lighting,
+        uniforms: { color: [ 0.6, 0.4, 0.2 ] },
+      },
+    },
+  },
+};

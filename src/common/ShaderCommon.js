@@ -206,6 +206,9 @@ export const Lighting = {
       vec3 V = normalize( eyePos - v_pos );
       vec3 N = normalize( v_norm );
 
+      // Someone claimed this was faster by avoiding the branch in gl_FrontFacing ? 1.0 : -1.0
+      N *= ( 2.0 * float( gl_FrontFacing ) - 1.0 );
+
       outColor = getLighting( L, V, N );
       // outColor = vec4( N, 1.0 );
     }

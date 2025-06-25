@@ -12,10 +12,14 @@ import * as Worker from '../src/entities/Worker.js';
 export const ModelInfo = {
   'Wood': Resources.WoodModel,
   'Stone': Resources.StoneModel,
+  'Basket': Resources.BasketModel,
+
   'Stockpile': Buildings.StockpileModel,
   'Farm': Buildings.FarmModel,
+
   'Worker': Worker.Model,
   'Axe': Worker.Axe,
+
   'Tree': Environment.TreeModel,
   'Bush': Environment.BushModel,
 
