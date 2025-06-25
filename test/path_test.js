@@ -18,20 +18,17 @@ import * as Entity from '../src/Entity.js';
 
 
 const entities = [
-  // {
-  //   type: 'Bush',
-  //   pos: [ 0, 0, 0 ],
-  //   animation: {
-  //     name: 'swing',
-  //     time: 0,
-  //   },
-  //   delay: 0,
-  //   carry: [
-  //     { type: 'Axe' },
-  //   ],
-  // },
   {
-    type: 'Basket',
+    type: 'Worker',
+    pos: [ 0, 0, 0 ],
+    animation: {
+      name: 'carry',
+      time: 0,
+    },
+    delay: 0,
+    carry: [
+      { type: 'Basket' },
+    ],
   },
   // {
   //   type: 'Ground',

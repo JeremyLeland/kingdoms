@@ -59,6 +59,14 @@ Next:
     - If they are dropping off, then they are carrying resource
     - Maybe it happens if they are going to stockpile to pick something up
 
+- Custom shaders for texturing
+  - Weave for bowel
+  - Curved triangular leaves for bush
+  - Wood lines for lumber
+  - Bark pattern for tree trunk, some sort of leaves for top (maybe the wavy base from demo tree?)
+  - For now, these will import common lighting code
+    - Eventually separate lighting code with two-pass rendering? (might make multiple lights easier)
+
 - Hands and tools/weapons
   - The worker needs to control how hands are rendered (e.g. skin color )
   - The tool/weapon knows where the hand(s) should go

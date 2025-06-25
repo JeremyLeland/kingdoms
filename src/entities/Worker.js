@@ -17,7 +17,8 @@ export const Info = {
   },
   HandRadius: 0.1,
   CarryWidth: 0.4,
-  CarryHeight: 0.4,
+  CarryHeight: 0.6,
+  CarryDist: 0.6,
   WalkTime: 1000,
   WalkSpeed: 0.001,
   TurnSpeed: 0.004,
@@ -57,9 +58,9 @@ const WalkBodyPath = {
 };
 
 const CarryPos = {
-  Left:  [ Info.BodyRadius, Info.CarryHeight, -Info.BodyRadius ],
-  Right: [ Info.BodyRadius, Info.CarryHeight,  Info.BodyRadius ],
-  Carry: [ Info.BodyRadius, Info.CarryHeight,  0 ],
+  Left:  [ Info.CarryDist, Info.CarryHeight, -Info.CarryWidth ],
+  Right: [ Info.CarryDist, Info.CarryHeight,  Info.CarryWidth ],
+  Carry: [ Info.CarryDist, Info.CarryHeight,  0 ],
 };
 
 // TODO: Probably need to string multiple paths together to get the swing I want

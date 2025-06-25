@@ -33,7 +33,20 @@ export const StoneModel = {
   },
 };
 
-const BasketBounds = [ 0.5, 0.2, 0.5 ];
+
+// TODO: Keep berry info in one spot
+
+const BasketInfo = {
+  BerryRadius: 0.02,
+  BerrySegments: 6,
+  BerryMaterial: {
+    shader: ShaderCommon.Lighting,
+    uniforms: { color: [ 0.7, 0.1, 0.2 ] },
+  },
+  Rungs: 10,
+};
+
+const BasketBounds = [ 0.3, 0.1, 0.3 ];
 
 export const BasketModel = {
   bounds: BasketBounds,
@@ -48,3 +61,23 @@ export const BasketModel = {
     },
   },
 };
+
+for ( let rung = 0; rung < BasketInfo.Rungs; rung ++ ) {
+
+  const radius = 0.2 - 0.2 * ( rung / BasketInfo.Rungs );
+  const numBerries = Math.floor( Math.PI * radius / BasketInfo.BerryRadius );
+
+  for ( let i = 0; i < numBerries; i ++ ) {
+    const phi = ( i / numBerries ) * Math.PI * 2;
+    
+    const x = radius * Math.cos( phi );
+    const y = 0.05 + BasketInfo.BerryRadius * rung;
+    const z = radius * Math.sin( phi );
+    
+    BasketModel.parts[ `Berry${rung}_${ i }` ] = {
+      mesh: MeshCommon.Sphere( BasketInfo.BerryRadius, BasketInfo.BerryRadius, BasketInfo.BerryRadius, BasketInfo.BerrySegments, BasketInfo.BerrySegments ),
+      pos: [ x, y, z ],
+      material: BasketInfo.BerryMaterial,
+    }
+  }
+}
