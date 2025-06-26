@@ -22,17 +22,21 @@ const entities = [
     type: 'Worker',
     pos: [ 0, 0, 0 ],
     animation: {
-      name: 'carry',
+      name: 'gather',
       time: 0,
     },
     delay: 0,
     carry: [
-      { type: 'Basket' },
+    //   { type: 'Basket' },
     ],
   },
-  // {
-  //   type: 'Ground',
-  // },
+  {
+    type: 'Bush',
+    pos: [ 1, 0, 0 ],
+  },
+  {
+    type: 'Ground',
+  },
 ];
 
 //
@@ -90,7 +94,11 @@ document.body.appendChild( timeSlider );
 timeSlider.addEventListener( 'input', _ => {
   const newTime = +timeSlider.value;
 
-  entities.forEach( entity => entity.animation.time = newTime );
+  entities.forEach( entity => {
+    if ( entity.animation ) {
+      entity.animation.time = newTime
+    }
+  } );
   canvas.redraw();
 } );
 

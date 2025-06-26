@@ -93,6 +93,11 @@ const SwingOffset = {
   Right: [ 0, -0.2, 0 ],
 };
 
+const GatherPos = {
+  Left:  [ Info.BodyRadius, 0.4, -0.3 ],
+  Right: [ Info.BodyRadius, 0.4,  0.3 ],
+};
+
 function getOffsetPath( path, offset ) {
   const copy = structuredClone( path );
 
@@ -116,6 +121,9 @@ export const Model = {
     },
     swing: {
       duration: 800,
+    },
+    gather: {
+      duration: 500,
     },
   },
   parts: {
@@ -158,6 +166,20 @@ export const Model = {
           }
         },
         swing: getOffsetPath( SwingPath, SwingOffset.Left ),
+        gather: {
+          start: {
+            pos: GatherPos.Left,
+          },
+          control1: {
+            pos: vec3.add( [], [ 0.4, -0.2, -0.1 ], CarryPos.Left ),
+          },
+          control2: {
+            pos: GatherPos.Left,
+          },
+          end: {
+            pos: GatherPos.Left,
+          },
+        },
       },
     },
     RightHand: {
@@ -180,6 +202,20 @@ export const Model = {
           }
         },
         swing: getOffsetPath( SwingPath, SwingOffset.Right ),
+        gather: {
+          start: {
+            pos: GatherPos.Right,
+          },
+          control1: {
+            pos: GatherPos.Right,
+          },
+          control2: {
+            pos: vec3.add( [], [ 0.4, -0.2, 0.1 ], GatherPos.Right ),
+          },
+          end: {
+            pos: GatherPos.Right,
+          },
+        },
       },
     },
     Carry: {
