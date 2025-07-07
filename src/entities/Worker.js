@@ -32,10 +32,10 @@ const WalkBobPath = {
     pos: [ 0, 0, 0 ],
   },
   control1: {
-    pos: [ 0, -0.5, 0 ],
+    pos: [ 0, -0.25, 0 ],
   },
   control2: {
-    pos: [ 0, -0.5, 0 ],
+    pos: [ 0, -0.25, 0 ],
   },
   end: {
     pos: [ 0, 0, 0 ],
@@ -47,10 +47,10 @@ const WalkBodyPath = {
     scale: [ 1, 1, 1 ],
   },
   control1: {
-    scale: [ 1, 0.5, 1 ],
+    scale: [ 1, 0.75, 1 ],
   },
   control2: {
-    scale: [ 1, 0.5, 1 ],
+    scale: [ 1, 0.75, 1 ],
   },
   end: {
     scale: [ 1, 1, 1 ],
@@ -93,6 +93,12 @@ const SwingOffset = {
   Right: [ 0, -0.2, 0 ],
 };
 
+// TODO: Gather currently looks weird in the left hand, since it races out to grab a berry and then slowly brings it back
+//       This looks better in the right hand, where it carefully reaches out and then quickly brings back
+//       To do this right, they would need to both have the right path but be alternated.
+//       This would require some kind of staggering and tracking separately of the hands. 
+//       Not sure the complexity is worth it.
+
 const GatherPos = {
   Left:  [ Info.BodyRadius, 0.4, -0.3 ],
   Right: [ Info.BodyRadius, 0.4,  0.3 ],
@@ -123,7 +129,7 @@ export const Model = {
       duration: 800,
     },
     gather: {
-      duration: 500,
+      duration: 1000,
     },
   },
   parts: {

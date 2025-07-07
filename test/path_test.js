@@ -27,7 +27,7 @@ const entities = [
     },
     delay: 0,
     carry: [
-    //   { type: 'Basket' },
+      { type: 'Basket' },
     ],
   },
   {

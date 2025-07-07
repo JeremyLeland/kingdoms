@@ -2,6 +2,8 @@ Next:
   - Bush w/berries
     - Low gather animation
     - Carry bowl of berries back to stockpile
+    - Differentiate between what we are visibly holding and how many resources we have?
+      - Or can we only hold a tool if we aren't carrying resources? Maybe its ok...
   - Stone (draw it, harvest it, work on phases and whatever results)
   - Draw wireframe bounds for entities (to validate)
 
