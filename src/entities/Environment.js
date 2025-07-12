@@ -102,6 +102,26 @@ export const TreeModel = {
   }
 };
 
+const RockInfo = {
+  Bounds: [ 0.4, 0.7, 0.4 ],
+  BelowGround: 0.3,
+  Material: {
+    shader: ShaderCommon.Lighting,
+    uniforms: { color: [ 0.3, 0.3, 0.3 ] },
+  },
+};
+
+export const RockModel = {
+  bounds: RockInfo.Bounds,
+  parts: {
+    Main: {
+      mesh: MeshCommon.Sphere( ...RockInfo.Bounds ),
+      pos: [ 0, RockInfo.BelowGround, 0 ],
+      material: RockInfo.Material,
+    },
+  },
+};
+
 const BushInfo = {
   Radius: 0.5,
   BelowGround: 0.3,

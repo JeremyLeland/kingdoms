@@ -12,7 +12,7 @@ import * as Worker from '../src/entities/Worker.js';
 export const ModelInfo = {
   'Wood': Resources.WoodModel,
   'Stone': Resources.StoneModel,
-  'Basket': Resources.BasketModel,
+  'Berry': Resources.BasketModel,   // was Basket
 
   'Stockpile': Buildings.StockpileModel,
   'Farm': Buildings.FarmModel,
@@ -21,6 +21,7 @@ export const ModelInfo = {
   'Axe': Worker.Axe,
 
   'Tree': Environment.TreeModel,
+  'Rock': Environment.RockModel,
   'Bush': Environment.BushModel,
 
   'Ground': {
@@ -40,6 +41,10 @@ export const ModelInfo = {
 };
 
 export function applyTransforms( matrix, transform ) {
+  if ( transform == null ) {
+    debugger;
+  }
+
   if ( transform.pos ) {
     mat4.translate( matrix, matrix, transform.pos );
   }
@@ -249,11 +254,18 @@ export function draw( gl, entity, scene, modelMatrixStack ) {
         scene.drawMesh( gl, partInfo.mesh, partInfo.material, modelMatrixStack.current );
 
         if ( partInfo.attach ) {
-          const attachList = entity[ partInfo.attach ];
+          const attached = entity[ partInfo.attach ];
 
-          attachList.forEach( attached => {
+          // TODO: Make it always one item, not potentially an array? (for simplicity)
+
+          if ( Array.isArray( attached ) ) { 
+            attached.forEach( attachedItem => {
+              draw( gl, attachedItem, scene, modelMatrixStack );
+            } );
+          }
+          else if ( attached ) {
             draw( gl, attached, scene, modelMatrixStack );
-          } );
+          }
         }
       }
 

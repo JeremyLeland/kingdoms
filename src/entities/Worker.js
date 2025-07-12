@@ -242,12 +242,17 @@ export const Model = {
             pos: vec3.add( [], WalkBobPath.end.pos, CarryPos.Carry ),
           }
         },
-        // Position for swing matches left hand, since this is the base of the axe
-        swing: SwingPath,
       },
       attach: 'carry',
-      // TODO: attachFunc, something to specify how to draw multiple items
     },
+    Tool: {
+      animationPaths: {
+        walk: WalkBobPath,
+        carry: WalkBobPath,
+        swing: SwingPath,
+      },
+      attach: 'tool',
+    }
   }
 };
 

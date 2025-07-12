@@ -41,30 +41,45 @@ const entities = [
     pos: [ 0, 0, 3 ],
     rot: [ 0, 0, 0 ],
     carry: [],
-    // animation: {
-    //   name: 'carry',
-    //   time: 0,
-    // },
+    tool: { type: 'Axe' },
     delay: 0,
-    job: 'HarvestBerry',
+    job: {
+    },
   },
   {
     type: 'Stockpile',
     pos: [ -3, 0, 3 ],
     pile: [],
   },
-  // {
-  //   type: 'Ground',
-  //   pos: [ 0, 0, 0 ],
-  // },
+  {
+    type: 'Stockpile',
+    pos: [ -2, 0, 3 ],
+    pile: [],
+  },
+  {
+    type: 'Ground',
+    pos: [ 0, 0, 0 ],
+  },
   {
     type: 'Bush',
     resources: {
-      'Berry': 100,
+      'Berry': 10,
     },
     pos: [ 0, 0, 0 ],
   },
+  {
+    type: 'Rock',
+    resources: {
+      'Stone': 10,
+    },
+    pos: [ -2, 0, 0 ],
+  },
 ];
+
+const desired = {
+  'Berry': 4,
+  'Stone': 3,
+};
 
 canvas.update = ( dt ) => {
  
@@ -146,9 +161,15 @@ canvas.update = ( dt ) => {
 }
 
 const StockpileLayout = {
-  'Basket': [ 2, 2 ],
+  'Berry': [ 2, 2 ],  // was Basket
   'Stone': [ 2, 1 ],
   'Wood': [ 3, 1 ],
+};
+
+const HarvestAnimation = {
+  'Berry': 'gather',
+  'Stone': 'swing',
+  'Wood': 'swing',
 };
 
 function addItemToStockpile( target, item ) {
@@ -165,7 +186,7 @@ function addItemToStockpile( target, item ) {
 
   const horizCol = ( withinRow * 2 - ( cols - 1 ) ) * itemInfo.bounds[ 0 ];
   const horizRow = ( rowIndex  * 2 - ( rows - 1 ) ) * itemInfo.bounds[ 2 ];
-  
+
   const vert = layerIndex * itemInfo.bounds[ 1 ] * 2;
 
   if ( layerIndex % 2 == 0 ) {
@@ -257,6 +278,31 @@ const WorkerActions = {
       entity.job = 'DropOff';
     },
   },
+
+  // TODO: One generic harvest for all of them? How to know what to gather?
+
+  Harvest: {
+    targetFunc: ( entity ) => {
+      return closestTo( entity,
+        entities.filter( e => e.resources?.[ entity.job.resource ] > 0 )
+      );
+    },
+    actionFunc: ( entity, target ) => {
+      entity.animation = {
+        name: HarvestAnimation[ entity.job.resource ],  // base on target instead of resource type?
+        time: 0,
+      };
+      entity.delay = 1000;    // TODO: get from animation duration? or do we need to set this at all?
+
+      // TODO: change rock stage to less rock
+
+      const resourceName = entity.job.resource;
+
+      target.resources[ resourceName ] --;
+      entity.carry.push( { type: resourceName } );
+      entity.job = 'DropOff';
+    },
+  },
   HarvestWood: {
     targetFunc: ( entity ) => {
       return closestTo( entity,
@@ -331,11 +377,11 @@ function updateWorker( entity, others, dt ) {
   entity.avoid = avoid;
 
 
-  const berryCount = numResourceAvailable( 'Berry' );
+  const resCount = numResourceAvailable( entity.job.resource );
 
-  if ( berryCount == 0 ) {
+  if ( resCount == 0 ) {
     // if ( entity.carry.length > 0 && entity.carry[ 0 ].type == 'Berry' ) {
-      entity.job = 'DropOff';
+      entity.job = { type: 'DropOff' };
     // }
     // else {
       // entity.job = 'Harvest';
@@ -358,18 +404,34 @@ function updateWorker( entity, others, dt ) {
   //   entity.job = 'DropOff';
   // }
 
-  if ( entity.job == 'DropOff' && entity.animation.name != 'carry' ) {
+  if ( entity.job?.type == 'DropOff' && entity.animation?.name != 'carry' ) {
     entity.animation = {
       name: 'carry',
       time: 0,
     };
   }
 
-  if ( entity.job == 'DropOff' && entity.carry.length == 0 ) {
-    entity.job = 'HarvestBerry';
+  if ( entity.job?.type == 'DropOff' && entity.carry.length == 0 ) {
+
+    // TODO: Find total number of each resource in stockpiles and only grab what we want more of
+    const pileContents = entities.flatMap( e => e.pile ?? [] );
+
+    const nextDesired = Object.entries( desired ).find( ( [ key, val ] ) => val > pileContents.filter( e => e.type == key ).length );
+
+    if ( nextDesired ) { 
+      entity.job = {
+        type: 'Harvest',
+        resource: nextDesired[ 0 ],
+      };
+    }
+    else {
+      entity.job = {
+        type: 'Idle',
+      };
+    }
   }
 
-  const workerAction = WorkerActions[ entity.job ];
+  const workerAction = WorkerActions[ entity.job.type ];
   //const workerAction = entity.carry.length >= CARRY_MAX ? WorkerActions.DropOff : WorkerActions.PickUp;
   const target = workerAction?.targetFunc( entity );
 

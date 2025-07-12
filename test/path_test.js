@@ -29,11 +29,12 @@ const entities = [
     carry: [
       { type: 'Basket' },
     ],
+    tool: { type: 'Axe' },
   },
-  {
-    type: 'Bush',
-    pos: [ 1, 0, 0 ],
-  },
+  // {
+  //   type: 'Bush',
+  //   pos: [ 1, 0, 0 ],
+  // },
   {
     type: 'Ground',
   },
