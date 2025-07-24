@@ -38,22 +38,27 @@ window.addEventListener( 'beforeunload', ( e ) =>
 const entities = [
   {
     type: 'Worker', 
-    pos: [ 0, 0, 3 ],
-    rot: [ 0, 0, 0 ],
-    carry: [],
+    pos: [ 0, 0, 0 ],
     tool: { type: 'Axe' },
-    delay: 0,
-    job: {
-    },
+  },
+  {
+    type: 'Worker', 
+    pos: [ 2, 0, 0 ],
+    tool: { type: 'Axe' },
   },
   {
     type: 'Stockpile',
-    pos: [ -3, 0, 3 ],
+    pos: [ -1, 0, 3 ],
     pile: [],
   },
   {
     type: 'Stockpile',
-    pos: [ -2, 0, 3 ],
+    pos: [ 0, 0, 3 ],
+    pile: [],
+  },
+  {
+    type: 'Stockpile',
+    pos: [ 1, 0, 3 ],
     pile: [],
   },
   {
@@ -65,14 +70,14 @@ const entities = [
     resources: {
       'Berry': 10,
     },
-    pos: [ 0, 0, 0 ],
+    pos: [ 2, 0, -2 ],
   },
   {
     type: 'Rock',
     resources: {
       'Stone': 10,
     },
-    pos: [ -2, 0, 0 ],
+    pos: [ 0, 0, -2 ],
   },
   {
     type: 'Tree',
@@ -83,14 +88,14 @@ const entities = [
     resources: {
       'Wood': 10,
     },
-    pos: [ -4, 0, 0 ],
+    pos: [ -2, 0, -2 ],
   },
 ];
 
 const desired = {
-  // 'Berry': 4,
-  // 'Stone': 3,
-  'Wood': 3,
+  'Berry': 4,
+  'Stone': 4,
+  'Wood': 6,
 };
 
 canvas.update = ( dt ) => {
@@ -187,6 +192,7 @@ const HarvestAnimation = {
 };
 
 function addItemToStockpile( target, item ) {
+  const targetInfo = Entity.ModelInfo[ target.type ];
   const itemInfo = Entity.ModelInfo[ item.type ];
 
   const [ cols, rows ] = StockpileLayout[ item.type ];
@@ -198,8 +204,11 @@ function addItemToStockpile( target, item ) {
   const withinRow = withinLayer % cols;
   const rowIndex = Math.floor( withinLayer / cols );
 
-  const horizCol = ( withinRow * 2 - ( cols - 1 ) ) * itemInfo.bounds[ 0 ];
-  const horizRow = ( rowIndex  * 2 - ( rows - 1 ) ) * itemInfo.bounds[ 2 ];
+  const horizSpacing = targetInfo.bounds[ 0 ] / cols;
+  const vertSpacing = targetInfo.bounds[ 2 ] / rows;
+
+  const horizCol = ( withinRow * 2 - ( cols - 1 ) ) * horizSpacing; //itemInfo.bounds[ 0 ];
+  const horizRow = ( rowIndex  * 2 - ( rows - 1 ) ) * vertSpacing;  //itemInfo.bounds[ 2 ];
 
   const vert = layerIndex * itemInfo.bounds[ 1 ] * 2;
 
@@ -289,7 +298,9 @@ const WorkerActions = {
 
       target.resources.Berry --;
       entity.carry.push( { type: 'Basket' } );
-      entity.job = 'DropOff';
+      entity.job = {
+        type: 'DropOff'
+      };
     },
   },
 
@@ -314,7 +325,7 @@ const WorkerActions = {
 
       target.resources[ resourceName ] --;
       entity.carry.push( { type: resourceName } );
-      entity.job = 'DropOff';
+      entity.job = { type: 'DropOff' };
     },
   },
   HarvestWood: {
@@ -369,6 +380,12 @@ function numResourceAvailable( resourceName ) {
 }
 
 function updateWorker( entity, others, dt ) {
+  // Initialize default values
+  entity.rot ??= [ 0, 0, 0 ];
+  entity.carry ??= [];
+  entity.delay ??= 0;
+  entity.job ??= { type: 'Idle' };
+
   // Find avoid vectors
   const avoid = [ 0, 0, 0 ];
 
@@ -390,33 +407,13 @@ function updateWorker( entity, others, dt ) {
 
   entity.avoid = avoid;
 
+  if ( entity.job?.type == 'Harvest' ) {
+    const resCount = numResourceAvailable( entity.job.resource );
 
-  const resCount = numResourceAvailable( entity.job.resource );
-
-  if ( resCount == 0 ) {
-    // if ( entity.carry.length > 0 && entity.carry[ 0 ].type == 'Berry' ) {
+    if ( resCount == 0 ) {
       entity.job = { type: 'DropOff' };
-    // }
-    // else {
-      // entity.job = 'Harvest';
-      // entity.carry = [ { type: 'Basket' } ];
-    // }
+    }
   }
-
-  // TODO: Changing this up because we aren't dropping resources on ground anymore to harvest
-  //       If we want to harvest, grab our tool and go (tool = empty basket for gather?)
-  //       Maybe basket has attach point for berries, carrots, etc? Stack within like we stack for wood (based on pattern)?
-
-  // if ( entity.job == 'Harvest' ) {
-  //   if ( berryCount > 0 ) {
-  //     entity.job = 'PickUp';
-  //     entity.carry = [];
-  //   }
-  // }
-
-  // if ( entity.job == 'HarvestBerry' && entity.carry[ 0 ].resources.Berry >= 10 ) {
-  //   entity.job = 'DropOff';
-  // }
 
   if ( entity.job?.type == 'DropOff' && entity.animation?.name != 'carry' ) {
     entity.animation = {
@@ -426,7 +423,15 @@ function updateWorker( entity, others, dt ) {
   }
 
   if ( entity.job?.type == 'DropOff' && entity.carry.length == 0 ) {
+    entity.job = { type: 'Idle' };
 
+    entity.animation = {
+      name: 'Idle',
+      time: 0,
+    };
+  }
+
+  if ( entity.job.type == 'Idle' ) {
     // TODO: Find total number of each resource in stockpiles and only grab what we want more of
     const pileContents = entities.flatMap( e => e.pile ?? [] );
 
@@ -436,16 +441,6 @@ function updateWorker( entity, others, dt ) {
       entity.job = {
         type: 'Harvest',
         resource: nextDesired[ 0 ],
-      };
-    }
-    else {
-      entity.job = {
-        type: 'Idle',
-      };
-
-      entity.animation = {
-        name: 'Idle',
-        time: 0,
       };
     }
   }
