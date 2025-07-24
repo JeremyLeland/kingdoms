@@ -1,5 +1,6 @@
 Next:
-  - NOW: Separate attachments for axe and carry
+  - NOW: Add tree back into this (cut down tree, then gather wood from downed tree)
+  - Separate attachments for axe and carry
     - Have axe on our back when not used? (at least for demo purposes for now)
   - Stone (draw it, harvest it, work on phases and whatever results)
   - Draw wireframe bounds for entities (to validate)

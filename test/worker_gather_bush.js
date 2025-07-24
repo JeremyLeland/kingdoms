@@ -74,11 +74,23 @@ const entities = [
     },
     pos: [ -2, 0, 0 ],
   },
+  {
+    type: 'Tree',
+    animation: {
+      name: 'fell',
+      time: 1000,   // fell.duration
+    },
+    resources: {
+      'Wood': 10,
+    },
+    pos: [ -4, 0, 0 ],
+  },
 ];
 
 const desired = {
-  'Berry': 4,
-  'Stone': 3,
+  // 'Berry': 4,
+  // 'Stone': 3,
+  'Wood': 3,
 };
 
 canvas.update = ( dt ) => {
@@ -90,10 +102,12 @@ canvas.update = ( dt ) => {
     if ( entity.animation ) {
       const animInfo = Entity.ModelInfo[ entity.type ].animations[ entity.animation.name ];
     
-      entity.animation.time += dt;
-
-      if ( animInfo.loop ) {
-        entity.animation.time %= animInfo.duration;
+      if ( animInfo ) {
+        entity.animation.time += dt;
+        
+        if ( animInfo.loop ) {
+          entity.animation.time %= animInfo.duration;
+        }
       }
 
       // if ( entity.animation.time < Entity.ModelInfo[ entity.type ].animations[ entity.animation.name ].duration ) {
@@ -427,6 +441,11 @@ function updateWorker( entity, others, dt ) {
     else {
       entity.job = {
         type: 'Idle',
+      };
+
+      entity.animation = {
+        name: 'Idle',
+        time: 0,
       };
     }
   }
