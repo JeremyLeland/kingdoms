@@ -1,0 +1,473 @@
+<title>Multiple workers</title>
+<link rel="stylesheet" href="../style.css">
+
+<script type="module">
+
+import { mat4 } from '../lib/gl-matrix.js';
+import { GLCanvas } from '../src/common/GLCanvas.js';
+import { MatrixStack } from '../src/common/MatrixStack.js';
+import * as MeshCommon from '../src/common/MeshCommon.js';
+import * as ShaderCommon from '../src/common/ShaderCommon.js';
+
+const canvas = new GLCanvas();
+
+const camera = {
+  origin: [ 0, 0, 0 ],
+  distance: 10,
+  phi: Math.PI / 2,
+  theta: Math.PI / 4,
+}
+
+
+const WorkerInfo = {
+  SkinColor: [ 0.7, 0.6, 0.5 ],
+  Neck: 0.2,
+  BodyRadius: 0.5,
+  BodyHeight: 1,
+  BodyColor: [ 0.1, 0.2, 0.4 ],
+  CarryWidth: 0.4,
+  CarryHeight: 0.4,
+  WalkTime: 1000,
+  WalkSpeed: 0.001,
+  TurnSpeed: 0.004,
+}
+
+// The "bob" part of the walk is used by head and hands
+const WalkBobFrames = [
+  {
+    time: 0,
+    pos: [ 0, 0, 0 ],
+  },
+  {
+    time: WorkerInfo.WalkTime / 2,
+    pos: [ 0, -0.25, 0 ],
+  },
+  {
+    time: WorkerInfo.WalkTime,
+    pos: [ 0, 0, 0 ],
+  },
+];
+
+const WoodModel = {
+  Plank: {
+    mesh: MeshCommon.Cube(),
+    pos: [ 0, 0.05, 0 ],
+    scale: [ 0.1, 0.05, 0.5 ],
+    color: [ 0.5, 0.2, 0.0 ],
+  },
+};
+
+const StoneModel = {
+  Block: {
+    mesh: MeshCommon.Cube(),
+    pos: [ 0, 0.2, 0 ],
+    scale: [ 0.1, 0.2, 0.3 ],
+    color: [ 0.4, 0.4, 0.4 ],
+  },
+};
+
+const StockpileModel = {
+  Base: {
+    mesh: MeshCommon.Cube(),
+    pos: [ 0, 0.05, 0 ],
+    scale: [ 0.5, 0.05, 0.5 ],
+    color: [ 0.7, 0.7, 0.7 ],
+  },
+  Pile: {
+    pos: [ 0, 0.05 * 2, 0 ],
+    attach: 'pile',
+  },
+};
+
+const WorkerModel = {
+  Head: {
+    mesh: MeshCommon.Sphere(),
+    pos: [ 0, WorkerInfo.BodyHeight + WorkerInfo.Neck, 0 ],
+    scale: [ 0.3, 0.3, 0.3 ],
+    color: WorkerInfo.SkinColor,
+    keyframes: {
+      walk: WalkBobFrames,
+    },
+  },
+  Body: {
+    mesh: MeshCommon.Sphere( 32, 32, 0, Math.PI * 2, 0, Math.PI / 2 ),
+    scale: [ WorkerInfo.BodyRadius, WorkerInfo.BodyHeight, WorkerInfo.BodyRadius ],
+    color: WorkerInfo.BodyColor,
+    keyframes: {
+      walk: [
+        {
+          time: 0,
+          scale: [ 1, 1, 1 ],
+        },
+        {
+          time: WorkerInfo.WalkTime / 2,
+          scale: [ 1, 0.75, 1 ],
+        },
+        {
+          time: WorkerInfo.WalkTime,
+          scale: [ 1, 1, 1 ],
+        },
+      ],
+    }
+  },
+  LeftHand: {
+    mesh: MeshCommon.Sphere(),
+    pos: [ WorkerInfo.BodyRadius, WorkerInfo.CarryHeight, -WorkerInfo.CarryWidth ],
+    scale: [ 0.1, 0.1, 0.1 ],
+    color: WorkerInfo.SkinColor,
+    keyframes: {
+      walk: WalkBobFrames,
+    },
+  },
+  RightHand: {
+    mesh: MeshCommon.Sphere(),
+    pos: [ WorkerInfo.BodyRadius, WorkerInfo.CarryHeight, WorkerInfo.CarryWidth ],
+    scale: [ 0.1, 0.1, 0.1 ],
+    color: WorkerInfo.SkinColor,
+    keyframes: {
+      walk: WalkBobFrames,
+    },
+  },
+  Carry: {
+    // TODO: Maybe an "attach" parameter here that points to name of attachment?
+    // If we ever want to support sword, shield, helmet, etc
+    // Could check for "attach" parameter to go next level deep instead of looking at part name
+    // And then the hands could attach sword, head could attach helmet, etc
+    // mesh: MeshCommon.Cube(),
+    // scale: [ 0.1, 0.05, 0.5 ],
+    // color: [ 0.5, 0.2, 0.0 ],
+    pos: [ WorkerInfo.BodyRadius, WorkerInfo.CarryHeight + 0.1, 0 ],
+    keyframes: {
+      walk: WalkBobFrames,
+    },
+    attach: 'carry',
+    // TODO: attachFunc, something to specify how to draw multiple items
+  },
+  // TODO: Allow arrays like this? Maybe nesting eventually?
+  // Hands: [ -1, 1 ].map( offset => (
+  //   {
+  //     mesh: MeshCommon.Sphere(),
+  //     pos: [ offset, 0, 0 ],
+  //     scale: [ 0.1, 0.1, 0.1 ],
+  //     color: WorkerInfo.SkinColor,
+  //   }
+  // ) ),
+};
+
+const ModelInfo = {
+  'Wood': WoodModel,
+  'Stone': StoneModel,
+  'Stockpile': StockpileModel,
+  'Worker': WorkerModel,
+};
+
+const Meshes = new Map();
+
+const shader = ShaderCommon.getShader( canvas.gl, ShaderCommon.BasicLighting );
+
+// TODO: How to handle IDs? 
+//   - Should we make this a map? Can't serialize/deserialize as nicely that way, though
+//   - How to generate? Just keep a running index every time something is added?
+//   - Maybe we don't need to do this, if we move items into "carrying", "pile", etc
+const entities = [
+  {
+    id: 1, 
+    type: 'Worker', 
+    pos: [ 1, 0, 0 ], 
+    goalPos: [ 2, 0, 0 ],
+    carry: [
+      { type: 'Stone' },
+    ],
+  },
+  { 
+    id: 2, 
+    type: 'Worker', 
+    pos: [ 0, 0, 1 ], 
+    rot: [ 0, -2, 0 ], 
+    goalRot: [ 0, 0, 0 ], 
+    carry: [ 
+      { type: 'Wood' },
+      { type: 'Wood' },
+    ],
+  },
+  {
+    type: 'Stockpile',
+    pos: [ 3, 0, 3 ],
+    pile: [
+      { type: 'Wood' },
+      { type: 'Wood' },
+      { type: 'Wood' },
+      { type: 'Wood' },
+    ]
+  }
+];
+
+// TODO: Walk to wood on ground, pick up, carry to pile, add to pile
+// First step: already carrying wood, take it to pile and transfer it
+
+let animationTime = 0;    // TODO: Per entity
+
+canvas.update = ( dt ) => {
+  // animationTime += dt;
+  animationTime = ( animationTime + dt ) % WorkerInfo.WalkTime;
+
+  // Walk test
+  {
+    const entity = entities[ 0 ];
+
+    const [ gx, gy, gz ] = entity.goalPos;
+    const [ px, py, pz ] = entity.pos;
+
+    const dist = Math.hypot( gx - px, gy - py, gz - pz );
+
+    const angle = entity.rot?.[ 1 ] ?? 0;
+    
+    const moveDist = sigma( dist ) * WorkerInfo.WalkSpeed * dt;
+
+    entity.pos[ 0 ] += Math.cos( angle ) * moveDist;
+    entity.pos[ 2 ] += Math.sin( angle ) * moveDist;
+  }
+
+  // Turn test
+  {
+    const angle = entities[ 1 ].rot[ 1 ];
+    const goalAngle = entities[ 1 ].goalRot[ 1 ];
+    
+    entities[ 1 ].rot[ 1 ] += sigma( goalAngle - angle ) * WorkerInfo.TurnSpeed * dt;
+  }
+
+  entities.forEach( entity => {
+    // if ( entity.carrying != null ) {
+      // const carried = entities.find( e => e.id == entity.carrying );
+
+      // carried.rot[ 0 ] = entity.rot[ 0 ];
+      // carried.rot[ 1 ] = entity.rot[ 1 ];
+      // carried.rot[ 2 ] = entity.rot[ 2 ];
+
+      // carried.pos[ 0 ] = entity.pos[ 0 ] + Math.cos( entity.rot[ 1 ] ) * WorkerInfo.BodyRadius;
+      // carried.pos[ 1 ] = entity.pos[ 1 ] + WorkerInfo.CarryHeight;
+      // carried.pos[ 2 ] = entity.pos[ 2 ] - Math.sin( entity.rot[ 1 ] ) * WorkerInfo.BodyRadius;
+
+      // TODO: How to handle worker walk bob?
+      //  - should we be treating carried objects as separate objects in the world?
+      //  - or make them somehow part of the worker while being carried?
+      //  - can we apply our animation to them somehow?
+
+      // What if we add a placeholder object to the model, 
+      // and if worker is carrying an object, that object is drawn there?
+      //   - Could move item into worker so that it is not drawn twice. 
+      //     - How do we could total avaiable wood/stone, then?
+    // }
+  } )
+}
+
+// Play with different functions here
+function sigma( x ) {
+  return Math.tanh( 10 * x );
+}
+
+function bump( x ) {
+  if ( x < 0 )  return 0;
+  if ( x > 1 )  return 1;
+  return Math.sin( x * Math.PI / 2 );
+}
+
+const viewMatrix = mat4.create();
+
+function updateViewMatrix() {
+  const x = camera.distance * Math.cos( camera.phi ) * Math.sin( camera.theta );
+  const y = camera.distance * Math.cos( camera.theta );
+  const z = camera.distance * Math.sin( camera.phi ) * Math.sin( camera.theta );
+
+  mat4.lookAt(
+    viewMatrix,
+    [ x, y, z ],
+    [ 0, 0, 0 ],
+    [ 0, 1, 0 ],
+  );
+}
+updateViewMatrix();
+
+const projectionMatrix = mat4.create();
+const projViewMatrix = mat4.create();
+
+// TODO: Draw grid for ground (to help us see where things are and if they are underground)
+
+canvas.draw = ( gl ) => {
+
+  const fieldOfView = 45 * Math.PI / 180; // in radians
+  const zNear = 0.1;
+  const zFar = 100.0;
+  mat4.perspective( projectionMatrix, fieldOfView, canvas.canvas.width / canvas.canvas.height, zNear, zFar );
+  mat4.multiply( projViewMatrix, projectionMatrix, viewMatrix );
+
+  entities.forEach( entity => {
+    drawEntity( gl, entity );
+  } );
+}
+
+canvas.start();
+
+
+function applyTransforms( matrix, transform ) {
+  if ( transform.pos ) {
+    mat4.translate( matrix, matrix, transform.pos );
+  }
+
+  if ( transform.rot ) {
+    mat4.rotate( matrix, matrix, transform.rot[ 2 ], [ 0, 0, 1 ] );
+    mat4.rotate( matrix, matrix, transform.rot[ 1 ], [ 0, 1, 0 ] );
+    mat4.rotate( matrix, matrix, transform.rot[ 0 ], [ 1, 0, 0 ] );
+  }
+
+  if ( transform.scale ) {
+    mat4.scale( matrix, matrix, transform.scale );
+  }
+}
+
+const modelMatrix = new MatrixStack( mat4.create() );
+const mvp = mat4.create();
+const normalMatrix = mat4.create();
+
+const blend = {
+  pos: [ 0, 0, 0 ],
+  scale: [ 1, 1, 1 ],
+};
+
+function drawEntity( gl, entity ) {
+
+  modelMatrix.save();
+
+  // mat4.identity( modelMatrix.current );
+  applyTransforms( modelMatrix.current, entity );
+
+  const modelInfo = ModelInfo[ entity.type ];
+
+  for ( const part in modelInfo ) {
+    const partInfo = modelInfo[ part ];
+
+    // if ( clearModelMatrix ) {
+    //   mat4.identity( modelMatrix.current );
+    // }
+    // 
+    // applyTransforms( modelMatrix.current, entity );
+
+    modelMatrix.save();
+
+    // TODO: Where should animation specific transforms go? Here?
+    // Using fill to avoid garbage collection
+    blend.pos.fill( 0 );
+    blend.scale.fill( 1 );
+    
+    const keyframes = partInfo.keyframes?.walk;
+
+    if ( keyframes ) {
+      const totalTime = keyframes[ keyframes.length - 1 ].time;
+      const loopTime = animationTime % totalTime;
+      
+      let nextIndex = 0;
+      for ( let i = 0; i < keyframes.length; i ++ ) {
+        if ( keyframes[ i ].time > loopTime ) {
+          nextIndex = i;
+          break;
+        }
+      }
+
+      // NOTE: This assumes a keyframe at zero. Should we create one automatically?
+      const prevFrame = keyframes[ nextIndex - 1 ];
+      const nextFrame = keyframes[ nextIndex ];
+
+      const partialTime = ( animationTime - prevFrame.time ) / ( nextFrame.time - prevFrame.time );
+
+      for ( let i = 0; i < 3; i ++ ) {
+        if ( prevFrame.pos ) {
+          blend.pos[ i ] = prevFrame.pos[ i ] + partialTime * ( nextFrame.pos[ i ] - prevFrame.pos[ i ] );
+        }
+
+        if ( prevFrame.scale ) {
+          blend.scale[ i ] = prevFrame.scale[ i ] + partialTime * ( nextFrame.scale[ i ] - prevFrame.scale[ i ] );
+        }
+      }
+
+      applyTransforms( modelMatrix.current, blend );
+    }
+
+    applyTransforms( modelMatrix.current, partInfo );
+
+    mat4.multiply( mvp, projViewMatrix, modelMatrix.current );
+
+    mat4.invert( normalMatrix, modelMatrix.current );
+    mat4.transpose( normalMatrix, normalMatrix );
+
+
+    gl.useProgram( shader.program );
+    gl.uniformMatrix4fv( shader.uniformLocations.mvp, false, mvp );
+    gl.uniformMatrix4fv( shader.uniformLocations.normalMatrix, false, normalMatrix );
+
+    if ( partInfo.color ) {
+      gl.uniform3fv( shader.uniformLocations.color, partInfo.color );
+    }
+
+    if ( partInfo.mesh ) {
+      if ( !Meshes.has( part ) ) {
+        Meshes.set( part, MeshCommon.getMesh( canvas.gl, partInfo.mesh ) );
+      }
+      
+      const mesh = Meshes.get( part );
+      
+      gl.bindBuffer( gl.ARRAY_BUFFER, mesh.positionBuffer );
+      gl.vertexAttribPointer( shader.attribLocations.position, 3, gl.FLOAT, false, 0, 0 );
+      gl.enableVertexAttribArray( shader.attribLocations.position );
+      
+      gl.bindBuffer( gl.ARRAY_BUFFER, mesh.normalBuffer );
+      gl.vertexAttribPointer( shader.attribLocations.normal, 3, gl.FLOAT, false, 0, 0 );
+      gl.enableVertexAttribArray( shader.attribLocations.normal );
+      
+      gl.bindBuffer( gl.ELEMENT_ARRAY_BUFFER, mesh.indexBuffer );
+      gl.drawElements( gl.TRIANGLES, mesh.length, gl.UNSIGNED_SHORT, 0 );
+    }
+
+    if ( partInfo.attach ) {
+      const attachList = entity[ partInfo.attach ];
+
+      // TODO: attachFunc to iterate through list and draw? (so carry stack is done differently than pile stack, e.g.)
+      attachList.forEach( attached => {
+        drawEntity( gl, attached );
+
+        // TODO: Get size from ModelInfo? Make it top level somehow? (may need an overall bounding box for selection anyway)
+        mat4.translate( modelMatrix.current, modelMatrix.current, [ 0, 0.15, 0 ] );
+
+        // How to make wood lay flat on top of ground (and not partway in it )?
+        // Should all wood be offset by half its height so that 0 is the bottom instead of center?
+
+      } );
+    }
+
+    modelMatrix.restore();
+  }
+
+  modelMatrix.restore();
+}
+
+const X_SENSITIVITY = 100;
+const Y_SENSTIVITY = -100;
+
+canvas.canvas.addEventListener( 'pointermove', e => {
+  if ( e.buttons == 1 ) {
+    camera.phi += e.movementX / X_SENSITIVITY;
+    camera.theta = Math.max( 1e-6, Math.min( Math.PI, camera.theta + e.movementY / Y_SENSTIVITY ) );
+
+    updateViewMatrix();
+  }
+} );
+
+const MIN_DIST = 1;
+const MAX_DIST = 100;
+const ZOOM_SENSIVITY = -200;
+canvas.canvas.addEventListener( 'wheel', e => {
+  camera.distance = Math.max( MIN_DIST, Math.min( MAX_DIST, camera.distance + e.wheelDelta / ZOOM_SENSIVITY ) );
+
+  updateViewMatrix();
+} );
+
+</script>

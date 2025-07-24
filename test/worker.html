@@ -1,0 +1,288 @@
+<title>Multiple workers</title>
+<link rel="stylesheet" href="../style.css">
+
+<script type="module">
+
+import { mat4 } from '../lib/gl-matrix.js';
+import { GLCanvas } from '../src/common/GLCanvas.js';
+import * as MeshCommon from '../src/common/MeshCommon.js';
+import * as ShaderCommon from '../src/common/ShaderCommon.js';
+
+const canvas = new GLCanvas();
+
+const camera = {
+  origin: [ 0, 0, 0 ],
+  distance: 5,
+  phi: Math.PI / 2,
+  theta: Math.PI / 2,
+}
+
+// TODO: Why is lighting constant when we orbit? We should be able to see the dark side of things!
+
+
+const WorkerInfo = {
+  SkinColor: [ 0.7, 0.6, 0.5 ],
+  Neck: 0.2,
+  BodyRadius: 0.5,
+  BodyHeight: 1,
+  BodyColor: [ 0.1, 0.2, 0.4 ],
+  CarryHeight: 0.6,
+  WalkTime: 1000,
+}
+
+// The "bob" part of the walk is used by head and hands
+const WalkBobFrames = [
+  {
+    time: 0,
+    pos: [ 0, 0, 0 ],
+  },
+  {
+    time: WorkerInfo.WalkTime / 2,
+    pos: [ 0, -0.25, 0 ],
+  },
+  {
+    time: WorkerInfo.WalkTime,
+    pos: [ 0, 0, 0 ],
+  },
+];
+
+const WorkerModel = {
+  Head: {
+    mesh: MeshCommon.Sphere(),
+    pos: [ 0, WorkerInfo.BodyHeight + WorkerInfo.Neck, 0 ],
+    scale: [ 0.3, 0.3, 0.3 ],
+    color: WorkerInfo.SkinColor,
+    keyframes: {
+      walk: WalkBobFrames,
+    },
+  },
+  Body: {
+    mesh: MeshCommon.Sphere( 32, 32, 0, Math.PI * 2, 0, Math.PI / 2 ),
+    scale: [ WorkerInfo.BodyRadius, WorkerInfo.BodyHeight, WorkerInfo.BodyRadius ],
+    color: WorkerInfo.BodyColor,
+    keyframes: {
+      walk: [
+        {
+          time: 0,
+          scale: [ 1, 1, 1 ],
+        },
+        {
+          time: WorkerInfo.WalkTime / 2,
+          scale: [ 1, 0.75, 1 ],
+        },
+        {
+          time: WorkerInfo.WalkTime,
+          scale: [ 1, 1, 1 ],
+        },
+      ],
+    }
+  },
+  LeftHand: {
+    mesh: MeshCommon.Sphere(),
+    pos: [ WorkerInfo.BodyRadius, WorkerInfo.CarryHeight, -WorkerInfo.BodyRadius ],
+    scale: [ 0.1, 0.1, 0.1 ],
+    color: WorkerInfo.SkinColor,
+    keyframes: {
+      walk: WalkBobFrames,
+    },
+  },
+  RightHand: {
+    mesh: MeshCommon.Sphere(),
+    pos: [ WorkerInfo.BodyRadius, WorkerInfo.CarryHeight, WorkerInfo.BodyRadius ],
+    scale: [ 0.1, 0.1, 0.1 ],
+    color: WorkerInfo.SkinColor,
+    keyframes: {
+      walk: WalkBobFrames,
+    },
+  }
+  // TODO: Allow arrays like this? Maybe nesting eventually?
+  // Hands: [ -1, 1 ].map( offset => (
+  //   {
+  //     mesh: MeshCommon.Sphere(),
+  //     pos: [ offset, 0, 0 ],
+  //     scale: [ 0.1, 0.1, 0.1 ],
+  //     color: WorkerInfo.SkinColor,
+  //   }
+  // ) ),
+};
+
+const Meshes = new Map();
+
+const shader = ShaderCommon.getShader( canvas.gl, ShaderCommon.BasicLighting );
+
+const entities = [
+  { type: 'Worker', pos: [ 1, 0, 0 ], },
+  { type: 'Worker', pos: [ 0, 0, 1 ], rot: [ 0, -2, 0 ] },
+  { type: 'Wood',   pos: [ 0, 1, 0 ], rot: [ 1, 0, 0 ] },
+];
+
+let animationTime = 0;    // TODO: Per entity
+
+canvas.update = ( dt ) => {
+  // animationTime += dt;
+  animationTime = ( animationTime + dt ) % WorkerInfo.WalkTime;
+
+
+  // const scale = 2 + 0.5 * Math.sin( animationTime / 200 );
+
+  // entities[ 5 ].pos[ 1 ] = scale / 2 + 0.2;
+  // entities[ 6 ].scale[ 1 ] = scale;
+}
+
+const viewMatrix = mat4.create();
+
+function updateViewMatrix() {
+  const x = camera.distance * Math.cos( camera.phi ) * Math.sin( camera.theta );
+  const y = camera.distance * Math.cos( camera.theta );
+  const z = camera.distance * Math.sin( camera.phi ) * Math.sin( camera.theta );
+
+  mat4.lookAt(
+    viewMatrix,
+    [ x, y, z ],
+    [ 0, 0, 0 ],
+    [ 0, 1, 0 ],
+  );
+}
+updateViewMatrix();
+
+const projectionMatrix = mat4.create();
+const projViewMatrix = mat4.create();
+
+canvas.draw = ( gl ) => {
+
+  const fieldOfView = 45 * Math.PI / 180; // in radians
+  const zNear = 0.1;
+  const zFar = 100.0;
+  mat4.perspective( projectionMatrix, fieldOfView, canvas.canvas.width / canvas.canvas.height, zNear, zFar );
+  mat4.multiply( projViewMatrix, projectionMatrix, viewMatrix );
+
+  entities.forEach( entity => {
+    drawWorker( gl, entity );
+  } );
+}
+
+canvas.start();
+
+const modelMatrix = mat4.create();
+const mvp = mat4.create();
+const normalMatrix = mat4.create();
+
+function applyTransforms( matrix, transform ) {
+  if ( transform.pos ) {
+    mat4.translate( matrix, matrix, transform.pos );
+  }
+
+  if ( transform.rot ) {
+    mat4.rotate( matrix, matrix, transform.rot[ 2 ], [ 0, 0, 1 ] );
+    mat4.rotate( matrix, matrix, transform.rot[ 1 ], [ 0, 1, 0 ] );
+    mat4.rotate( matrix, matrix, transform.rot[ 0 ], [ 1, 0, 0 ] );
+  }
+
+  if ( transform.scale ) {
+    mat4.scale( matrix, matrix, transform.scale );
+  }
+}
+
+const blend = {
+  pos: [ 0, 0, 0 ],
+  scale: [ 1, 1, 1 ],
+};
+
+function drawWorker( gl, entity ) {
+
+  for ( const part in WorkerModel ) {
+    if ( !Meshes.has( part ) ) {
+      Meshes.set( part, MeshCommon.getMesh( canvas.gl, WorkerModel[ part ].mesh ) );
+    }
+
+    const mesh = Meshes.get( part );
+    const partInfo = WorkerModel[ part ];
+
+    mat4.identity( modelMatrix );
+    applyTransforms( modelMatrix, entity );
+
+    // TODO: Where should animation specific transforms go? Here?
+    // Using fill to avoid garbage collection
+    blend.pos.fill( 0 );
+    blend.scale.fill( 1 );
+    
+    const keyframes = partInfo.keyframes?.walk;
+
+    if ( keyframes ) {
+      const totalTime = keyframes[ keyframes.length - 1 ].time;
+      const loopTime = animationTime % totalTime;
+      
+      let nextIndex = 0;
+      for ( let i = 0; i < keyframes.length; i ++ ) {
+        if ( keyframes[ i ].time > loopTime ) {
+          nextIndex = i;
+          break;
+        }
+      }
+
+      // NOTE: This assumes a keyframe at zero. Should we create one automatically?
+      const prevFrame = keyframes[ nextIndex - 1 ];
+      const nextFrame = keyframes[ nextIndex ];
+
+      const partialTime = ( animationTime - prevFrame.time ) / ( nextFrame.time - prevFrame.time );
+
+      for ( let i = 0; i < 3; i ++ ) {
+        if ( prevFrame.pos ) {
+          blend.pos[ i ] = prevFrame.pos[ i ] + partialTime * ( nextFrame.pos[ i ] - prevFrame.pos[ i ] );
+        }
+
+        if ( prevFrame.scale ) {
+          blend.scale[ i ] = prevFrame.scale[ i ] + partialTime * ( nextFrame.scale[ i ] - prevFrame.scale[ i ] );
+        }
+      }
+
+      applyTransforms( modelMatrix, blend );
+    }
+
+    applyTransforms( modelMatrix, partInfo );
+
+    mat4.multiply( mvp, projViewMatrix, modelMatrix );
+
+    mat4.invert( normalMatrix, modelMatrix );
+    mat4.transpose( normalMatrix, normalMatrix );
+
+    gl.useProgram( shader.program );
+    gl.uniformMatrix4fv( shader.uniformLocations.mvp, false, mvp );
+    gl.uniformMatrix4fv( shader.uniformLocations.normalMatrix, false, normalMatrix );
+    gl.uniform3fv( shader.uniformLocations.color, partInfo.color );
+
+    gl.bindBuffer( gl.ARRAY_BUFFER, mesh.positionBuffer );
+    gl.vertexAttribPointer( shader.attribLocations.position, 3, gl.FLOAT, false, 0, 0 );
+    gl.enableVertexAttribArray( shader.attribLocations.position );
+
+    gl.bindBuffer( gl.ARRAY_BUFFER, mesh.normalBuffer );
+    gl.vertexAttribPointer( shader.attribLocations.normal, 3, gl.FLOAT, false, 0, 0 );
+    gl.enableVertexAttribArray( shader.attribLocations.normal );
+
+    gl.bindBuffer( gl.ELEMENT_ARRAY_BUFFER, mesh.indexBuffer );
+    gl.drawElements( gl.TRIANGLES, mesh.length, gl.UNSIGNED_SHORT, 0 );
+  }
+}
+
+const X_SENSITIVITY = 100;
+const Y_SENSTIVITY = -100;
+
+canvas.canvas.addEventListener( 'pointermove', e => {
+  if ( e.buttons == 1 ) {
+    camera.phi += e.movementX / X_SENSITIVITY;
+    camera.theta = Math.max( 1e-6, Math.min( Math.PI, camera.theta + e.movementY / Y_SENSTIVITY ) );
+
+    updateViewMatrix();
+  }
+} );
+
+const MIN_DIST = 1;
+const MAX_DIST = 100;
+const ZOOM_SENSIVITY = -200;
+canvas.canvas.addEventListener( 'wheel', e => {
+  camera.distance = Math.max( MIN_DIST, Math.min( MAX_DIST, camera.distance + e.wheelDelta / ZOOM_SENSIVITY ) );
+
+  updateViewMatrix();
+} );
+
+</script>

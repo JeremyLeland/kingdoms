@@ -1,0 +1,231 @@
+<title>ThreeJS test</title>
+<link rel="stylesheet" href="../style.css">
+
+<script type="module">
+  import * as THREE from '../lib/threejs/three.module.js';
+  import { ThreeGame } from '../src/common/ThreeGame.js';
+  import { OrbitControls } from '../lib/threejs/OrbitControls.js';
+  import { ValuesPanel } from '../src/common/ValuesPanel.js';
+
+  const DETAIL = 32;
+
+  const Info = {
+    HeadSize: 0.4,
+    Neck: 0.2,
+    BodyHeight: 1.5,
+    BodyWidth: 0.5,
+    BodyShrink: 0.25,   // shrink amount during walk animation
+    HandSize: 0.1,
+    CarryDown: 0.5,
+    CarryAway: 0.1,
+  };
+
+  // TODO: Put meshes and size info into class?
+  // Put position info in JSON, place meshes based on that
+
+  // new ValuesPanel( Info );
+
+  const game = new ThreeGame();
+  game.scene.background = new THREE.Color( 0x000022 );
+  game.camera.position.set( 0, 0, 5 );
+  game.camera.lookAt( 0, 0, 0 );
+
+  const controls = new OrbitControls( game.camera, game.renderer.domElement );
+  controls.target.set( 0, 0, 0 );
+  controls.update();
+
+
+  game.scene.add( new THREE.AxesHelper( 5 ) );
+
+  const grid = new THREE.GridHelper( 10, 10 );
+  grid.material.opacity = 0.2;
+  grid.material.transparent = true;
+  game.scene.add( grid );
+
+  game.scene.add( new THREE.AmbientLight( 0xffffff, 0.4 ) );
+
+  const light = new THREE.DirectionalLight( 0xffffff, 0.8 );
+  light.position.set( 0, 1, 2 );
+  light.target.position.set( 0, 0, 0 );
+  game.scene.add( light );
+
+  //
+  // Ground
+  //
+  const ground = new THREE.Mesh(
+    new THREE.PlaneGeometry( 10, 10 ),
+    new THREE.MeshPhongMaterial( { color: 0x442200 } ),
+  );
+
+  ground.rotation.set( -Math.PI / 2, 0, 0 );
+
+  game.scene.add( ground );
+
+  //
+  // Worker
+  //
+
+  class Person {
+    type = 'Person';
+
+    x = 0;
+    y = 0;
+    z = 0;
+    angle = 0;
+
+    #body;
+    #head;
+    #hands;
+    #group;
+
+    constructor( values, scene ) {
+      Object.assign( this, values );
+
+      this.#body = new THREE.Mesh( 
+        new THREE.SphereGeometry( 1, DETAIL, DETAIL, 0, Math.PI * 2, 0, Math.PI / 2 ), 
+        new THREE.MeshPhongMaterial( { color: 'blue' } ),
+      );
+
+      this.#body.scale.set( Info.BodyWidth, Info.BodyHeight, Info.BodyWidth );
+      
+      this.#head = new THREE.Mesh( 
+        new THREE.SphereGeometry( Info.HeadSize, DETAIL, DETAIL ), 
+        new THREE.MeshPhongMaterial( { color: 'tan' } ),
+      );
+
+      this.#head.position.y = Info.BodyHeight + Info.HeadSize - Info.Neck;
+
+      this.#hands = Array.from( Array( 2 ), _ => 
+        new THREE.Mesh(
+          new THREE.SphereGeometry( Info.HandSize, DETAIL, DETAIL ),
+          new THREE.MeshPhongMaterial( { color: 'tan' } ),
+        )
+      );
+
+      this.#group = new THREE.Group();
+      this.#group.add( this.#body );
+      this.#group.add( this.#head );
+      this.#group.add( this.#hands[ 0 ] );
+      this.#group.add( this.#hands[ 1 ] );
+
+      scene.add( this.#group )
+    }
+
+    update( dt ) {
+      const bodyHeight = Info.BodyHeight - Info.BodyShrink * Math.sin( Math.PI * 2 * ( animationTime % DURATION ) / DURATION );
+
+      this.angle = animationTime / 1000;
+
+      this.#body.scale.y = bodyHeight;
+      this.#head.position.y = bodyHeight + Info.HeadSize - Info.Neck;
+
+      const carryY = bodyHeight - Info.CarryDown;
+      const carryZ = Info.BodyWidth + Info.CarryAway;
+
+      this.#hands[ 0 ].position.set( -0.5, carryY, carryZ );
+      this.#hands[ 1 ].position.set(  0.5, carryY, carryZ );
+
+      if ( this.carryItem != null ) {
+        const carry = items[ this.carryItem ];
+        carry.x = this.x + Math.sin( this.angle ) * carryZ;
+        carry.y = this.y + carryY;
+        carry.z = this.z + Math.cos( this.angle ) * carryZ;
+        carry.angle = this.angle;
+      }
+
+      const WALK_RADIUS = 3, WALK_TIME = 12000;
+      const theta = Math.PI * 2 * ( animationTime % WALK_TIME ) / WALK_TIME;
+
+      // worker.position.set( WALK_RADIUS * Math.cos( theta ), 0, WALK_RADIUS * Math.sin( theta ) );
+      // worker.rotation.set( 0, -theta, 0 );
+
+      // worker.position.y = bodyOffset;
+
+      this.#group.position.set( this.x, this.y, this.z );
+      this.#group.rotation.set( 0, this.angle, 0 );
+    }
+  }
+
+  //
+  // Items
+  //
+
+  const Items = {
+    Wood: {
+      width: 1,
+      height: 0.1,
+      depth: 0.2,
+      color: 'brown',
+    },
+    Stone: {
+      width: 0.5,
+      height: 0.4,
+      depth: 0.3,
+      color: 'gray',
+    }
+  }
+
+  class Wood {
+    type = 'Wood';
+
+    #group = new THREE.Mesh(
+      new THREE.BoxGeometry( Items.Wood.width, Items.Wood.height, Items.Wood.depth ),
+      new THREE.MeshPhongMaterial( { color: Items.Wood.color } ),
+    ); 
+
+    constructor( values, scene ) {
+      Object.assign( this, values );
+
+      scene.add( this.#group );
+    }
+
+    update( dt ) {
+      this.#group.position.set( this.x, this.y, this.z );
+      this.#group.rotation.set( 0, this.angle, 0 );
+    }
+  }
+
+  class Stone {
+    type = 'Stone';
+
+    #group = new THREE.Mesh(
+      new THREE.BoxGeometry( Items.Stone.width, Items.Stone.height, Items.Stone.depth ),
+      new THREE.MeshPhongMaterial( { color: Items.Stone.color } ),
+    ); 
+
+    constructor( values, scene ) {
+      Object.assign( this, values );
+
+      scene.add( this.#group );
+    }
+
+    update( dt ) {
+      this.#group.position.set( this.x, this.y, this.z );
+      this.#group.rotation.set( 0, this.angle, 0 );
+    }
+  }
+
+  
+  const items = [
+    new Wood( { x: 0, y: 0.1, z: 0, angle: 0 }, game.scene ),
+  ]
+
+  const people = [
+    new Person( { x: 1, y: 0, z: 0, angle: Math.PI / 3, carryItem: 0 }, game.scene ),
+    new Person( { x: 0, y: 0, z: 1, angle: 0 }, game.scene ),
+  ];
+  
+  const DURATION = 1000;
+
+  let animationTime = 0;
+
+  game.start( ( dt ) => {
+    animationTime += dt;
+
+    people.forEach( p => p.update( dt ) );
+
+    items.forEach( i => i.update( dt ) );
+
+  } );
+
+</script>

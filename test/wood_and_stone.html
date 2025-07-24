@@ -1,0 +1,198 @@
+<title>WebGL test</title>
+<link rel="stylesheet" href="../style.css">
+
+<script type="module">
+
+import { mat4 } from '../lib/gl-matrix.js';
+import { GLCanvas } from '../src/common/GLCanvas.js';
+import * as MeshCommon from '../src/common/MeshCommon.js';
+import * as ShaderCommon from '../src/common/ShaderCommon.js';
+
+const canvas = new GLCanvas();
+
+const camera = {
+  origin: [ 0, 0, 0 ],
+  distance: 5,
+  phi: Math.PI / 2,
+  theta: Math.PI / 2,
+}
+
+
+// TODO: Orbit camera controls
+// TODO: Pass lighting info into shader
+// TODO: Fix lighting when orbiting -- make sure normals are correct first
+// TODO: Person carrying wood or stone
+// TODO: Person picking up and setting down wood/stone
+
+const Info = {
+  Stone: {
+    scale: [ 0.3, 0.2, 0.1 ],
+    color: [ 0.4, 0.4, 0.4 ],
+  },
+  Wood: {
+    scale: [ 0.5, 0.05, 0.1 ],
+    color: [ 0.5, 0.2, 0.0 ],
+  },
+  Head: {
+    scale: [ 0.3, 0.3, 0.3 ],
+    color: [ 0.7, 0.6, 0.5 ],
+  },
+  Cube: {
+    color: [ 0.1, 0.6, 0.5 ],
+  },
+  Body: {
+    scale: [ 0.5, 0.5, 0.5 ],
+    color: [ 0.1, 0.2, 0.4 ],
+  }
+};
+
+const MeshInfo = {
+  Stone: MeshCommon.Cube(),
+  Wood: MeshCommon.Cube(),
+  Head: MeshCommon.Sphere(),
+  Cube: MeshCommon.Cube(),
+  Body: MeshCommon.Sphere( 32, 32, 0, Math.PI * 2, 0, Math.PI / 2 ),
+};
+
+const Meshes = {};
+for ( const name in MeshInfo ) {
+  Meshes[ name ] = MeshCommon.getMesh( canvas.gl, MeshInfo[ name ] );
+}
+
+const shader = ShaderCommon.getShader( canvas.gl, ShaderCommon.BasicLighting );
+
+const entities = [
+  { type: 'Wood', pos: [ 0, 1, 0 ], rot: [ 1, 0, 0 ] },
+  { type: 'Stone', pos: [ 1, -1, 0 ], rot: [ 0, 2, 0 ] },
+  { type: 'Stone', pos: [ -1, -1, -1 ], rot: [ 0, 0, 3 ] },
+  { type: 'Stone', pos: [ -2, -2, -2 ], rot: [ 0, 1, 0 ] },
+  { type: 'Stone', pos: [ 0, 0, 0 ], rot: [ 2, 0, 0 ] },
+  { type: 'Head', pos: [ 1, 0, 0 ] },
+  { type: 'Body', pos: [ 1, 0, 0 ], scale: [ 1, 1, 1 ] },
+];
+
+let animationTime = 0;
+
+canvas.update = ( dt ) => {
+  animationTime += dt;
+
+  // entities.forEach( entity => {
+    entities[ 0 ].rot[ 0 ] += dt / 1000;
+  // } );
+
+
+  const scale = 2 + 0.5 * Math.sin( animationTime / 200 );
+
+  entities[ 5 ].pos[ 1 ] = scale / 2 + 0.2;
+  entities[ 6 ].scale[ 1 ] = scale;
+}
+
+const viewMatrix = mat4.create();
+
+function updateViewMatrix() {
+  const x = camera.distance * Math.cos( camera.phi ) * Math.sin( camera.theta );
+  const y = camera.distance * Math.cos( camera.theta );
+  const z = camera.distance * Math.sin( camera.phi ) * Math.sin( camera.theta );
+
+  mat4.lookAt(
+    viewMatrix,
+    [ x, y, z ],
+    [ 0, 0, 0 ],
+    [ 0, 1, 0 ],
+  );
+}
+updateViewMatrix();
+
+const projectionMatrix = mat4.create();
+const projViewMatrix = mat4.create();
+
+canvas.draw = ( gl ) => {
+
+  const fieldOfView = 45 * Math.PI / 180; // in radians
+  const zNear = 0.1;
+  const zFar = 100.0;
+  mat4.perspective( projectionMatrix, fieldOfView, canvas.canvas.width / canvas.canvas.height, zNear, zFar );
+  mat4.multiply( projViewMatrix, projectionMatrix, viewMatrix );
+
+  entities.forEach( entity => {
+    drawEntity( gl, entity );
+  } );
+}
+
+canvas.start();
+
+const modelMatrix = mat4.create();
+const mvp = mat4.create();
+const normalMatrix = mat4.create();
+
+function drawEntity( gl, entity ) {
+  const mesh = Meshes[ entity.type ];
+  const info = Info[ entity.type ];
+
+  if ( entity.pos ) {
+    mat4.fromTranslation( modelMatrix, entity.pos );
+  }
+
+  if ( entity.rot ) {
+    mat4.rotate( modelMatrix, modelMatrix, entity.rot[ 2 ], [ 0, 0, 1 ] );
+    mat4.rotate( modelMatrix, modelMatrix, entity.rot[ 1 ], [ 0, 1, 0 ] );
+    mat4.rotate( modelMatrix, modelMatrix, entity.rot[ 0 ], [ 1, 0, 0 ] );
+  }
+
+  if ( entity.scale ) {
+    mat4.scale( modelMatrix, modelMatrix, entity.scale );
+  }
+
+  if ( info.scale ) {
+    mat4.scale( modelMatrix, modelMatrix, info.scale );
+  }
+
+  mat4.multiply( mvp, projViewMatrix, modelMatrix );
+
+  mat4.invert( normalMatrix, modelMatrix );
+  mat4.transpose( normalMatrix, normalMatrix );
+
+
+  gl.useProgram( shader.program );
+  gl.uniformMatrix4fv( shader.uniformLocations.mvp, false, mvp );
+  gl.uniformMatrix4fv( shader.uniformLocations.normalMatrix, false, normalMatrix );
+  gl.uniform3fv( shader.uniformLocations.color, info.color );
+
+  gl.bindBuffer( gl.ARRAY_BUFFER, mesh.positionBuffer );
+  gl.vertexAttribPointer( shader.attribLocations.position, 3, gl.FLOAT, false, 0, 0 );
+  gl.enableVertexAttribArray( shader.attribLocations.position );
+
+  gl.bindBuffer( gl.ARRAY_BUFFER, mesh.normalBuffer );
+  gl.vertexAttribPointer( shader.attribLocations.normal, 3, gl.FLOAT, false, 0, 0 );
+  gl.enableVertexAttribArray( shader.attribLocations.normal );
+
+  // gl.bindBuffer( gl.ARRAY_BUFFER, mesh.uvBuffer );
+  // gl.vertexAttribPointer( shader.attribLocations.uv, 2, gl.FLOAT, false, 0, 0 );
+  // gl.enableVertexAttribArray( shader.attribLocations.uv );
+
+  gl.bindBuffer( gl.ELEMENT_ARRAY_BUFFER, mesh.indexBuffer );
+  gl.drawElements( gl.TRIANGLES, mesh.length, gl.UNSIGNED_SHORT, 0 );
+}
+
+const X_SENSITIVITY = 100;
+const Y_SENSTIVITY = -100;
+
+canvas.canvas.addEventListener( 'pointermove', e => {
+  if ( e.buttons == 1 ) {
+    camera.phi += e.movementX / X_SENSITIVITY;
+    camera.theta = Math.max( 1e-6, Math.min( Math.PI, camera.theta + e.movementY / Y_SENSTIVITY ) );
+
+    updateViewMatrix();
+  }
+} );
+
+const MIN_DIST = 1;
+const MAX_DIST = 20;
+const ZOOM_SENSIVITY = -200;
+canvas.canvas.addEventListener( 'wheel', e => {
+  camera.distance = Math.max( MIN_DIST, Math.min( MAX_DIST, camera.distance + e.wheelDelta / ZOOM_SENSIVITY ) );
+
+  updateViewMatrix();
+} );
+
+</script>

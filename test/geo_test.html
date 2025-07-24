@@ -1,0 +1,91 @@
+<title>Geometry test</title>
+<link rel="stylesheet" href="../style.css">
+
+<script type="module">
+
+import { mat4 } from '../lib/gl-matrix.js';
+import { GLCanvas } from '../src/common/GLCanvas.js';
+import * as MeshCommon from '../src/common/MeshCommon.js';
+import * as ShaderCommon from '../src/common/ShaderCommon.js';
+
+const canvas = new GLCanvas();
+
+const viewMatrix = mat4.lookAt(
+  mat4.create(),
+  [ 5, 5, 5 ],
+  [ 0, 0, 0 ],
+  [ 0, 1, 0 ],
+);
+
+// const meshInfo = MeshCommon.Sphere( 32, 32, 0, Math.PI * 2, 0, Math.PI );
+// const meshInfo = MeshCommon.Plane( );
+const meshInfo = MeshCommon.Cylinder( 0, 1, 2, 32 );
+
+const mesh = MeshCommon.getMesh( canvas.gl, meshInfo );
+
+const shader = ShaderCommon.getShader( canvas.gl, ShaderCommon.BasicLighting );
+// const shader = ShaderCommon.getShader( canvas.gl, ShaderCommon.NormalColor );
+
+
+let angle = 0;
+
+canvas.update = ( dt ) => {
+  // angle += dt / 1000;
+}
+
+const projectionMatrix = mat4.create();
+const projViewMatrix = mat4.create();
+
+canvas.draw = ( gl ) => {
+
+  const fieldOfView = 45 * Math.PI / 180; // in radians
+  const zNear = 0.1;
+  const zFar = 100.0;
+  mat4.perspective( projectionMatrix, fieldOfView, canvas.canvas.width / canvas.canvas.height, zNear, zFar );
+  mat4.multiply( projViewMatrix, projectionMatrix, viewMatrix );
+
+  drawSphere( gl );
+}
+
+canvas.start();
+
+const modelMatrix = mat4.create();
+const mvp = mat4.create();
+const normalMatrix = mat4.create();
+
+function drawSphere( gl ) {
+  
+  mat4.fromTranslation( modelMatrix, [ 0, 0, 0 ] );
+  mat4.rotate( modelMatrix, modelMatrix, 0, [ 0, 0, 1 ] );
+  mat4.rotate( modelMatrix, modelMatrix, angle, [ 0, 1, 0 ] );
+  mat4.rotate( modelMatrix, modelMatrix, 0, [ 1, 0, 0 ] );
+
+  mat4.multiply( mvp, projViewMatrix, modelMatrix );
+
+  const modelViewMatrix = mat4.multiply( mat4.create(), viewMatrix, modelMatrix );
+  mat4.invert( normalMatrix, modelViewMatrix );
+  mat4.transpose( normalMatrix, normalMatrix );
+
+
+  gl.useProgram( shader.program );
+  gl.uniformMatrix4fv( shader.uniformLocations.mvp, false, mvp );
+  gl.uniformMatrix4fv( shader.uniformLocations.normalMatrix, false, normalMatrix );
+  gl.uniform3fv( shader.uniformLocations.color, [ 1, 1, 1 ] );
+
+  gl.bindBuffer( gl.ARRAY_BUFFER, mesh.positionBuffer );
+  gl.vertexAttribPointer( shader.attribLocations.position, 3, gl.FLOAT, false, 0, 0 );
+  gl.enableVertexAttribArray( shader.attribLocations.position );
+
+  gl.bindBuffer( gl.ARRAY_BUFFER, mesh.normalBuffer );
+  gl.vertexAttribPointer( shader.attribLocations.normal, 3, gl.FLOAT, false, 0, 0 );
+  gl.enableVertexAttribArray( shader.attribLocations.normal );
+
+  // gl.bindBuffer( gl.ARRAY_BUFFER, mesh.uvBuffer );
+  // gl.vertexAttribPointer( shader.attribLocations.uv, 2, gl.FLOAT, false, 0, 0 );
+  // gl.enableVertexAttribArray( shader.attribLocations.uv );
+
+  gl.bindBuffer( gl.ELEMENT_ARRAY_BUFFER, mesh.indexBuffer );
+  gl.drawElements( gl.TRIANGLES, mesh.length, gl.UNSIGNED_SHORT, 0 );
+}
+
+</script>
