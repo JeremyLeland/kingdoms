@@ -291,9 +291,15 @@ export function Cylinder( width = 1, height = 1, depth = 1, radiusTop = 1, radiu
     indices: [],
   };
 
-  // TODO: Account for differences in width and depth
-
   const slope = ( radiusBottom - radiusTop ) / height;
+
+  const topPositions = [];
+  const topNormals = [];
+  const bottomPositions = [];
+  const bottomNormals = [];
+
+  const TOP_NORMAL    = [ 0,  1, 0 ];
+  const BOTTOM_NORMAL = [ 0, -1, 0 ];
 
   // Where do we want base of unit cylinder? Should it be height of 1 or height of 2? (radius is 1)
   for ( let col = 0; col <= widthSegments; col ++ ) {
@@ -304,21 +310,55 @@ export function Cylinder( width = 1, height = 1, depth = 1, radiusTop = 1, radiu
 
     const normal = vec3.normalize( [], [ cosTheta / width ** 2, slope / height ** 2, sinTheta / depth ** 2 ] );
 
-    cylinder.positions.push( radiusTop * cosTheta, height, radiusTop * sinTheta );
+
+    const top = [ radiusTop * cosTheta, height, radiusTop * sinTheta ];
+    cylinder.positions.push( ...top );
     cylinder.normals.push( ...normal );
 
-    cylinder.positions.push( radiusBottom * cosTheta, -height, radiusBottom * sinTheta );
+    topPositions.push( ...top );
+    topNormals.push( ...TOP_NORMAL );
+
+    const bottom = [ radiusBottom * cosTheta, -height, radiusBottom * sinTheta ];
+    cylinder.positions.push( ...bottom );
     cylinder.normals.push( ...normal );
+
+    bottomPositions.push( ...bottom );
+    bottomNormals.push( ...BOTTOM_NORMAL );
   }
 
   // For convenience, we alternated top and bottom for cylinder points
-
   const heightSegments = 2;
   for ( let col = 0; col < widthSegments; col ++ ) {
     cylinder.indices.push( col * heightSegments, col * heightSegments + 2, col * heightSegments + 3 );
     cylinder.indices.push( col * heightSegments, col * heightSegments + 3, col * heightSegments + 1 );
   }
 
+
+  // Top
+  const TOP_INDEX = cylinder.positions.length / 3;
+  cylinder.positions.push( 0, height, 0 );
+  cylinder.normals.push( ...TOP_NORMAL );
+
+  cylinder.positions.push( ...topPositions );
+  cylinder.normals.push( ...topNormals );
+
+  for ( let col = 0; col <= widthSegments; col ++ ) {
+    cylinder.indices.push( TOP_INDEX, TOP_INDEX + col + 1, TOP_INDEX + col );   // reverse order from below to fix back face
+  }
+  
+  // Bottom
+  const BOTTOM_INDEX = cylinder.positions.length / 3;
+  cylinder.positions.push( 0, -height, 0 );
+  cylinder.normals.push( ...BOTTOM_NORMAL );
+
+  cylinder.positions.push( ...bottomPositions );
+  cylinder.normals.push( ...bottomNormals );
+
+  for ( let col = 0; col <= widthSegments; col ++ ) {
+    cylinder.indices.push( BOTTOM_INDEX, BOTTOM_INDEX + col, BOTTOM_INDEX + col + 1 );
+  }
+  
+  
   return cylinder;
 }
 
