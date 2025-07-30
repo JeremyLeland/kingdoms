@@ -1,5 +1,5 @@
 Next:
-  - NOW: Add tree back into this (cut down tree, then gather wood from downed tree)
+  - SOON: Walking animation (swinging empty hands)
   - Separate attachments for axe and carry
     - Have axe on our back when not used? (at least for demo purposes for now)
   - Stone (draw it, harvest it, work on phases and whatever results)
@@ -9,14 +9,6 @@ Next:
     - Should whatever we carry be a single stack with a # of resource? Like the basket of berries.
     - I don't think we're going to mix resources, e.g. carry two pieces of wood and one piece of stone at same time
 
-- Should we drop resource on ground to pick up, or harvest them directly from source?
-  - Instead of dropping wood on ground in circle, maybe just have worker swing on downed tree a few times
-    - Then directly place 3 pieces of wood in carry?
-  - Could do same for stone. Swing a few times, then a chunk is gone and walk off with a block or two.
-  - Do the low two-handed gather motion from bush, then walk away with basket full of berries
-  - Do a slower higher gather from tree, walk away with basket full of apples
-  - Resources can still be dropped onto the ground (e.g. if worker emergently changes jobs, or dies)
-    - But it probably makes sense to be mostly taking directly from source or picking up from stockpile
 
 - Resources
   - Wood (forest trees)

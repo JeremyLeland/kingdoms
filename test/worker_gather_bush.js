@@ -15,35 +15,20 @@ import * as Worker from '../src/entities/Worker.js';
 import * as Entity from '../src/Entity.js';
 
 
-const canvas = new GLCanvas();
-const scene = new Scene( /*canvas.gl */ );
-
-
-//
-// Persist camera state between sessions
-// TODO: Make this part of Scene, maybe? Pass in the state key name to use
-//
-const TestStateKey = 'kingdoms_workerGatherTestState';
-
-const oldState = JSON.parse( localStorage.getItem( TestStateKey ) );
-if ( oldState ) {
-  scene.camera = new OrbitCamera( oldState );
-}
-
-window.addEventListener( 'beforeunload', ( e ) =>
-  localStorage.setItem( TestStateKey, JSON.stringify( scene.camera ) )
-);
-
-
 const entities = [
   {
     type: 'Worker', 
-    pos: [ 0, 0, 0 ],
+    pos: [ 4, 0, 2 ],
     tool: { type: 'Axe' },
   },
   {
     type: 'Worker', 
-    pos: [ 2, 0, 0 ],
+    pos: [ 4, 0, 3 ],
+    tool: { type: 'Axe' },
+  },
+  {
+    type: 'Worker', 
+    pos: [ 4, 0, 4 ],
     tool: { type: 'Axe' },
   },
   {
@@ -93,10 +78,64 @@ const entities = [
 ];
 
 const desired = {
-  'Berry': 4,
-  'Stone': 4,
-  'Wood': 6,
+  'Berry': 1,
+  'Stone': 1,
+  'Wood': 1,
 };
+
+//
+// UI
+//
+const divUI = document.createElement( 'div' );
+
+Object.assign( divUI.style, {
+  position: 'absolute',
+  left: 0,
+  top: 0,
+  display: 'grid',
+  gridTemplateColumns: '1fr 75px',
+  background: '#000a',
+} );
+
+for ( const [ key, value ] of Object.entries( desired ) ) {
+  const labelUI = document.createElement( 'label' );
+  labelUI.innerText = key;
+  
+  const numInputUI = document.createElement( 'input' );
+  numInputUI.type = 'number';
+  numInputUI.value = value;
+
+  numInputUI.oninput = _ => {
+    desired[ key ] = parseInt( numInputUI.value );
+  };
+
+  divUI.appendChild( labelUI );
+  divUI.appendChild( numInputUI );
+}
+
+document.body.appendChild( divUI );
+
+//
+// GLCanvas
+//
+
+const canvas = new GLCanvas();
+const scene = new Scene( /*canvas.gl */ );
+
+//
+// Persist camera state between sessions
+// TODO: Make this part of Scene, maybe? Pass in the state key name to use
+//
+const TestStateKey = 'kingdoms_workerGatherTestState';
+
+const oldState = JSON.parse( localStorage.getItem( TestStateKey ) );
+if ( oldState ) {
+  scene.camera = new OrbitCamera( oldState );
+}
+
+window.addEventListener( 'beforeunload', ( e ) =>
+  localStorage.setItem( TestStateKey, JSON.stringify( scene.camera ) )
+);
 
 canvas.update = ( dt ) => {
  
@@ -408,6 +447,18 @@ function updateWorker( entity, others, dt ) {
   entity.avoid = avoid;
 
   if ( entity.job?.type == 'Harvest' ) {
+    const pileContents = entities.flatMap( e => e.pile ?? e.carry ?? [] );  // Should we use one name for this?
+
+    const nextDesired = Object.entries( desired ).find( ( [ key, val ] ) => val > pileContents.filter( e => e.type == key ).length );
+
+    if ( nextDesired ) { 
+      entity.job = {
+        type: 'Harvest',
+        resource: nextDesired[ 0 ],
+      };
+    }
+
+    // TODO: Include this in part of the search above (compare against list of available resources)
     const resCount = numResourceAvailable( entity.job.resource );
 
     if ( resCount == 0 ) {
@@ -431,18 +482,25 @@ function updateWorker( entity, others, dt ) {
     };
   }
 
+  //
+  // TODO: We're harvesting too many items this way, since we are committing to a gather
+  //       and not re-checking if it's still needed. Maybe check all carrys (not just piles)
+  //       and do this every update? Then we can redirect to another resource if someone
+  //       already grabbed all we need of the first one
+  //
+
   if ( entity.job.type == 'Idle' ) {
-    // TODO: Find total number of each resource in stockpiles and only grab what we want more of
-    const pileContents = entities.flatMap( e => e.pile ?? [] );
+  //   // TODO: Find total number of each resource in stockpiles and only grab what we want more of
+  //   const pileContents = entities.flatMap( e => e.pile ?? [] );
 
-    const nextDesired = Object.entries( desired ).find( ( [ key, val ] ) => val > pileContents.filter( e => e.type == key ).length );
+  //   const nextDesired = Object.entries( desired ).find( ( [ key, val ] ) => val > pileContents.filter( e => e.type == key ).length );
 
-    if ( nextDesired ) { 
+  //   if ( nextDesired ) { 
       entity.job = {
         type: 'Harvest',
-        resource: nextDesired[ 0 ],
+  //       resource: nextDesired[ 0 ],
       };
-    }
+  //   }
   }
 
   const workerAction = WorkerActions[ entity.job.type ];
