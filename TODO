@@ -13,6 +13,7 @@ Next:
 - Resources
   - Wood (forest trees)
     - Chop down tree first, then harvest from felled tree
+      - Standing trees have health (like a living sheep), "attack" and "kill" first to get to resources
     - Should add a stump to remain after tree is felled
     - Harvesting from felled tree makes felled part sink? Or hide sections of leaves for 25percent, 50percent, etc?
   - Stone (rocks)

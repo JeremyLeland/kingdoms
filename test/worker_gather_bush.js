@@ -320,30 +320,10 @@ const WorkerActions = {
       }
     },
   },
-  HarvestBerry: {
-    targetFunc: ( entity ) => {
-      return closestTo( entity,
-        entities.filter( e => e.type == 'Bush' && e.resources?.Berry > 0 )
-      );
-    },
-    actionFunc: ( entity, target ) => {
-      entity.animation = {
-        name: 'gather',
-        time: 0,
-      };
-      entity.delay = 1000;
-
-      // TODO: change bush stage to show fewer berries
-
-      target.resources.Berry --;
-      entity.carry.push( { type: 'Basket' } );
-      entity.job = {
-        type: 'DropOff'
-      };
-    },
-  },
 
   // TODO: One generic harvest for all of them? How to know what to gather?
+  // TODO: Trying to get rid of entity.job.resource and make job just be 'Harvest' or 'DropOff' again
+  //          - can we get everything we need without it?
 
   Harvest: {
     targetFunc: ( entity ) => {
@@ -365,25 +345,6 @@ const WorkerActions = {
       target.resources[ resourceName ] --;
       entity.carry.push( { type: resourceName } );
       entity.job = { type: 'DropOff' };
-    },
-  },
-  HarvestWood: {
-    targetFunc: ( entity ) => {
-      return closestTo( entity,
-        entities.filter( e => e.type == 'Tree' && e.health > 0 )
-      );
-    },
-    actionFunc: ( entity, target ) => {
-      entity.animation = {
-        name: 'swing',
-        time: 0,
-      };
-      entity.delay = 1000;
-
-      target.action = 'impact';
-      target.delay = 400;
-
-      // TODO: Should we delay here? Maybe better to cancel further updating if certain animations are in proress
     },
   },
 }
@@ -456,6 +417,9 @@ function updateWorker( entity, others, dt ) {
         type: 'Harvest',
         resource: nextDesired[ 0 ],
       };
+    }
+    else {
+      entity.job = { type: 'Idle' };
     }
 
     // TODO: Include this in part of the search above (compare against list of available resources)
