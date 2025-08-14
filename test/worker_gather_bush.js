@@ -454,17 +454,14 @@ function updateWorker( entity, others, dt ) {
   //
 
   if ( entity.job.type == 'Idle' ) {
-  //   // TODO: Find total number of each resource in stockpiles and only grab what we want more of
-  //   const pileContents = entities.flatMap( e => e.pile ?? [] );
+    entity.job = {
+      type: 'Harvest',
+    };
 
-  //   const nextDesired = Object.entries( desired ).find( ( [ key, val ] ) => val > pileContents.filter( e => e.type == key ).length );
-
-  //   if ( nextDesired ) { 
-      entity.job = {
-        type: 'Harvest',
-  //       resource: nextDesired[ 0 ],
-      };
-  //   }
+    entity.animation = {
+      name: 'walk',
+      time: 0,
+    };
   }
 
   const workerAction = WorkerActions[ entity.job.type ];

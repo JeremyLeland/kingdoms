@@ -18,29 +18,29 @@ import * as Entity from '../src/Entity.js';
 
 
 const entities = [
-  // {
-  //   type: 'Worker',
-  //   pos: [ 0, 0, 0 ],
-  //   animation: {
-  //     name: 'gather',
-  //     time: 0,
-  //   },
-  //   delay: 0,
-  //   carry: [
-  //   ],
-  //   tool: { type: 'Axe' },
-  // },
+  {
+    type: 'Worker',
+    pos: [ 0, 0, 0 ],
+    animation: {
+      name: 'walk',
+      time: 0,
+    },
+    delay: 0,
+    carry: [
+    ],
+    tool: { type: 'Axe' },
+  },
   // {
   //   type: 'Bush',
   //   pos: [ 1, 0, 0 ],
   // },
-  {
-    type: 'Tree',
-    animation: {
-      name: 'fell',
-      time: 1000,
-    },
-  },
+  // {
+  //   type: 'Tree',
+  //   animation: {
+  //     name: 'fell',
+  //     time: 1000,
+  //   },
+  // },
   {
     type: 'Ground',
   },

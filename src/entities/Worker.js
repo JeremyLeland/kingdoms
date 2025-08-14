@@ -104,6 +104,30 @@ const GatherPos = {
   Right: [ Info.BodyRadius, 0.4,  0.3 ],
 };
 
+const ToolOnBack = {
+  pos: [ -Info.BodyRadius, 0.5, 0 ],
+  rot: [ 0, Math.PI / 2, 0.5 ],
+};
+
+const ToolOnBackPath = {
+  start: {
+    pos: vec3.add( [], WalkBobPath.start.pos, ToolOnBack.pos ),
+    rot: ToolOnBack.rot,
+  },
+  control1: {
+    pos: vec3.add( [], WalkBobPath.control1.pos, ToolOnBack.pos ),
+    rot: ToolOnBack.rot,
+  },
+  control2: {
+    pos: vec3.add( [], WalkBobPath.control2.pos, ToolOnBack.pos ),
+    rot: ToolOnBack.rot,
+  },
+  end: {
+    pos: vec3.add( [], WalkBobPath.end.pos, ToolOnBack.pos ),
+    rot: ToolOnBack.rot,
+  }
+};
+
 function getOffsetPath( path, offset ) {
   const copy = structuredClone( path );
 
@@ -113,6 +137,10 @@ function getOffsetPath( path, offset ) {
 
   return copy;
 }
+
+//
+// TODO: Helper functions to intelligently combine paths (e.g. WalkBob + CarryOffset)
+//
 
 export const Model = {
   bounds: [ 0.5, 1.5, 0.5 ],
@@ -247,8 +275,14 @@ export const Model = {
     },
     Tool: {
       animationPaths: {
-        walk: WalkBobPath,
-        carry: WalkBobPath,
+        walk: ToolOnBackPath,
+        carry: ToolOnBackPath,
+        gather: {
+          start: ToolOnBack,
+          control1: ToolOnBack,
+          control2: ToolOnBack,
+          end: ToolOnBack,
+        },
         swing: SwingPath,
       },
       attach: 'tool',
